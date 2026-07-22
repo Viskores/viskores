@@ -111,7 +111,7 @@ public:
   /// Destructor
   ~HierarchicalAugmenterInOutData() = default;
 
-  /// Print contents fo this objects
+  /// Print contents for this objects
   std::string DebugPrint(std::string message, const char* fileName, long lineNum);
 
 }; // class HierarchicalAugmenterInOutData

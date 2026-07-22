@@ -116,7 +116,7 @@ public:
           viskores::worklet::contourtree_augmented::MaskedIndex(
             augmentedTreeWhichIterationPortal.Get(newSupernodeId)),
           newSupernodeId);
-      } // start of segmen
+      } // start of segment
     }
 
     /*

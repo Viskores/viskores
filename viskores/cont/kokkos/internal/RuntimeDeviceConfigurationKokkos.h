@@ -68,10 +68,10 @@ protected:
   ///
   /// When using viskores::Initialize, the standard order for kokkos argument priority is as
   /// follows (this assumes kokkos still prioritizes arguments found at the end of the
-  /// argv list over similarly named arguements found earlier in the list):
+  /// argv list over similarly named arguments found earlier in the list):
   ///   1. Environment Variables
   ///   2. Kokkos Command Line Arguments
-  ///   3. Viskores Interpreted Command Line Arguements
+  ///   3. Viskores Interpreted Command Line Arguments
   VISKORES_CONT virtual void InitializeSubsystem() override final;
 
 private:

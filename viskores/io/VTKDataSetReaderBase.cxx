@@ -757,13 +757,13 @@ void VTKDataSetReaderBase::SkipArrayMetaData(viskores::IdComponent numComponents
     return;
   }
 
-  auto begining = this->DataFile->Stream.tellg();
+  auto beginning = this->DataFile->Stream.tellg();
 
   std::string tag;
   this->DataFile->Stream >> tag;
   if (tag != "METADATA")
   {
-    this->DataFile->Stream.seekg(begining);
+    this->DataFile->Stream.seekg(beginning);
     return;
   }
 

@@ -31,7 +31,7 @@ if [ $# -ne 1 ]
 then
     echo "USAGE: $0 <directory>"
     echo
-    echo "This script seaches for C++ source files and removes the template"
+    echo "This script searches for C++ source files and removes the template"
     echo "arguments of select ControlSignature tags that have changed since"
     echo "Viskores 1.3. This script searches through all subdirectories of the"
     echo "given directory. Files with the following extensions are processed:"
@@ -43,7 +43,7 @@ fi
 
 find_command="find '$1' -name 'not-a-name'"
 
-for extention in $extentions_to_change
+for extension in $extentions_to_change
 do
     find_command="$find_command -o -name '*.$extention'"
 done

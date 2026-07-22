@@ -49,7 +49,7 @@ def readBOV(filename):
         header = dict([(lambda x: (x[0].strip().lower(), x[1].strip()))(l.strip().split(':')) for l in f.readlines()])
         if 'data_endian' in header:
             if header['data_endian'].lower() != sys.byteorder:
-                print('Unsopported endianess ' + eader['data_endian'].lower())
+                print('Unsopported endianness ' + eader['data_endian'].lower())
                 return None
         shape = tuple([int(x) for x in header['data_size'].split(' ')])
         count = reduce(operator.mul, shape, 1)
@@ -108,10 +108,10 @@ def split_points(shape, nblocks):
 def save_hdf(filename, data, **kwargs):
     """
     Save the data to HDF5.
-    The axes of the data will be transposed and reorded to match the order of save_piece function.
+    The axes of the data will be transposed and reordered to match the order of save_piece function.
 
     Args:
-        filename (str) : Name fo the HDF5 file
+        filename (str) : Name of the HDF5 file
         data (np.array): 3D array with the data
         kwargs (dict) : Dict with keyword arguments for the h5py create_dataset function
     """

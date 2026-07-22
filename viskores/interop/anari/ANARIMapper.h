@@ -78,7 +78,7 @@ struct VISKORES_ANARI_EXPORT ANARIMapper
   /// @brief Set color map arrays using raw ANARI array handles.
   /// @param color Color array used for color mapping.
   /// @param opacity (unused/deprecated, will remove on future ANARI version)
-  /// @param releaseArrays If true this function will release the hanldes passed in.
+  /// @param releaseArrays If true this function will release the handles passed in.
   virtual void SetANARIColorMap(anari_cpp::Array1D color,
                                 anari_cpp::Array1D opacity,
                                 bool releaseArrays = true);

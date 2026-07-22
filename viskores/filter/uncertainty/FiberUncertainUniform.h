@@ -75,7 +75,7 @@ public:
     this->SetActiveField(0, fieldName, viskores::cont::Field::Association::Points);
   }
 
-  /// @brief Sets maxmimum X.
+  /// @brief Sets maximum X.
   /// Sets maximum value of the uniform distribution of the variable X at each grid point.
   VISKORES_CONT void SetField1Max(const std::string& fieldName)
   {
@@ -89,7 +89,7 @@ public:
     this->SetActiveField(2, fieldName, viskores::cont::Field::Association::Points);
   }
 
-  /// @brief Sets maxmimum Y.
+  /// @brief Sets maximum Y.
   /// Sets maximum value of the uniform distribution of the variable Y at each grid point.
   VISKORES_CONT void SetField2Max(const std::string& fieldName)
   {

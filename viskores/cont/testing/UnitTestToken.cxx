@@ -133,7 +133,7 @@ void TestBasicAttachDetatch()
   CHECK_OBJECT(object2, 1, 2);
   CHECK_OBJECT(object3, 1, 2);
 
-  std::cout << "  Detatch outer token" << std::endl;
+  std::cout << "  Detach outer token" << std::endl;
   outerToken.DetachFromAll();
 
   CHECK_OBJECT(object1, 0, 1);

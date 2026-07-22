@@ -162,11 +162,11 @@ public:
     using ExecutionSignature = void(_1, _2, _3);
 
     template <typename T>
-    VISKORES_EXEC void operator()(const viskores::Vec<T, 3>& coordiantes,
+    VISKORES_EXEC void operator()(const viskores::Vec<T, 3>& coordinates,
                                   const BinLocator binLocator,
                                   viskores::HashType& hashOut) const
     {
-      viskores::Id3 binId = binLocator.FindBin(coordiantes);
+      viskores::Id3 binId = binLocator.FindBin(coordinates);
       hashOut = viskores::Hash(binId);
     }
   };
@@ -429,7 +429,7 @@ public:
 
     invoker(BuildPointInputToOutputMap(), this->MergeKeys, this->PointInputToOutputMap);
 
-    // Need to pull out the unique point coordiantes
+    // Need to pull out the unique point coordinates
     viskores::cont::ArrayHandle<viskores::Vec<T, 3>> uniquePointCoordinates;
     viskores::cont::ArrayCopy(
       viskores::cont::make_ArrayHandlePermutation(this->MergeKeys.GetUniqueKeys(), points),
@@ -444,7 +444,7 @@ public:
     const viskores::Bounds& bounds, // Bounds of points
     viskores::cont::UncertainArrayHandle<TL, SL>& points) // coordinates, modified to merge close
   {
-    // Get a cast to a concrete set of point coordiantes so that it can be modified in place
+    // Get a cast to a concrete set of point coordinates so that it can be modified in place
     viskores::cont::ArrayHandle<viskores::Vec3f> concretePoints;
     viskores::cont::ArrayCopyShallowIfPossible(points, concretePoints);
 
@@ -460,7 +460,7 @@ public:
     const viskores::Bounds& bounds,             // Bounds of points
     viskores::cont::UnknownArrayHandle& points) // coordinates, modified to merge close
   {
-    // Get a cast to a concrete set of point coordiantes so that it can be modified in place
+    // Get a cast to a concrete set of point coordinates so that it can be modified in place
     viskores::cont::ArrayHandle<viskores::Vec3f> concretePoints;
     viskores::cont::ArrayCopyShallowIfPossible(points, concretePoints);
 

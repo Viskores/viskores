@@ -246,7 +246,7 @@ whether independent or as an `ArrayHandleRecombineVec`.
 The problem really happens when you create an array of an unknown type in
 an `UnknownArrayHandle` (such as with `NewInstance`) and then use that as
 an output to a worklet. Sure, you could use `ArrayHandle::Allocate` to
-resize before getting the array, but that is awkward for programers.
+resize before getting the array, but that is awkward for programmers.
 Instead, allow the extracted arrays to be resized as normal output arrays
 would be.
 
@@ -337,7 +337,7 @@ This has been fixed.
 
 ## Split flying edges and marching cells into separate filters
 
-The contour filter contains 2 separate implementations, Marching Cells and Flying Edges, the latter only available if the input has a `CellSetStructured<3>` and `ArrayHandleUniformPointCoordinates` for point coordinates. The compilation of this filter was lenghty and resource-heavy, because both algorithms were part of the same translation unit.
+The contour filter contains 2 separate implementations, Marching Cells and Flying Edges, the latter only available if the input has a `CellSetStructured<3>` and `ArrayHandleUniformPointCoordinates` for point coordinates. The compilation of this filter was lengthy and resource-heavy, because both algorithms were part of the same translation unit.
 
 Now, this filter is separated into two new filters, `ContourFlyingEdges` and `ContourMarchingCells`, compiling more efficiently into two translation units. The `Contour` API is left unchanged. All 3 filters `Contour`, `ContourFlyingEdges` and `ContourMarchingCells` rely on a new abstract class `AbstractContour` to provide configuration and common utility functions.
 
@@ -353,11 +353,11 @@ The marching cubes version of contour still has several possible compile paths, 
 
 Many flow filters have common underpinnings in term of the components they use.
 E.g., the choice and handling for solvers, analysis, termination, vector field, etc.
-However, having these components baked hard in the infrastructure makes extensibility chanllenging,
+However, having these components baked hard in the infrastructure makes extensibility challenging,
 which leads to developers implementing bespoke solutions.
 This change establishes an infrastructure for easy specification and development of flow filter.
 
-To that end, two new abstractions are introduced along with thier basic implementations : `Analysis` and `Termination`
+To that end, two new abstractions are introduced along with their basic implementations : `Analysis` and `Termination`
 
 - `Analysis` defines how each step of the particle needs to be analyzed
 - `Termination` defines the termination criteria for every particle
@@ -491,7 +491,7 @@ types.
 
 ## Get the 3D index from a BoundaryState in WorkletPointNeighborhood
 
-There are occasions when you need a worklet to opeate on 2D or 3D indices.
+There are occasions when you need a worklet to operate on 2D or 3D indices.
 Most worklets operate on 1D indices, which requires recomputing the 3D
 index in each worklet instance. A workaround is to use a worklet that does
 a 3D scheduling and pull the working index from that.
@@ -602,7 +602,7 @@ build a monolithic file.
 
 ## Kokkos atomic functions switched to use desul library
 
-Kokkos 4 switches from their interal library based off of desul to using desul
+Kokkos 4 switches from their internal library based off of desul to using desul
 directly.  This removes VTK-m's dependency on the Kokkos internal
 implementation (Kokkos::Impl) to using desul directly.
 
@@ -651,7 +651,7 @@ track down the original source and license, so to be cautious these data
 sets have been removed and replaced with some generated in house.
 
 For some of the other data sets, we have traced down the original author
-and verified that they propery contribute the data to VTK-m and agree to
+and verified that they properly contribute the data to VTK-m and agree to
 allow it to be distributed under VTK-m's license. Not counting the most
 trivial examples, here are the originators of the non-trivial data
 examples.

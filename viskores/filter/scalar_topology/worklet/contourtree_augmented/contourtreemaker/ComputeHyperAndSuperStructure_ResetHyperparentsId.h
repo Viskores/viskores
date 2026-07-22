@@ -73,7 +73,7 @@ namespace contourtree_augmented
 namespace contourtree_maker_inc
 {
 
-// Worklet for settubg the super/hyperarcs fromm the permuted super/hyperarcs vector
+// Worklet for setting the super/hyperarcs from the permuted super/hyperarcs vector
 class ComputeHyperAndSuperStructure_ResetHyperparentsId : public viskores::worklet::WorkletMapField
 {
 public:

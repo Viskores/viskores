@@ -47,7 +47,7 @@ void TubeThatSpiral(viskores::FloatDefault radius,
   viskores::cont::DataSetBuilderExplicitIterative dsb;
   std::vector<viskores::Id> ids;
 
-  // The Archimedian spiral is defined by the equation r = a + b*theta.
+  // The Archimedean spiral is defined by the equation r = a + b*theta.
   // To extend to a 3D curve, use z = t, theta = t, r = a + b t.
   viskores::FloatDefault a = viskores::FloatDefault(0.2);
   viskores::FloatDefault b = viskores::FloatDefault(0.8);

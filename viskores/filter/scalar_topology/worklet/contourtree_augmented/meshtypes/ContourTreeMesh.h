@@ -166,7 +166,7 @@ public:
                   const IdArrayType& arcs,
                   const ContourTreeMesh<FieldType>& mesh);
 
-  // Initalize contour tree mesh from mesh and arcs. For fully augmented contour tree with all
+  // Initialize contour tree mesh from mesh and arcs. For fully augmented contour tree with all
   // mesh vertices as nodes. Same as using { 0, 1, ..., nodes.size()-1 } as nodes for the
   // ContourTreeMeshh(nodes, arcsm mesh) constructor above
   ContourTreeMesh(const IdArrayType& arcs, const ContourTreeMesh<FieldType>& mesh);
@@ -190,12 +190,12 @@ public:
   void Load(const char* filename);
 
   // Empty placeholder function to ensure compliance of this class with the interface
-  // the other mesh classes. This is a no-op here since this class is initalized
+  // the other mesh classes. This is a no-op here since this class is initialized
   // from a known contour tree so sort is already done
   template <typename T, typename StorageType>
   void SortData(const viskores::cont::ArrayHandle<T, StorageType>& values) const
   {
-    (void)values; // Do nothink but avoid unsused param warning
+    (void)values; // Do nothing but avoid unused param warning
   }
 
   // Public fields
@@ -209,11 +209,11 @@ public:
   // NeighborConnectivity stores for each vertex the indices of its neighbors. For each vertex
   // the indices are sorted by value, i.e, the first neighbour has the lowest and
   // the last neighbour the highest value for the vertex. In the array we just
-  // concatinate the list of neighbors from all vertices, i.e., we first
+  // concatenate the list of neighbors from all vertices, i.e., we first
   // have the list of neighbors of the first vertex, then the second vertex and so on, i.e.:
   // [ n_1_1, n_1_2, n_2_1, n_2_2, n_2_3, etc.]
   IdArrayType NeighborConnectivity;
-  // NeighborOffsets gives us for each vertex an index into the neighours array indicating
+  // NeighborOffsets gives us for each vertex an index into the neighbours array indicating
   // the index where the list of neighbors for the vertex begins
   IdArrayType NeighborOffsets;
   // the maximum number of neighbors of a vertex
@@ -338,7 +338,7 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
   , NeighborOffsets()
 {
   this->NumVertices = inSortOrder.GetNumberOfValues();
-  // Initalize the SortedIndices as a smart array handle
+  // Initialize the SortedIndices as a smart array handle
   this->SortIndices = viskores::cont::ArrayHandleIndex(this->NumVertices);
   this->SortOrder = viskores::cont::ArrayHandleIndex(this->NumVertices);
   // values permuted by SortOrder to sort the values
@@ -347,7 +347,7 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
   viskores::cont::Algorithm::Copy(permutedValues, this->SortedValues);
   this->InitializeNeighborConnectivityFromArcs(arcs);
 #ifdef DEBUG_PRINT
-  // Print the contents fo this for debugging
+  // Print the contents for this for debugging
   DebugPrint("ContourTreeMesh Initialized", __FILE__, __LINE__);
 #endif
 }
@@ -370,13 +370,13 @@ inline ContourTreeMesh<FieldType>::ContourTreeMesh(
                                                                                      inSortOrder);
   auto permutedValues = viskores::cont::make_ArrayHandlePermutation(permutedSortOrder, values);
   viskores::cont::Algorithm::Copy(permutedValues, this->SortedValues);
-  // Initalize the SortedIndices as a smart array handle
+  // Initialize the SortedIndices as a smart array handle
   this->NumVertices = this->SortedValues.GetNumberOfValues();
   this->SortIndices = viskores::cont::ArrayHandleIndex(this->NumVertices);
   this->SortOrder = viskores::cont::ArrayHandleIndex(this->NumVertices);
   this->InitializeNeighborConnectivityFromArcs(arcs);
 #ifdef DEBUG_PRINT
-  // Print the contents fo this for debugging
+  // Print the contents for this for debugging
   DebugPrint("ContourTreeMesh Initialized", __FILE__, __LINE__);
 #endif
 }
@@ -389,13 +389,13 @@ inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
   , NeighborConnectivity()
   , NeighborOffsets()
 {
-  // Initalize the SortedIndices as a smart array handle
+  // Initialize the SortedIndices as a smart array handle
   this->NumVertices = this->SortedValues.GetNumberOfValues();
   this->SortIndices = viskores::cont::ArrayHandleIndex(this->NumVertices);
   this->SortOrder = viskores::cont::ArrayHandleIndex(this->NumVertices);
   this->InitializeNeighborConnectivityFromArcs(arcs);
 #ifdef DEBUG_PRINT
-  // Print the contents fo this for debugging
+  // Print the contents for this for debugging
   DebugPrint("ContourTreeMesh Initialized", __FILE__, __LINE__);
 #endif
 }
@@ -421,7 +421,7 @@ inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
   this->SortOrder = viskores::cont::ArrayHandleIndex(this->NumVertices);
   this->InitializeNeighborConnectivityFromArcs(arcs);
 #ifdef DEBUG_PRINT
-  // Print the contents fo this for debugging
+  // Print the contents for this for debugging
   DebugPrint("ContourTreeMesh Initialized", __FILE__, __LINE__);
 #endif
 }
@@ -462,14 +462,14 @@ inline void CopyVecArrayByIndices(const PT1& srcArray,
     contourtree_mesh_inc_ns::CopyIntoCombinedNeighborsWorklet{}, srcPermutation, dstPermuation);
 }
 
-// Initalize the contour tree from the arcs array
+// Initialize the contour tree from the arcs array
 template <typename FieldType>
 inline void ContourTreeMesh<FieldType>::InitializeNeighborConnectivityFromArcs(
   const IdArrayType& arcs)
 {
   // This function computes the neighbor connecitvity (NeighborConnectivity, NeighborOffsets) from
   // an arc array. An arc array consists of undirected arcs. arc[i] connects contour tree nodes
-  // i and arc[i]. For the neighbor connectiviy in the contour tree mesh, we first convert these
+  // i and arc[i]. For the neighbor connectivity in the contour tree mesh, we first convert these
   // into two directed arcs that are then used to compute a list of neighbors in the mesh for
   // each node.
   //
@@ -491,7 +491,7 @@ inline void ContourTreeMesh<FieldType>::InitializeNeighborConnectivityFromArcs(
   // idx:  0 1 2 3 4
   // arcs: 1 - 3 1 3 (- = NO_SUCH_ELEMENT, meaning no arc originating from this node)
   //
-  // This function translates this into the internal contour tree mesh represnetation,
+  // This function translates this into the internal contour tree mesh representation,
   // which is "regular" viskores connectivity format, i.e., the connectity array is a
   // flat list of neighbor vertices and offsets give the start index of the
   // neighbor list for each vertex:
@@ -516,7 +516,7 @@ inline void ContourTreeMesh<FieldType>::InitializeNeighborConnectivityFromArcs(
   viskores::cont::Algorithm::CopyIf(indexArray, arcIsValidArray, this->NeighborConnectivity);
   viskores::Id nValidArcs = this->NeighborConnectivity.GetNumberOfValues();
 
-  // Step 2: Sort arcs---by permuting their indices in the connectiviy array---so
+  // Step 2: Sort arcs---by permuting their indices in the connectivity array---so
   // that all arcs originating at the same vertex (same `from`) are adjacent.
   // All arcs are in neighbors array based on  sort index of their 'from' vertex
   // (and then within a run sorted by sort index of their 'to' vertex).
@@ -545,7 +545,7 @@ inline void ContourTreeMesh<FieldType>::InitializeNeighborConnectivityFromArcs(
   viskores::Id neighborOffsetsSize;
   viskores::cont::ConvertNumComponentsToOffsets(counts, this->NeighborOffsets, neighborOffsetsSize);
 
-  // Finally, the correct connectivity array correspons to the `to` array,
+  // Finally, the correct connectivity array corresponds to the `to` array,
   // so replace arc indices with its `to`vertex. In our example, this results in:
   // connectivity: 1 0 3 3 1 2 4 3
   // which is exactly the array we needed to compute
@@ -956,7 +956,7 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
-  // Re-compute maximum number of neigbours
+  // Re-compute maximum number of neighbours
   ComputeMaxNeighbors();
 
   timingsStream << "    " << std::setw(38) << std::left << "Compute MaxNeighbors"
@@ -976,7 +976,7 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   (void)timingsMessage;
 
 #ifdef DEBUG_PRINT
-  // Print the contents fo this for debugging
+  // Print the contents for this for debugging
   DebugPrint("ContourTreeMeshes merged", __FILE__, __LINE__);
 #endif
 } // Merge With
@@ -1073,7 +1073,7 @@ inline void ContourTreeMesh<FieldType>::GetBoundaryVertices(
   this->Invoke(computeMeshBoundaryContourTreeMeshWorklet,
                indexArray,           // input
                *meshBoundaryExecObj, // input
-               isOnBoundary          // outut
+               isOnBoundary          // output
   );
 
   // we will conditionally copy the boundary vertices' indices, capturing the end iterator to compute the # of boundary vertices

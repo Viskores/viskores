@@ -25,12 +25,12 @@ Gitlab CI
 
 # Kitware Gitlab CI
 
-GitLab CI/CD allows for software development through continous integration, delivery, and deployment.
+GitLab CI/CD allows for software development through continuous integration, delivery, and deployment.
 Viskores uses continuous integration to verify every merge request, by running a pipeline of scripts to build, test,
 the code changes across a wide range of hardware and configurations before merging them into master.
 
 This workflow allow everyone to easily catch build failures, bugs, and errors before Viskores is deployed in a
-production enviornment. Making sure Viskores is a robust library provides not only confidence to our users
+production environment. Making sure Viskores is a robust library provides not only confidence to our users
 but to every Viskores developer. When the system is working developers can be confident that failures
 seen during CI are related to the specific changes they have made.
 
@@ -39,9 +39,9 @@ The scripts set in this file are executed by the [GitLab Runners](https://docs.g
 
 ## Why pipelines
 
-Pipelines are the top-level component of continuous integration. For Viskores the pipeline contains build and test stages, with the possibilty of adding subsequent stages such as coverage, or memory checking.
+Pipelines are the top-level component of continuous integration. For Viskores the pipeline contains build and test stages, with the possibility of adding subsequent stages such as coverage, or memory checking.
 
-Decomposing the build and test into separate components comes with some significant benifits for Viskores developers.
+Decomposing the build and test into separate components comes with some significant benefits for Viskores developers.
 The most impactful change is that we now have the ability to compile Viskores on dedicated 'compilation' machines and
 test on machines with less memory or an older CPU improving turnaround time. Additionally since we are heavily
 leveraging docker, Viskores build stages can be better load balanced across the set of builders as we don't have
@@ -135,12 +135,12 @@ Tags are used to by gitlab-ci to match a given build to a set of possible execut
 Therefore we encode information such as we require docker or the linux kernel into tags.
 The full set of Viskores tags each meaning are found under the `runner tags` section of the document.
 
-Extends is used to compose the execution enviornment of the builder. Basically this means
-setting up the correct build/test enviornment and specifying the CMake scripts that need
+Extends is used to compose the execution environment of the builder. Basically this means
+setting up the correct build/test environment and specifying the CMake scripts that need
 to be executed. So a linux docker based builder would extend the docker image they want,
 plus `.cmake_build_linux`. A MacOS builder would extend `.cmake_build_macos`.
 
-Variables control stage specific information such as runtime enviornment variables,
+Variables control stage specific information such as runtime environment variables,
 or Viskores CMake options.
 
 ## How to add a new builder

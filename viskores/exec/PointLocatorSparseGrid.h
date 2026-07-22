@@ -61,7 +61,7 @@ public:
   /// @brief Nearest neighbor search using a Uniform Grid
   ///
   /// Parallel search of nearesat neighbor for each point in the `queryPoints` in the set of
-  /// `coords`. Returns neareast neighbot in `nearestNeighborIds` and distances to nearest
+  /// `coords`. Returns neareast neighbor in `nearestNeighborIds` and distances to nearest
   /// neighbor in `distances`.
   ///
   /// \param queryPoint Point coordinates to query for nearest neighbor.

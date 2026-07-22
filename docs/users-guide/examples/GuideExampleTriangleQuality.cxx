@@ -315,7 +315,7 @@ struct ComputeTriangleQualityValues : viskores::worklet::WorkletMapField
 VISKORES_CONT
 viskores::cont::ArrayHandle<viskores::Float32> BuildTriangleQualityTable()
 {
-  // Repurpose uniform point coordinates to compute triange edge lengths.
+  // Repurpose uniform point coordinates to compute triangle edge lengths.
   viskores::cont::ArrayHandleUniformPointCoordinates edgeLengths(
     viskores::Id3(detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
                   detail::TRIANGLE_QUALITY_TABLE_DIMENSION,

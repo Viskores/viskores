@@ -54,7 +54,7 @@ struct Fetch<FetchType, viskores::exec::arg::AspectTagIncidentElementIndices, Ex
                                                         ScatterAndMaskMode>& indices,
     const ExecObjectType&) const -> viskores::Vec<viskores::Id, 6>
   {
-    // std::cout << "opimized fetch for point ids" << std::endl;
+    // std::cout << "optimized fetch for point ids" << std::endl;
     const auto& xgcidx = indices.GetIndicesIncident();
     const viskores::Id offset1 = (xgcidx.Planes[0] * xgcidx.NumberOfPointsPerPlane);
     const viskores::Id offset2 = (xgcidx.Planes[1] * xgcidx.NumberOfPointsPerPlane);

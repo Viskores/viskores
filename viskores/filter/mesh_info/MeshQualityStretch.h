@@ -43,7 +43,7 @@ namespace mesh_info
 /// The stretch of a cell is computed as the ratio of the minimum edge length to the maximum
 /// diagonal, normalized for the unit cube. A good quality cell will have a stretch in
 /// the range [0.25, 1]. Poorer quality cells can have a stretch as low as 0 although a malformed
-/// cell might return a strech of infinity.
+/// cell might return a stretch of infinity.
 ///
 /// This only produces values for quadrilaterals and hexahedra.
 class VISKORES_FILTER_MESH_INFO_EXPORT MeshQualityStretch : public viskores::filter::Filter

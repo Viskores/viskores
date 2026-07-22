@@ -72,7 +72,7 @@ class SetFirstAttachmentPointInRoundWorklet : public viskores::worklet::WorkletM
 {
 public:
   /// Control signature for the worklet
-  /// NOTE: we need this to be in/out because any valyes we don't set here need
+  /// NOTE: we need this to be in/out because any values we don't set here need
   /// to remain NO_SUCH_ELEMENT for further processing
   using ControlSignature = void(WholeArrayIn attachmentIds,                 // input
                                 WholeArrayIn superparentRounds,             // input

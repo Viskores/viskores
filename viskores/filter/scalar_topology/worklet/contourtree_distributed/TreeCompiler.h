@@ -75,7 +75,7 @@ namespace worklet
 {
 namespace contourtree_distributed
 {
-// Possibly change the following when comapring to PPP prototype
+// Possibly change the following when comparing to PPP prototype
 constexpr int PRINT_WIDTH = 12;
 using dataType = viskores::Float64;
 using indexType = viskores::Id;

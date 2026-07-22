@@ -88,7 +88,7 @@ namespace scalar_topology
 /// computation of the augmented contour tree, i.e., the contour tree including
 /// all regular mesh vertices. Augmentation with regular vertices is used in
 /// practice to compute statistics (e.g., volume), to segment the input mesh,
-/// facilitate iso-value selection, enable localization of all verticies of a
+/// facilitate iso-value selection, enable localization of all vertices of a
 /// mesh in the tree among others.
 ///
 /// In addition to single-block computation, the filter also supports multi-block

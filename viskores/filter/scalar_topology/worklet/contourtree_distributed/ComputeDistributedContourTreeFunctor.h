@@ -91,7 +91,7 @@ public:
   /// @param[in] globalSize  Global extents of the input mesh (i.e., number of mesh points in each dimension).
   /// @param[in] useBoundaryExtremaOnly Use boundary extrema only (instead of the full boundary) during the fan in.
   /// @param[in] timingsLogLevel Set the viskores::cont:LogLevel to be used to record timings information
-  ///                            specific to the computation of the hierachical contour tree.
+  ///                            specific to the computation of the hierarchical contour tree.
   /// @param[in] treeLogLevel Set the viskores::cont:LogLevel to be used to record metadata information
   ///                         about the various trees computed as part of the hierarchical contour tree compute.
   ComputeDistributedContourTreeFunctor(
@@ -127,9 +127,9 @@ public:
     const auto selfid = rp.gid();
 
     // Here we do the deque first before the send due to the way the iteration is handled in DIY, i.e., in each iteration
-    // A block needs to first collect the data from its neighours and then send the combined block to its neighbours
+    // A block needs to first collect the data from its neighbours and then send the combined block to its neighbours
     // for the next iteration.
-    // 1. dequeue the block and compute the new contour tree and contour tree mesh for the block if we have the hight GID
+    // 1. dequeue the block and compute the new contour tree and contour tree mesh for the block if we have the height GID
     std::vector<int> incoming;
     rp.incoming(incoming);
     // log the time for getting the data from DIY
@@ -468,7 +468,7 @@ public:
 
 
     // Send our current block (which is either our original block or the one we just combined from the ones we received) to our next neighbour.
-    // Once a rank has send his block (either in its orignal or merged form) it is done with the reduce
+    // Once a rank has send his block (either in its original or merged form) it is done with the reduce
     for (int cc = 0; cc < rp.out_link().size(); ++cc)
     {
       auto target = rp.out_link().target(cc);

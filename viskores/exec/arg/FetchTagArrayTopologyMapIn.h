@@ -236,7 +236,7 @@ struct Fetch<viskores::exec::arg::FetchTagArrayTopologyMapIn,
                                                         ScatterAndMaskMode>& indices,
     const ExecObjectType& portal) -> viskores::Vec<typename ExecObjectType::ValueType, 6>
   {
-    // std::cout << "opimized fetch for point values" << std::endl;
+    // std::cout << "optimized fetch for point values" << std::endl;
     const auto& xgcidx = indices.GetIndicesIncident();
     const viskores::Id offset1 = (xgcidx.Planes[0] * xgcidx.NumberOfPointsPerPlane);
     const viskores::Id offset2 = (xgcidx.Planes[1] * xgcidx.NumberOfPointsPerPlane);

@@ -148,8 +148,8 @@ private:
     viskores::IdComponent forcedDimensionality = 0)
   {
     // when the point dimension for a given axis is 1 we
-    // need to lower the dimensonality by 1. So a Plane
-    // in XZ space would have a dimensonality of 2.
+    // need to lower the dimensionality by 1. So a Plane
+    // in XZ space would have a dimensionality of 2.
     // likewise the global offsets need to also
     // be updated when this occurs
     viskores::IdComponent dimensionality = forcedDimensionality;

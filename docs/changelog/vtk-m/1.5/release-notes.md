@@ -546,16 +546,16 @@ than a cast) and is easy to recreate with `ArrayHandleTransform`.
 
 ## Remove ArrayPortalShrink, behavior subsumed by `vtkm::cont::ArrayHandleView`
 
-`ArrayPortalShrink` originaly allowed a user to pass in a delegate array portal
+`ArrayPortalShrink` originally allowed a user to pass in a delegate array portal
 and then shrink the reported array size without actually modifying the
 underlying allocation.  An iterator was also provided that would
 correctly iterate over the shrunken size of the stored array.
 
-Instead of directly shrinking the original array, it is prefered
+Instead of directly shrinking the original array, it is preferred
 to create an ArrayHandleView from an ArrayHandle and then specify the
 number of values to use in the ArrayHandleView constructor.
 
-# Control Enviornment
+# Control Environment
 
 ## `vtkm::cont::CellSetExplicit` refactored to remove redundant array
 
@@ -945,7 +945,7 @@ inline VTKM_CONT vtkm::cont::DataSet PointElevation::DoExecute(
 ## Simplify creating results for `vtkm::filter::filters`
 
 As part of the process of making VTK-m filters easier to write for newcomers
-whe have a couple of changes to make constructing the output `vtkm::cont::DataSet`
+we have a couple of changes to make constructing the output `vtkm::cont::DataSet`
 easier.
 
 First we have moved the `CreateResult` functions out of the internals namespace
@@ -953,18 +953,18 @@ and directly into `vtkm::filter`. This makes it clearer to developers that this
 was the 'proper' way to construct the output DataSet.
 
 Second we have streamlined the collection of `vtkm::filter::CreateResult` methods to
-require the user to provide less information and provide clearer names explaing what
+require the user to provide less information and provide clearer names explaining what
 they do.
 
 To construct output identical to the input but with a new field you now just pass
-the `vtkm::filter::FieldMetadata` as a paramter instead of explictly stating
+the `vtkm::filter::FieldMetadata` as a parameter instead of explicitly stating
 the field association, and the possible cell set name:
 ```cpp
 return CreateResult(input, newField, name, fieldMetadata);
 ```
 
 To construct output identical to the input but with a cell field added you
-can now pass the `vtkm::cont::CellSet` as a paramter instead of explictly stating
+can now pass the `vtkm::cont::CellSet` as a parameter instead of explicitly stating
 the field association, and the cell set name:
 ```cpp
 return CreateResultFieldCell(input, newCellField, name, cellset);
@@ -1195,7 +1195,7 @@ The filter allows users to calculate FTLE in two ways
    FTLE field calculation.
 
 The filter returns a dataset with a point field named FTLE.
-Is the input is strucutred and an auxiliary grid was not used, the filter will
+Is the input is structured and an auxiliary grid was not used, the filter will
 add the field to the original dataset set, else a new structured dataset is returned.
 
 ## `SurfaceNormals` filter can now orient normals
@@ -1248,7 +1248,7 @@ was stored in a CellSetPermutation. This made Threshold hyper- efficient
 because it required hardly any data movement to implement. However, the
 problem was that any other unit that had to use the CellSet failed. To have
 VTK-m handle that output correctly in other filters and writers, they all
-would have to check for the existance of CellSetPermutation. And
+would have to check for the existence of CellSetPermutation. And
 CellSetPermutation is templated on the CellSet type it is permuting, so all
 units would have to compile special cases for all these combinations. This
 is not likely to be feasible in any static solution.
@@ -1290,7 +1290,7 @@ compilation units compile correctly.
 
 ### Options to vtkm_add_target_information
 
-  - DROP_UNUSED_SYMBOLS: If enabled will apply the appropiate link
+  - DROP_UNUSED_SYMBOLS: If enabled will apply the appropriate link
   flags to drop unused VTK-m symbols. This works as VTK-m is compiled with
   -ffunction-sections which allows for the linker to remove unused functions.
   If you are building a program that loads runtime plugins that can call
@@ -1358,7 +1358,7 @@ creating a working algorithm (wrapped in a filter) in VTK-m (and used).
 
 
 This was done to allow for developers to write normal operations on vtkm::Vec but have
-the resolved at compile time, allowing for both readible code and no runtime cost.
+the resolved at compile time, allowing for both readable code and no runtime cost.
 
 Now you can do things such as:
 ```cxx

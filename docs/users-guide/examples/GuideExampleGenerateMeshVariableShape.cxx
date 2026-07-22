@@ -487,7 +487,7 @@ inline VISKORES_CONT viskores::cont::DataSet ExtractFaces::DoExecute(
   //// END-EXAMPLE GenerateMeshVariableShapeOffsetsArray
   ////
 
-  // Eigth, use a reduce-by-key to extract indices for each unique face.
+  // Eight, use a reduce-by-key to extract indices for each unique face.
   this->Invoke(FaceIndicesWorklet{},
                hashCollisionScatter,
                cellToFaceKeys,

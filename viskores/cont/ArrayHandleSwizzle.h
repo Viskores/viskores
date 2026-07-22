@@ -92,7 +92,7 @@ struct GetInverseSwizzleImpl<InType, OutType, std::true_type>
   {
     // Note that when reversing the map, if the forwardMap repeats any indices, then
     // the map is not 1:1 and is not invertible. We cannot check that at compile time.
-    // In this case, results can become unpredictible.
+    // In this case, results can become unpredictable.
     using InverseMapType = typename Type::MapType;
     InverseMapType inverseMap = Type::InitMap();
     for (viskores::IdComponent inIndex = 0; inIndex < ForwardMapType::NUM_COMPONENTS; ++inIndex)

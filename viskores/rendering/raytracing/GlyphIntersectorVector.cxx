@@ -680,7 +680,7 @@ void GlyphIntersectorVector::IntersectionDataImp(Ray<Precision>& rays,
   if (!isSupportedField)
   {
     throw viskores::cont::ErrorBadValue(
-      "GlyphIntersectorVector: Field not accociated with a cell set or field");
+      "GlyphIntersectorVector: Field not associated with a cell set or field");
   }
 
   viskores::worklet::DispatcherMapField<detail::CalculateGlyphVectorNormals>(

@@ -58,7 +58,7 @@ void Test()
   ////
   //// BEGIN-EXAMPLE ArrayHandleRandomUniformBitsIteration
   ////
-  // Create a new insance of ArrayHandleRandomUniformBits
+  // Create a new instance of ArrayHandleRandomUniformBits
   // for each set of random bits.
   viskores::cont::ArrayHandleRandomUniformBits randomArray0(50, { 0 });
   viskores::cont::ArrayHandleRandomUniformBits randomArray1(50, { 1 });

@@ -112,7 +112,7 @@ using TypeListScalarAll = viskores::List<viskores::Int8,
                                          viskores::Float32,
                                          viskores::Float64>;
 
-// A list that containes all the base arithmetric C types (i.e. char, int, float, etc.).
+// A list that contains all the base arithmetic C types (i.e. char, int, float, etc.).
 // The list contains C types that are functionally equivalent but considered different
 // types (e.g. it contains both `char` and `signed char`).
 using TypeListBaseC = viskores::ListAppend<

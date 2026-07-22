@@ -1322,7 +1322,7 @@ public:
                                 WholeArrayIn, // cA+cD (signal)
                                 WholeArrayIn, // lowFilter
                                 WholeArrayIn, // highFilter
-                                FieldOut);    // outptu coefficients
+                                FieldOut);    // output coefficients
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
   using InputDomain = _8;
 
@@ -1553,7 +1553,7 @@ public:
                                 WholeArrayIn, // cA+cD (signal)
                                 WholeArrayIn, // lowFilter
                                 WholeArrayIn, // highFilter
-                                FieldOut);    // outptu coefficients
+                                FieldOut);    // output coefficients
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
   using InputDomain = _8;
 
@@ -1784,7 +1784,7 @@ public:
                                 WholeArrayIn, // cA+cD (signal)
                                 WholeArrayIn, // lowFilter
                                 WholeArrayIn, // highFilter
-                                FieldOut);    // outptu coefficients
+                                FieldOut);    // output coefficients
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
   using InputDomain = _8;
 
@@ -2585,7 +2585,7 @@ public:
                                 WholeArrayIn, // cA+cD (signal)
                                 WholeArrayIn, // lowFilter
                                 WholeArrayIn, // highFilter
-                                FieldOut);    // outptu coeffs
+                                FieldOut);    // output coeffs
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
   using InputDomain = _8;
 

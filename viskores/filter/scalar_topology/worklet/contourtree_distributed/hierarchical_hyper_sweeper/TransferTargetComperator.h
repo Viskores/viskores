@@ -96,7 +96,7 @@ public:
     // NOTE: We need to explicitly check for NO_SUCH_ELEMENT here since viskores::Id is signed
     // while the index time in PPP is unsigned. Thus, for PPP "regular" indices are always
     // smaller that NO_SUCH_ELEMENT, while with the signed viskores::Id, NO_SUCH_ELEMENT is
-    // negative and the order is not as intented.
+    // negative and the order is not as intended.
     auto leftVal = this->SuperarcPortal.Get(left);
     auto rightVal = this->SuperarcPortal.Get(right);
 

@@ -173,7 +173,7 @@ struct Bounds
 
   /// \b Returns the min point of the bounds
   ///
-  /// \c MinCorder returns the minium point of the bounds.If the bounds
+  /// \c MinCorder returns the minimum point of the bounds.If the bounds
   /// are empty, the results are undefined.
   ///
   VISKORES_EXEC_CONT
@@ -184,7 +184,7 @@ struct Bounds
 
   /// \b Returns the max point of the bounds
   ///
-  /// \c MaxCorder returns the minium point of the bounds.If the bounds
+  /// \c MaxCorder returns the minimum point of the bounds.If the bounds
   /// are empty, the results are undefined.
   ///
   VISKORES_EXEC_CONT

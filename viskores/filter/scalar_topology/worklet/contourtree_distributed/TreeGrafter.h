@@ -173,7 +173,7 @@ public:
   } // constructor
 
   /// routine to graft the InteriorForest residue from the BoundaryTree computation into the tree. Previously called GraftResidue
-  /// @param[in] theRound The reducting round we are in
+  /// @param[in] theRound The reducing round we are in
   /// @param[in] hierarchicalTree Reference to the hierarchical tree
   /// @param[in] meshDataValues Data values associated with the mesh. This is mesh.SortedValues in the case of
   ///            a ContourTreeMesh and the original data values in the case of a Mesh_DEM_Triangulation mesh.
@@ -357,7 +357,7 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
     this->CollapseRegularChains();
 
     //  5.  Test for leaves & identify hyperarcs
-    // alternating betwen up and down
+    // alternating between up and down
     // NB: it is therefore possible to have 0 leaves in an iteration, eg if there are no upper leaves to be transferred
     this->IdentifyLeafHyperarcs();
 
@@ -576,9 +576,9 @@ void TreeGrafter<MeshType, FieldType>::InitializeActiveSuperarcs()
                  activeSuperarcId                   // output
     );
   }
-  // TODO: Check that it is Ok to use the same array as input and ouput for the partial sum in Viskores
+  // TODO: Check that it is Ok to use the same array as input and output for the partial sum in Viskores
   // TODO: According to the original code this WANTS to be an exclusive_scan / prefix_sum,
-  //       but it was not compiling in the orginal code, so this was workaround: see also comment in the following worklet
+  //       but it was not compiling in the original code, so this was workaround: see also comment in the following worklet
   //       In Viskores we could change this to a ScanExclusive but using the inclusive scan is fine too
   // compute the new indices for each:
   {
@@ -594,7 +594,7 @@ void TreeGrafter<MeshType, FieldType>::InitializeActiveSuperarcs()
   // resize the active list accordingly
   this->ActiveSuperarcs.Allocate(nFree);
 
-  // Initalize the active superarcs
+  // Initialize the active superarcs
   {
     // loop to one less, i.e. excluding null superarc from root. tempSuperarcIndex is used as our loop index for the worklet
     auto tempSuperarcIndex =
@@ -827,7 +827,7 @@ void TreeGrafter<MeshType, FieldType>::CompressActiveArrays()
   // create an array where we can put the compressed array
   viskores::worklet::contourtree_augmented::EdgePairArray compressedActiveSuperarcs;
   // prediate for deciding which active superarcs to keep
-  // NOTE: The original PPP used std::remove_if instead of CopyIf so the predicate inverts the logic, i.e, the predicate indictes
+  // NOTE: The original PPP used std::remove_if instead of CopyIf so the predicate inverts the logic, i.e, the predicate indicates
   //       which values to keep rather than which ones to remove
   auto superarcWasTransferredPredicate =
     viskores::worklet::contourtree_distributed::tree_grafter::SuperarcWasNotTransferredPredicate(
@@ -859,14 +859,14 @@ void TreeGrafter<MeshType, FieldType>::ListNewHypernodes(
   viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>& hierarchicalTree)
 { // ListNewHypernodes()
   //  A.  Start with the list of all supernodes in the non-hierarchical tree
-  // NOTE: In contrast to the orignial code we directly initalize with iota instead of with NO_SUCH_ELEMENT first
+  // NOTE: In contrast to the original code we directly initialize with iota instead of with NO_SUCH_ELEMENT first
   viskores::cont::Algorithm::Copy(
     viskores::cont::ArrayHandleIndex(this->ContourTree.Supernodes.GetNumberOfValues()),
     this->NewHypernodes);
 
   //  B.  Remove any which already have a hyper ID in the hierarchical tree
   viskores::worklet::contourtree_augmented::IdArrayType compressedNewHypernodes;
-  // NOTE: The original code used std::remove_if. Since we use CopyIf here we need to invert the predicat and check for which ones to keep not which ones to remove
+  // NOTE: The original code used std::remove_if. Since we use CopyIf here we need to invert the predicate and check for which ones to keep not which ones to remove
   auto notANewHypernodePredicate =
     viskores::worklet::contourtree_distributed::tree_grafter::NewHypernodePredicate();
   viskores::cont::Algorithm::CopyIf(
@@ -924,7 +924,7 @@ void TreeGrafter<MeshType, FieldType>::ListNewSupernodes(
 { // ListNewSupernodes()
 
   //  A.  Start with the list of all supernodes in the non-hierarchical tree
-  // NOTE: In contrast to the orignial code we directly initalize with iota instead of with NO_SUCH_ELEMENT first
+  // NOTE: In contrast to the original code we directly initialize with iota instead of with NO_SUCH_ELEMENT first
   viskores::cont::Algorithm::Copy(
     viskores::cont::ArrayHandleIndex(this->ContourTree.Supernodes.GetNumberOfValues()),
     this->NewSupernodes);
@@ -932,8 +932,8 @@ void TreeGrafter<MeshType, FieldType>::ListNewSupernodes(
   //     Only new supernodes will have had whenTransferred set, so this is easy to test
   viskores::worklet::contourtree_augmented::IdArrayType compressedNewSupernodes;
   // NOTE: We here can reuse the NewHypernodePredicate because it does the same, only the stencil changes.
-  //       I.e., the predicate applys the NoSuchElement function to the stencil value and returns it as a bool
-  //       Similar to ListNewHypernodes the predicate is inverted compared to the orginal because we here use
+  //       I.e., the predicate applies the NoSuchElement function to the stencil value and returns it as a bool
+  //       Similar to ListNewHypernodes the predicate is inverted compared to the original because we here use
   //       CopyIf instead of remove_if in the original code
   auto notANewSupernodePredicate =
     viskores::worklet::contourtree_distributed::tree_grafter::NewHypernodePredicate();
@@ -1020,7 +1020,7 @@ void TreeGrafter<MeshType, FieldType>::ListNewNodes(
       localToGlobalIdRelabeler);
   // Get a FindRegularByGlobal execution object that we can use as an input for worklets to call the function
   auto findRegularByGlobal = hierarchicalTree.GetFindRegularByGlobal();
-  // look up our gloabl ids  (NO_SUCH_ELEMENT is acceptable, but should never occur) and
+  // look up our global ids  (NO_SUCH_ELEMENT is acceptable, but should never occur) and
   // copy the regular ids found from global ids in the this->HierarchicalTreeId array
   // NOTE: we should technically be able to just use a ArrayHandleTransrom with findRegularByGlobal and copy the values but it is not clear how to get FindRegularByGlobal to work in both the execution and control environment as ArrayHandleTransform requires ExecutionAndControlObject as base class. The implementation via a worklet is fine but could be made more elegant this way.
   auto listNewNodesCopyIdsWorklet =
@@ -1031,7 +1031,7 @@ void TreeGrafter<MeshType, FieldType>::ListNewNodes(
                this->HierarchicalTreeId);
 
   //  C.  Start with the list of all nodes in the non-hierarchical tree
-  // NOTE: In contrast to the orignial code we directly initalize with iota instead of with NO_SUCH_ELEMENT first
+  // NOTE: In contrast to the original code we directly initialize with iota instead of with NO_SUCH_ELEMENT first
   viskores::cont::Algorithm::Copy(
     viskores::cont::ArrayHandleIndex(this->ContourTree.Nodes.GetNumberOfValues()), this->NewNodes);
 
@@ -1040,7 +1040,7 @@ void TreeGrafter<MeshType, FieldType>::ListNewNodes(
   viskores::worklet::contourtree_augmented::IdArrayType compressedNewNodes;
   // prediate for deciding which nodes to keep.
   // NOTE: Similar to ListNewHypernodes the predicate is inverted compared
-  //       to the orginal because we here use CopyIf instead of remove_if in the original code
+  //       to the original because we here use CopyIf instead of remove_if in the original code
   auto notANewNodePredicate =
     viskores::worklet::contourtree_distributed::tree_grafter::NewNodePredicate();
   // compress the array
@@ -1101,7 +1101,7 @@ void TreeGrafter<MeshType, FieldType>::CopyNewHypernodes(
   // Need to resize the vectors while keeping the original values.
   {
     // Resize array to length totalNHypernodes and fill new values with NO_SUCH_ELEMENT (or 0) (while keeping original values)
-    // NOTE: hierarchicalTree.Superchildren is initalized here but not used by this function
+    // NOTE: hierarchicalTree.Superchildren is initialized here but not used by this function
     hierarchicalTree.Hypernodes.AllocateAndFill(
       totalNHypernodes,
       viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,

@@ -186,7 +186,7 @@ inline void DataSetMeshTriangulation3DFreudenthal::GetBoundaryVertices(
   );
 }
 
-// Overwrite the implemenation from the base DataSetMesh parent class
+// Overwrite the implementation from the base DataSetMesh parent class
 inline void DataSetMeshTriangulation3DFreudenthal::GetOwnedVerticesByGlobalId(
   const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
   IdArrayType& ownedVertices) const

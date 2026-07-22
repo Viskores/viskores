@@ -33,7 +33,7 @@ VISKORES_CONT PathParticle::FieldType PathParticle::GetField(
 {
   const auto& fieldNm = this->GetActiveFieldName();
   if (!dataset.HasPointField(fieldNm) && !dataset.HasCellField(fieldNm))
-    throw viskores::cont::ErrorFilterExecution("Unsupported field assocation");
+    throw viskores::cont::ErrorFilterExecution("Unsupported field association");
   auto assoc = dataset.GetField(fieldNm).GetAssociation();
   ArrayType arr;
   viskores::cont::ArrayCopyShallowIfPossible(dataset.GetField(fieldNm).GetData(), arr);

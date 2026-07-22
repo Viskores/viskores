@@ -57,7 +57,7 @@ bool viskores::filter::MapFieldMergeAverage(const viskores::cont::Field& inputFi
   }
   catch (...)
   {
-    VISKORES_LOG_S(viskores::cont::LogLevel::Warn, "Faild to map field " << inputField.GetName());
+    VISKORES_LOG_S(viskores::cont::LogLevel::Warn, "Failed to map field " << inputField.GetName());
     return false;
   }
 }

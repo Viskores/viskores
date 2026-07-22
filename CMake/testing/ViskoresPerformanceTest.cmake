@@ -94,7 +94,7 @@ function(add_benchmark_test benchmark)
 
   set(test_name "PerformanceTest${Viskores_PERF_NAME}")
 
-  ###TEST INVOKATIONS##########################################################
+  ###TEST INVOCATIONS##########################################################
   if (NOT TEST PerformanceTestFetch)
     add_test(NAME "PerformanceTestFetch"
       COMMAND ${CMAKE_COMMAND}

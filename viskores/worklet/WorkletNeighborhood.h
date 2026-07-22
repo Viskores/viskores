@@ -56,7 +56,7 @@ public:
   /// information about where the local neighborhood is in relationship to the full mesh. It allows
   /// you to query whether the neighborhood of the current worklet call is completely inside the
   /// bounds of the mesh or if it extends beyond the mesh. This is important as when you are on a
-  /// boundary the neighboordhood will contain empty values for a certain subset of values, and in
+  /// boundary the neighborhood will contain empty values for a certain subset of values, and in
   /// this case the values returned will depend on the boundary behavior.
   ///
   struct Boundary : viskores::exec::arg::Boundary

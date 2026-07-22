@@ -91,7 +91,7 @@ public:
       return EdgePair(MaskedIndex(hierarchicalTreeSuperarc), superarc);
     }
 
-    /* // This worklet implements the follwing loop
+    /* // This worklet implements the following loop
         for (viskores::Id superarc = 0; superarc < nSuperarcs; superarc++)
         { // per superarc
         if (isAscending(hierarchicalTree.superarcs[superarc]))

@@ -86,7 +86,7 @@ class HierarchicalAugmenterFunctor
 public:
   /// Create the functor
   /// @param[in] timingsLogLevel Set the viskores::cont:LogLevel to be used to record timings information
-  ///                            specific to the computation of the hierachical contour tree
+  ///                            specific to the computation of the hierarchical contour tree
   HierarchicalAugmenterFunctor(
     viskores::cont::LogLevel timingsLogLevel = viskores::cont::LogLevel::Perf)
     : TimingsLogLevel(timingsLogLevel)

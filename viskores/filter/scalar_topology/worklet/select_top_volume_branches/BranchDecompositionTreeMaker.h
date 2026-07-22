@@ -93,7 +93,7 @@ namespace filter
 namespace scalar_topology
 {
 
-/// Facture class for augmenting the hierarchical contour tree to enable computations of measures, e.g., volumne
+/// Facture class for augmenting the hierarchical contour tree to enable computations of measures, e.g., volume
 class BranchDecompositionTreeMaker
 { // class BranchDecompositionTreeMaker
 public:

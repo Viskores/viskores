@@ -207,7 +207,7 @@ public:
   /// set to true, a secondary operation will find all duplicated points and combine
   /// them together. If false, points will be duplicated. In addition to requiring more
   /// storage, duplicated points mean that triangles next to each other will not be
-  /// considered adjecent to subsequent filters.
+  /// considered adjacent to subsequent filters.
   ///
   VISKORES_CONT
   void SetMergeDuplicatePoints(bool on) { this->MergeDuplicatedPoints = on; }

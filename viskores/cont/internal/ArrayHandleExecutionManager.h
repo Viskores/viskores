@@ -144,7 +144,7 @@ public:
   VISKORES_CONT
   void Shrink(viskores::Id numberOfValues) { this->ShrinkImpl(numberOfValues); }
 
-  /// Frees any resources (i.e. memory) allocated for the exeuction
+  /// Frees any resources (i.e. memory) allocated for the execution
   /// environment, if any.
   ///
   VISKORES_CONT

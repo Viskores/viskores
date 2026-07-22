@@ -732,7 +732,7 @@ std::string BoundaryTreeDotGraphPrint(
   const std::string& label, // the label to use as title for the graph
   MeshType& mesh,           // the underlying mesh for the contour tree
   MeshBoundaryExecObjType&
-    meshBoundaryExecutionObject, // the boundary description need to determin if a vertex is on the boundary
+    meshBoundaryExecutionObject, // the boundary description need to determine if a vertex is on the boundary
   viskores::worklet::contourtree_distributed::BoundaryTree&
     boundaryTree, // the boundary tree itself
   const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
@@ -883,7 +883,7 @@ std::string InteriorForestDotGraphPrint(
   viskores::worklet::contourtree_distributed::BoundaryTree& boundaryTree, // the boundary tree
   MeshType& mesh, // the underlying mesh for the contour tree
   MeshBoundaryExecObjType&
-    meshBoundaryExecutionObject, // the boundary description need to determin if a vertex is on the boundary
+    meshBoundaryExecutionObject, // the boundary description need to determine if a vertex is on the boundary
   const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
     localToGlobalIdRelabeler, // relabler needed to compute global ids
   const viskores::cont::ArrayHandle<T, StorageType>& field,

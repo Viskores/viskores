@@ -65,7 +65,7 @@ namespace scalar_topology
 namespace hierarchical_volumetric_branch_decomposer
 {
 
-// Note: We use a template bool paramter for the tiebreak role choice instead of a variable
+// Note: We use a template bool parameter for the tiebreak role choice instead of a variable
 // so that the if statement can be optimized at compile time and we have fewer tests inside
 // the worklet.
 template <bool tieBreakGreaterThan>

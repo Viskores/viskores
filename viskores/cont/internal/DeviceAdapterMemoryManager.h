@@ -110,7 +110,7 @@ public:
   VISKORES_CONT void Reallocate(viskores::BufferSizeType newSize);
 
   /// Transfers ownership of the underlying allocation and Deleter and Reallocater to the caller.
-  /// After ownership has been transferred this buffer will be equivalant to one that was passed
+  /// After ownership has been transferred this buffer will be equivalent to one that was passed
   /// to Viskores as `view` only.
   ///
   /// This means that the Deleter will do nothing, and the Reallocater will throw an `ErrorBadAllocation`.

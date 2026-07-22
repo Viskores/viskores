@@ -113,7 +113,7 @@ private:
 };
 
 } // namespace multi_block
-} // namesapce filter
+} // namespace filter
 } // namespace viskores
 
 #endif //viskores_filter_multi_block_AmrArrays_h

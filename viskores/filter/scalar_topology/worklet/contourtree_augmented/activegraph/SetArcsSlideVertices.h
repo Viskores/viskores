@@ -226,7 +226,7 @@ public:
           if (IsJoinGraph ? (nodeID < leftNodeID) : (nodeID > leftNodeID))
             { // below left hand end
               tree.Superparents[nodeID] = leftSupernodeID;
-            } // below left hand ned
+            } // below left hand end
           else
             { // not below the left hand end
               viskores::Id rightSupernodeID;

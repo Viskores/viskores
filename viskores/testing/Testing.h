@@ -89,7 +89,7 @@
 /// Asserts a condition for a test to pass. A passing condition is when \a
 /// condition resolves to true. If \a condition is false, then the test is
 /// aborted and failure is returned. If one or more message arguments are
-/// given, they are printed out by concatinating them. If no messages are
+/// given, they are printed out by concatenating them. If no messages are
 /// given, a generic message is given. In any case, the condition that failed
 /// is written out.
 

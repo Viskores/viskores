@@ -779,7 +779,7 @@ public:
     // Calling rangeMax[X] inside KOKKOS_LAMBDA confuses some compilers since
     // at first it tries to use the non-const inline vec_base::operator[0]
     // method, however, KOKKOS_LAMBDA DOES converts rangeMax to a const
-    // vec_base. This convertion is somehow catched by the compiler making it
+    // vec_base. This conversion is somehow caught by the compiler making it
     // complain that we are using a non-const method for a const object.
     const auto rMax_0 = rangeMax[0];
     const auto rMax_1 = rangeMax[1];

@@ -57,7 +57,7 @@ struct BoxMuller
 /// values is technically infinite, but the probability of large positive or negative numbers
 /// becomes vanishingly small.
 ///
-/// This array uses the Box-Muller transform to pick random numbers in the stanard normal
+/// This array uses the Box-Muller transform to pick random numbers in the standard normal
 /// distribution.
 ///
 /// Note: In contrast to traditional random number generator,

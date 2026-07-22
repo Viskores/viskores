@@ -30,7 +30,7 @@ namespace exec
 ///
 /// `FieldNeighborhood` manages the retrieval of field values within the neighborhood of a
 /// `viskores::worklet::WorkletPointNeighborhood` worklet. The `Get` methods take ijk indices
-/// relative to the neighborhood (with 0, 0, 0 being the element visted) and return the
+/// relative to the neighborhood (with 0, 0, 0 being the element visited) and return the
 /// field value at that part of the neighborhood. If the requested neighborhood is outside
 /// the boundary, the value at the nearest boundary will be returned. A `viskores::exec::BoundaryState`
 /// object can be used to determine if the neighborhood extends beyond the boundary of the mesh.
@@ -58,7 +58,7 @@ struct FieldNeighborhood
   /// "left" and `Get(1, 0, 0)` retrieves the value to the "right."
   ///
   /// If the relative index points outside the bounds of the mesh, `Get` will return the
-  /// value closest to the boundary (i.e. clamping behvior). For example, if the visited
+  /// value closest to the boundary (i.e. clamping behavior). For example, if the visited
   /// element is at the leftmost index of the mesh, `Get(-1, 0, 0)` will refer to a value
   /// outside the bounds of the mesh. In this case, `Get` will return the value at the
   /// visited index, which is the closest element at that boundary.

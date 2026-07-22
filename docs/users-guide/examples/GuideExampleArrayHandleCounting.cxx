@@ -95,7 +95,7 @@ void Test()
     ////
     //// BEGIN-EXAMPLE ArrayHandleCountingVec
     ////
-    // Create an array containg [(0,-3,75), (1,2,25), (3,7,-25)]
+    // Create an array containing [(0,-3,75), (1,2,25), (3,7,-25)]
     viskores::cont::make_ArrayHandleCounting(
       viskores::make_Vec(0, -3, 75), viskores::make_Vec(1, 5, -50), 3)
     ////

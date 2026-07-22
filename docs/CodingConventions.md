@@ -40,7 +40,7 @@ coding and because we expect viskores to have continual interaction with VTK.
     directory, with non alphanumeric characters, such as / and . replaced
     with underscores. The `#endif` part of the guard at the bottom of the
     file should include the guard name in a comment. For example, the
-    viskores/cont/ArrayHandle.h header contains the guard demostrated below.
+    viskores/cont/ArrayHandle.h header contains the guard demonstrated below.
 
     The unique use of viskores over viskores is to allow auto-complete engines the
     ability to differentiate between the header guards and VISKORES_ macros

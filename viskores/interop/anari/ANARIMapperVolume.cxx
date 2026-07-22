@@ -301,7 +301,7 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
         d, ptr, NoopANARIDeleter, nullptr, arrays.CellIndex.GetNumberOfValues() - 1);
     }
 
-    // TODO "cell.data" (NOT SUPPORED YET)
+    // TODO "cell.data" (NOT SUPPORTED YET)
     // {
     //   auto* ptr = (float*)arrays.CellData.GetBuffers()[0].ReadPointerHost(*arrays.Token);
     //   this->Handles->UnstructuredParameters.CellData =

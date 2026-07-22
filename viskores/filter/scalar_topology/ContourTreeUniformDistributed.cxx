@@ -281,7 +281,7 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
   // Set up the worklet
   viskores::worklet::ContourTreeAugmented worklet;
   worklet.TimingsLogLevel =
-    viskores::cont::LogLevel::Off; // turn of the loggin, we do this afterwards
+    viskores::cont::LogLevel::Off; // turn of the logging, we do this afterwards
   worklet.Run(field,
               mesh,
               state.LocalContourTrees[static_cast<std::size_t>(blockIndex)],
@@ -684,7 +684,7 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
       //     when this function is first called if pre-simplification is applied.
       // currInBlock->HierarchicalAugmenter.AugmentedTree seems ok to remain,
       //     because it is only called during augmentation,
-      //     in which the HierarchicalAugmenter is intialized.
+      //     in which the HierarchicalAugmenter is initialized.
       auto hierarchicalTreeToProcess = useAugmentedTree
         ? currInBlock->HierarchicalAugmenter.AugmentedTree
         : &currInBlock->HierarchicalTree;
@@ -825,7 +825,7 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
 #endif
 
       // Log the time
-      localHypersweepTimingsStream << "    Initalize Vertex Counts (block=" << b->LocalBlockNo
+      localHypersweepTimingsStream << "    Initialize Vertex Counts (block=" << b->LocalBlockNo
                                    << ") : " << localHypersweepTimer.GetElapsedTime() << " seconds"
                                    << std::endl;
       localHypersweepTimer.Start();
@@ -933,7 +933,7 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
   viskores::Id size = comm.size();
   viskores::Id rank = comm.rank();
 
-  // ******** 1. Fan in to compute the hiearchical contour tree ********
+  // ******** 1. Fan in to compute the hierarchical contour tree ********
   // 1.1 Setup DIY to do global binary reduction of neighbouring blocks.
   // See also RecuctionOperation struct for example
 
@@ -1030,7 +1030,7 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
     // ... Compute the global mesh index for the partially augmented contour tree. I.e., here we
     // don't need the global mesh index for all nodes, but only for the augmented nodes from the
     // tree. We, hence, permute the sortOrder by contourTree.augmentednodes and then compute the
-    // GlobalMeshIndex by tranforming those indices with our IdRelabler
+    // GlobalMeshIndex by transforming those indices with our IdRelabler
     viskores::worklet::contourtree_augmented::IdArrayType localGlobalMeshIndex;
     viskores::cont::ArrayHandlePermutation<viskores::worklet::contourtree_augmented::IdArrayType,
                                            viskores::worklet::contourtree_augmented::IdArrayType>
@@ -1333,7 +1333,7 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
         );
       });
 
-    timingsStream << "    " << std::setw(38) << std::left << "Initalize Hierarchical Trees"
+    timingsStream << "    " << std::setw(38) << std::left << "Initialize Hierarchical Trees"
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     timer.Start();
 

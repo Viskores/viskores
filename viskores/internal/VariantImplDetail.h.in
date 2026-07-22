@@ -246,7 +246,7 @@ template <$typename_list(param_length)>
 union VariantUnionTD<$type_list(param_length)>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<$type_list(param_length)> Placeholder;
 
 $for(param_index in range(param_length + 1))\
@@ -259,7 +259,7 @@ template <$typename_list(param_length)>
 union VariantUnionNTD<$type_list(param_length)>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<$type_list(param_length)> Placeholder;
 
 $for(param_index in range(param_length + 1))\
@@ -276,8 +276,8 @@ template <$typename_list(max_expanded), typename... Ts>
 union VariantUnionTD<$type_list(max_expanded), Ts...>
 {
   // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
+  // if another entry in the variant has a struct with padding. Place an item that requires
+  // everything to be copied.
   SizedPlaceholder<$type_list(max_expanded), Ts...> Placeholder;
 
 $for(param_index in range(max_expanded))\
@@ -293,8 +293,8 @@ template <$typename_list(max_expanded), typename... Ts>
 union VariantUnionNTD<$type_list(max_expanded), Ts...>
 {
   // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
+  // if another entry in the variant has a struct with padding. Place an item that requires
+  // everything to be copied.
   SizedPlaceholder<$type_list(max_expanded), Ts...> Placeholder;
 
 $for(param_index in range(max_expanded))\

@@ -25,7 +25,7 @@
 namespace
 {
 
-// Could potentially precompile more cell sets to serialze if that is useful.
+// Could potentially precompile more cell sets to serialize if that is useful.
 using UnknownSerializationCellSets = VISKORES_DEFAULT_CELL_SET_LIST;
 
 }

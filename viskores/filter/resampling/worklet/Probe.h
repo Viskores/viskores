@@ -225,7 +225,7 @@ public:
     }
   };
 
-  /// Intepolate the input point field data at the points of the geometry
+  /// Interpolate the input point field data at the points of the geometry
   template <typename InArrayType,
             typename OutArrayType,
             typename ComponentType,

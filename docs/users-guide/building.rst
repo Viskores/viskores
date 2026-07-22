@@ -154,7 +154,7 @@ The following list contains the most common configuration parameters.
 
 .. cmake:variable:: Viskores_ENABLE_MPI
 
-   Determines whether |Viskores| is built with :index:`MPI` suppoert for running on distributed memory clusters.
+   Determines whether |Viskores| is built with :index:`MPI` support for running on distributed memory clusters.
 
 .. cmake:variable:: Viskores_ENABLE_OPENMP
 

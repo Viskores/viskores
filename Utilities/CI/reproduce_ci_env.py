@@ -289,7 +289,7 @@ def run_container(ci_file_path, *args):
     cmd = ['exec', '-it', container_id, 'bash']
     subprocess_call_docker(cmd, cwd=src_dir)
   except subprocess.CalledProcessError:
-    print('Unable to attach an iteractive shell to : ', container_id)
+    print('Unable to attach an interactive shell to : ', container_id)
   pass
 
   try:

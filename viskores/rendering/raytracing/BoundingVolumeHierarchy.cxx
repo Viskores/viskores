@@ -384,7 +384,7 @@ private:
   {
     bool tie = false;
     bool outOfRange = (b < 0 || b > LeafCount - 1);
-    //still make the call but with a valid adderss
+    //still make the call but with a valid address
     viskores::Int32 bb = (outOfRange) ? 0 : b;
     viskores::UInt32 aCode = mortonCodePortal.Get(a);
     viskores::UInt32 bCode = mortonCodePortal.Get(bb);

@@ -9,7 +9,7 @@ VTK-m 1.9 Release Notes
 - Initialize DIY in vtkm::cont::Initialize
 
 2. [ArrayHandle](#ArrayHandle)
-- Add test for array and datas that are cleaned up after finalize
+- Add test for array and data that are cleaned up after finalize
 - Fix type comparison on OSX
 - Allow ArrayHandle to have a runtime selectable number of buffers
 - Do not require `VecTraits` for `UnknownArrayHandle` components
@@ -49,7 +49,7 @@ it can do so as long as it does before it initializes VTK-m.
 
 # ArrayHandle
 
-## Add test for array and datas that are cleaned up after finalize
+## Add test for array and data that are cleaned up after finalize
 
 It is the case that arrays might be deallocated from a device after the
 device is closed. This can happen, for example, when an `ArrayHandle` is
@@ -114,7 +114,7 @@ necessary. Another change was to remove the `GetNumberOfBuffers` method
 
 ## Do not require `VecTraits` for `UnknownArrayHandle` components
 
-Whan an `UnknownArrayHandler` is constructed from an `ArrayHandle`, it uses
+When an `UnknownArrayHandler` is constructed from an `ArrayHandle`, it uses
 the `VecTraits` of the component type to construct its internal functions.
 This meant that you could not put an `ArrayHandle` with a component type
 that did not have `VecTraits` into an `UnknownArrayHandle`.

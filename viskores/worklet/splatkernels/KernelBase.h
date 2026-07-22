@@ -93,7 +93,7 @@ struct KernelBase
   //---------------------------------------------------------------------
   // compute w(h) for a variable h kernel
   // this is less efficient than the fixed radius version as coefficients
-  // must be calculatd on the fly, but it is required when all particles
+  // must be calculated on the fly, but it is required when all particles
   // have different smoothing lengths
   VISKORES_EXEC_CONT
   double w(double h, double distance) { return static_cast<Kernel*>(this)->w(h, distance); }
@@ -115,7 +115,7 @@ struct KernelBase
 
   // Calculates the kernel derivative at the given distance using a variable h value
   // this is less efficient than the fixed radius version as coefficients
-  // must be calculatd on the fly
+  // must be calculated on the fly
   VISKORES_EXEC_CONT
   vector_type gradW(double h, double distance, const vector_type& pos)
   {

@@ -81,7 +81,7 @@ namespace hierarchical_augmenter
 class CreateSuperarcsData
 {
 public:
-  // Sort indicies types
+  // Sort indices types
   using IndicesPortalType = viskores::worklet::contourtree_augmented::IdArrayType::ReadPortalType;
 
   VISKORES_EXEC_CONT

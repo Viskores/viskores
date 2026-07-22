@@ -103,7 +103,7 @@ struct BuildReverseConnectivityForCellSetType
   //
   // Our ultimate goal is to call one method if operating on `CellSetExplict` or
   // _any subclass_. We also want to ignore any cell type that is not a `CellSetExplicit`
-  // or one of its sublcasses. So we want one templated method that specializes on a
+  // or one of its subclasses. So we want one templated method that specializes on a
   // `CellSetExplicit` with its three template arguments and another that is templated on
   // any `CellSet`. That works for a class of `CellSetExplicit`, but not of a subclass.
   // A subclass will match the more generic class.

@@ -31,7 +31,7 @@ namespace viskores
 namespace cont
 {
 
-// Work around circular dependancy with UnknownArrayHandle.
+// Work around circular dependency with UnknownArrayHandle.
 class UnknownArrayHandle;
 
 namespace internal
@@ -134,7 +134,7 @@ VISKORES_CONT void ArrayGetValues(const viskores::cont::ArrayHandle<viskores::Id
   internal::ArrayGetValuesImpl(ids, data, output, InefficientExtract{});
 }
 
-/// We need a specialization for `ArrayHandleCasts` to avoid runtime type missmatch errors inside
+/// We need a specialization for `ArrayHandleCasts` to avoid runtime type mismatch errors inside
 /// `ArrayGetValuesImpl`.
 template <typename SIds, typename TIn, typename SData, typename TOut, typename SOut>
 VISKORES_CONT void ArrayGetValues(

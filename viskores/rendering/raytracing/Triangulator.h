@@ -259,7 +259,7 @@ public:
     void operator()(viskores::Id4& triangleIndices) const
     {
       // first field contains the id of the cell the
-      // trianlge belongs to
+      // triangle belongs to
       viskores::Id temp;
       if (triangleIndices[1] > triangleIndices[3])
       {

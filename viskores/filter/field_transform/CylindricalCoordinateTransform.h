@@ -45,7 +45,7 @@ public:
 
   /// @brief Establish a transformation from Cartesian to cylindrical coordinates.
   VISKORES_CONT void SetCartesianToCylindrical() { CartesianToCylindrical = true; }
-  /// @brief Establish a transformation from cylindrical to Cartesian coordiantes.
+  /// @brief Establish a transformation from cylindrical to Cartesian coordinates.
   VISKORES_CONT void SetCylindricalToCartesian() { CartesianToCylindrical = false; }
 
 private:

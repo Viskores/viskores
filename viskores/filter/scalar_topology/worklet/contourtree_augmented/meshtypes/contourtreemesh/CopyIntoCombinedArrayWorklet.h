@@ -117,8 +117,8 @@ public:
       ? viskores::LowerBound(otherArrayPortal, value, comparisonFunctor)
       : viskores::UpperBound(otherArrayPortal, value, comparisonFunctor);
 
-    // The position of the current elemnt is its index in our array plus its
-    // position in the ohter array.
+    // The position of the current element is its index in our array plus its
+    // position in the other array.
     resultArrayPortal.Set(idx + posInOther, value);
   }
 }; //  CopyIntoCombinedArrayWorklet

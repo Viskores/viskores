@@ -494,7 +494,7 @@ squash commits](#reset-to-squash-commits).
 ### Reset to Squash Commits ###
 
 `git reset` can be used to delete whatever history your changes have and place
-all your changes ready to be staged and commited. Assuming you have your topic
+all your changes ready to be staged and committed. Assuming you have your topic
 branch checked out, start by executing the following commands.
 
 ```bash

@@ -47,7 +47,7 @@ static bool IsInitialized = false;
 
 // Holds how Viskores currently allocates memory.
 // When Viskores is initialized we set this based on the hardware support ( HardwareSupportsManagedMemory ).
-// The user can explicitly disable managed memory through an enviornment variable
+// The user can explicitly disable managed memory through an environment variable
 // or by calling a function on the CudaAllocator.
 // Likewise managed memory can be re-enabled by calling a function on CudaAllocator
 // if and only if the underlying hardware supports pageable managed memory

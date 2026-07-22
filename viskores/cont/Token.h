@@ -35,7 +35,7 @@ namespace cont
 /// \brief A token to hold the scope of an `ArrayHandle` or other object.
 ///
 /// A `Token` is an object that is held in the stack or state of another object and
-/// is used when creating references to resouces that may be used by other threads.
+/// is used when creating references to resources that may be used by other threads.
 /// For example, when preparing an `ArrayHandle` or `ExecutionObject` for a device,
 /// a `Token` is given. The returned object will be valid as long as the `Token`
 /// remains in scope.

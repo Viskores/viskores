@@ -34,7 +34,7 @@ namespace io
 /// are represented as a point field in a 2D uniform dataset.
 ///
 /// `ImageReaderBase` implements virtual methods for reading files.  Ideally,
-/// these methods will be overriden in various subclasses to implement specific
+/// these methods will be overridden in various subclasses to implement specific
 /// functionality for reading data to specific image file-types.
 ///
 class VISKORES_IO_EXPORT ImageReaderBase

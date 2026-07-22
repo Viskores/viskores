@@ -38,9 +38,9 @@ namespace viskores
 ///
 struct Range
 {
-  /// The minumum value of the range (inclusive).
+  /// The minimum value of the range (inclusive).
   viskores::Float64 Min;
-  /// Tha maximum value of the range (inclusive).
+  /// The maximum value of the range (inclusive).
   viskores::Float64 Max;
 
   /// Construct a range with a given minimum and maximum. If no minimum or maximum is

@@ -362,7 +362,7 @@ public:
                                                           ThirdHandleType>::Superclass));
 
   /// Construct an `ArrayHandleCartesianProduct` given arrays for the coordinates in
-  /// the x, y, and z diretions.
+  /// the x, y, and z directions.
   VISKORES_CONT
   ArrayHandleCartesianProduct(const FirstHandleType& firstArray,
                               const SecondHandleType& secondArray,

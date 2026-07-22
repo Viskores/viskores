@@ -44,7 +44,7 @@ namespace internal
 // The algorithm uses a number of states to determine when this occurs.
 // State 0: a process is working.
 // State 1: Process is done and waiting
-// State 2: All done and checking for cancelation
+// State 2: All done and checking for cancellation
 //
 // State 0:  ----- if no work ----> State 1: (locally done. call ibarrier).
 //                                      |
@@ -60,7 +60,7 @@ namespace internal
 // A process begins in State 0 and remains until it has no more work to do.
 // Process calls ibarrier and enters State 1.  When the ibarrier is satisfied, this means that all processes are in State 1.
 // When all processes are in State 1, each process sets a dirty flag to true if any work has arrived since entering State 1.
-// Each procces call iallreduce(dirty) and enter State 2.
+// Each process call iallreduce(dirty) and enter State 2.
 // In State 2, if the iallreduce returns true, there is new work, so return to State 0.
 // If the iallreduce returns false, then all work is complete and we can terminate.
 //

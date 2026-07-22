@@ -73,7 +73,7 @@ private:
     using VT = typename viskores::VecTraits<T>::ComponentType;
     VT value = VT(2.001);
     VISKORES_TEST_ASSERT(test_equal(float(value), float(2.001)),
-                         "Real does not hold floaing point number.");
+                         "Real does not hold floating point number.");
   }
 };
 

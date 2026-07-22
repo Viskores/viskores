@@ -84,7 +84,7 @@ public:
   using EdgeBoundaryDetectionMasksPortalType =
     m3d_marchingcubes::EdgeBoundaryDetectionMasksType::ReadPortalType;
 
-  // Sort indicies types
+  // Sort indices types
   using SortIndicesPortalType = IdArrayType::ReadPortalType;
 
   // CubeVertexPermutations types
@@ -207,7 +207,7 @@ public:
         return SortIndicesPortal.Get(meshIndex + strides[2] + strides[1] + strides[0]);
       default:
         VISKORES_ASSERT(false);
-        // TODO/FIXME: Should probaly return an invalid value or throw an exception instead
+        // TODO/FIXME: Should probably return an invalid value or throw an exception instead
         return meshIndex; // Need to error out here
     }
   } // GetNeighbourIndex

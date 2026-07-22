@@ -298,7 +298,7 @@ void TestLastCell(
   {
     VISKORES_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
     VISKORES_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
-                         "Incorrect parameteric coordinates");
+                         "Incorrect parametric coordinates");
   }
 }
 
@@ -346,7 +346,7 @@ void TestWithDataSet(viskores::cont::CellLocatorGeneral& locator,
   {
     VISKORES_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
     VISKORES_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
-                         "Incorrect parameteric coordinates");
+                         "Incorrect parametric coordinates");
   }
 
   viskores::cont::ArrayHandle<viskores::Id> cellIdsOnly;

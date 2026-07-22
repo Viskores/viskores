@@ -98,8 +98,8 @@ public:
     ExecObject findSuperArcForUnknownNode,
 
     // output (write-only) arrays
-    // NOTE: not all fileds are always updated in the operator.
-    //       We, therfore, need to use FieldInOut to make sure the original value (typical NO_SUCH_ELEMTENT)
+    // NOTE: not all fields are always updated in the operator.
+    //       We, therefore, need to use FieldInOut to make sure the original value (typical NO_SUCH_ELEMTENT)
     //       is not being overwritten (when just using FieldOut Viskores sets the value to 0)
     // TODO: We could potentially avoid the need for FieldInOut by always setting hierarchicalSuperId and hierarchicalHyperId to NO_SUCH_ELEMENT at the beginning
     FieldInOut hierarchicalRegularId,

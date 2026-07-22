@@ -649,7 +649,7 @@ VISKORES_EXEC_CONT bool operator!=(const viskores::Matrix<T, NumRow, NumCol>& a,
   return !(a == b);
 }
 
-/// Helper function for printing out matricies during testing
+/// Helper function for printing out matrices during testing
 ///
 template <typename T, viskores::IdComponent NumRow, viskores::IdComponent NumCol>
 VISKORES_CONT std::ostream& operator<<(std::ostream& stream,

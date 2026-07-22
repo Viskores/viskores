@@ -140,7 +140,7 @@ void CosmoTools<T, StorageType>::HaloFinder(viskores::cont::ArrayHandle<viskores
     graftParticlesDispatcher.Invoke(indexArray,   // (input) index into particles
                                     partId,       // (input) particle id sorted by bin
                                     binId,        // (input) bin id sorted by bin
-                                    activeMask,   // (input) flag indicates if neighor range is used
+                                    activeMask,   // (input) flag indicates if neighbor range is used
                                     partId,       // (input) particle id (whole array)
                                     location,     // (input) location on original particle order
                                     leftNeighbor, // (input) first partId for neighbor

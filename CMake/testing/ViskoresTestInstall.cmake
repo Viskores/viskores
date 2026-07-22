@@ -177,7 +177,7 @@ function(_test_install_make dir name)
   set(build_example_dir "${Viskores_BINARY_DIR}/CMakeFiles/_tmp_build/test_${name}_make/")
   set(source_example_dir "${CMAKE_CURRENT_SOURCE_DIR}/${dir}/")
 
-  # Create build dir if it doesnt exists
+  # Create build dir if it doesn't exists
   add_test(NAME ${build_name}_setup
            COMMAND ${CMAKE_COMMAND} -E make_directory ${build_example_dir})
 

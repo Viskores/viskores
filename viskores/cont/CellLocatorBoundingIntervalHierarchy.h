@@ -109,7 +109,7 @@ public:
   /// Larger numbers for the maximum leaf size result in a shallower tree (which is good
   /// because it means fewer memory lookups to find a cell), but it also means there will
   /// be more cells to check in each leaf (which is bad as checking a cell is slower
-  /// than decending a tree level).
+  /// than descending a tree level).
   ///
   /// The default value is 5.
   VISKORES_CONT void SetMaxLeafSize(viskores::IdComponent maxLeafSize)

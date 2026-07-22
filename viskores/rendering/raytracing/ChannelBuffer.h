@@ -33,7 +33,7 @@ namespace rendering
 namespace raytracing
 {
 ///
-///  \brief Mananges a buffer that contains many channels per value (e.g., RGBA values).
+///  \brief Manages a buffer that contains many channels per value (e.g., RGBA values).
 ///
 ///  \c The ChannelBuffer class is meant to handle a buffer of values with potentially many
 ///  channels. While RGBA values could be placed in a Vec<T,4>, data with a large number of
@@ -61,7 +61,7 @@ protected:
 public:
   viskores::cont::ArrayHandle<Precision> Buffer;
 
-  /// Functions we want accessble outside of viskores some of which execute
+  /// Functions we want accessible outside of viskores some of which execute
   /// on a device
   ///
   VISKORES_CONT

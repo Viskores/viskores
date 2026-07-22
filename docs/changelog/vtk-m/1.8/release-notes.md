@@ -76,7 +76,7 @@ supported are `vtkm::ListAll` and `vtkm::ListAny`. These both take a
 some other "compatible" type that has a constant static `bool` named
 `value`). `vtkm::ListAll` will become `std::false_type` if any of the
 entries in the list are `std::false_type`. `vtkm::ListAny` becomes
-`std::true_type` if any of the entires in the list are `std::true_type`.
+`std::true_type` if any of the entries in the list are `std::true_type`.
 
 ``` cpp
 using MyList = vtkm::List<std::integral_constant<int, 25>,
@@ -298,7 +298,7 @@ Filter implementations are also re-organized into submodules, with each submodul
 in its own `vtkm/filter` subdirectory. User should update their code to include
 the new header files, for example, `vtkm/filter/field_transform/GenerateIds.h`and
 link to submodule library file, for example, `libvtkm_filter_field_transform.so`.
-To maintain backward compatability, old `vtkm/filter/FooFilter.h` header files
+To maintain backward compatibility, old `vtkm/filter/FooFilter.h` header files
 can still be used but will be deprecated in release 2.0.
 
 

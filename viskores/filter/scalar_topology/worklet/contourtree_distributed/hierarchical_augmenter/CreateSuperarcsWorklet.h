@@ -73,7 +73,7 @@ template <typename FieldType>
 class CreateSuperarcsWorklet : public viskores::worklet::WorkletMapField
 {
 public:
-  // TODO: Check if augmentedTreeFirstSupernodePerIteration could be changed to WholeArrayOut or if we need the In to preserve orignal values
+  // TODO: Check if augmentedTreeFirstSupernodePerIteration could be changed to WholeArrayOut or if we need the In to preserve original values
 
   /// Control signature for the worklet
   /// @param[in] supernodeSorter input domain. We need access to InputIndex and InputIndex+1,

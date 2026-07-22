@@ -241,7 +241,7 @@ struct GetTypeInParentheses<void(T)>
 ///
 /// This macro takes three arguments. The first argument is the classname.
 /// The second argument is the full class type. The third argument is the
-/// superclass type (either \c ArrayHandle or another sublcass). Because
+/// superclass type (either \c ArrayHandle or another subclass). Because
 /// C macros do not handle template parameters very well (the preprocessor
 /// thinks the template commas are macro argument commas), the second and
 /// third arguments must be wrapped in parentheses.
@@ -250,7 +250,7 @@ struct GetTypeInParentheses<void(T)>
 /// StorageTag.
 ///
 /// Note that this macro only works on ArrayHandle subclasses that are
-/// templated. For ArrayHandle sublcasses that are not templates, use
+/// templated. For ArrayHandle subclasses that are not templates, use
 /// VISKORES_ARRAY_HANDLE_SUBCLASS_NT.
 ///
 #define VISKORES_ARRAY_HANDLE_SUBCLASS(classname, fullclasstype, superclass) \
@@ -265,7 +265,7 @@ struct GetTypeInParentheses<void(T)>
 ///
 /// This macro takes two arguments. The first argument is the classname. The
 /// second argument is the superclass type (either \c ArrayHandle or another
-/// sublcass). Because C macros do not handle template parameters very well
+/// subclass). Because C macros do not handle template parameters very well
 /// (the preprocessor thinks the template commas are macro argument commas),
 /// the second argument must be wrapped in parentheses.
 ///
@@ -273,7 +273,7 @@ struct GetTypeInParentheses<void(T)>
 /// StorageTag.
 ///
 /// Note that this macro only works on ArrayHandle subclasses that are not
-/// templated. For ArrayHandle sublcasses that are templates, use
+/// templated. For ArrayHandle subclasses that are templates, use
 /// VISKORES_ARRAY_HANDLE_SUBCLASS.
 ///
 #define VISKORES_ARRAY_HANDLE_SUBCLASS_NT(classname, superclass) \
@@ -562,7 +562,7 @@ public:
   ///
   /// After calling this method, every entry in the array from `startIndex` (inclusive)
   /// to `endIndex` (exclusive) of the array is set to `fillValue`. If `startIndex` or
-  /// `endIndex` is not specified, then the fill happens from the begining or end,
+  /// `endIndex` is not specified, then the fill happens from the beginning or end,
   /// respectively.
   ///
   VISKORES_CONT void Fill(const ValueType& fillValue,

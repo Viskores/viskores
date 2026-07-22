@@ -208,7 +208,7 @@ public:
 class TriangleIntersectionData
 {
 public:
-  // Worklet to calutate the normals of a triagle if
+  // Worklet to calutate the normals of a triangle if
   // none are stored in the data set
   class CalculateNormals : public viskores::worklet::WorkletMapField
   {
@@ -369,7 +369,7 @@ public:
     const bool isSupportedField = scalarField.IsCellField() || scalarField.IsPointField();
     if (!isSupportedField)
     {
-      throw viskores::cont::ErrorBadValue("Field not accociated with cell set or points");
+      throw viskores::cont::ErrorBadValue("Field not associated with cell set or points");
     }
     const bool isAssocPoints = scalarField.IsPointField();
 

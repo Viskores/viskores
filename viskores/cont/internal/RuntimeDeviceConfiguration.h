@@ -58,34 +58,34 @@ public:
                                 int& argc,
                                 char* argv[]);
 
-  /// The following public methods should be overriden in each individual device.
-  /// A method should return INVALID_FOR_DEVICE if the overriden device does not
+  /// The following public methods should be overridden in each individual device.
+  /// A method should return INVALID_FOR_DEVICE if the overridden device does not
   /// support the particular set method.
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const viskores::Id& value);
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(const viskores::Id& value);
 
-  /// The following public methods are overriden in each individual device and store the
+  /// The following public methods are overridden in each individual device and store the
   /// values that were set via the above Set* methods for the given device.
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(viskores::Id& value) const;
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetDeviceInstance(viskores::Id& value) const;
 
-  /// The following public methods should be overriden as needed for each individual device
+  /// The following public methods should be overridden as needed for each individual device
   /// as they describe various device parameters.
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetMaxThreads(viskores::Id& value) const;
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetMaxDevices(viskores::Id& value) const;
 
 protected:
-  /// An overriden method that can be used to perform extra command line argument parsing
+  /// An overridden method that can be used to perform extra command line argument parsing
   /// for cases where a specific device may use additional command line arguments. At the
   /// moment Kokkos is the only device that overrides this method.
   /// Note: This method assumes that viskores arguments have already been parsed and removed
   ///       from argv.
   VISKORES_CONT virtual void ParseExtraArguments(int& argc, char* argv[]);
 
-  /// An overriden method that can be used to perform extra initialization after Extra
+  /// An overridden method that can be used to perform extra initialization after Extra
   /// Arguments are parsed and the Initialized ConfigOptions are used to call the various
-  /// Set* methods at the end of Initialize. Particuarly useful when initializing
-  /// additional subystems (like Kokkos).
+  /// Set* methods at the end of Initialize. Particularly useful when initializing
+  /// additional subsystems (like Kokkos).
   VISKORES_CONT virtual void InitializeSubsystem();
 };
 

@@ -187,7 +187,7 @@ These channel values are given as floating point values between 0 and 1.
 .. doxygenclass:: viskores::rendering::Color
    :members:
 
-Once the :class:`viskores::rendering::View` is constructed, intialized, and set up, it is ready to render.
+Once the :class:`viskores::rendering::View` is constructed, initialized, and set up, it is ready to render.
 This is done by calling the :func:`viskores::rendering::View::Paint` method.
 
 .. load-example:: PaintView

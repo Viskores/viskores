@@ -66,7 +66,7 @@ if(VISKORES_COMPILER_IS_MSVC)
   if(TARGET viskores_cuda)
     target_compile_options(viskores_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/Gy">)
   endif()
-elseif(NOT (VISKORES_COMPILER_IS_PGI OR VISKORES_COMPILER_IS_XL)) #can't find an equivalant PGI/XL flag
+elseif(NOT (VISKORES_COMPILER_IS_PGI OR VISKORES_COMPILER_IS_XL)) #can't find an equivalent PGI/XL flag
   target_compile_options(viskores_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-ffunction-sections>)
   if(TARGET viskores_cuda)
     target_compile_options(viskores_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-ffunction-sections>)
@@ -173,7 +173,7 @@ elseif(VISKORES_COMPILER_IS_GNU OR VISKORES_COMPILER_IS_CLANG)
     set(cuda_flags "${cuda_flags},-Wchar-subscripts")
   endif()
 
-  #Only add float-conversion warnings for gcc as the integer warnigns in GCC
+  #Only add float-conversion warnings for gcc as the integer warnings in GCC
   #include the implicit casting of all types smaller than int to ints.
   if (VISKORES_COMPILER_IS_GNU AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.99)
     list(APPEND cxx_flags -Wfloat-conversion)

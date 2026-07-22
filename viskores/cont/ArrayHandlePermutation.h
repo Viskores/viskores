@@ -263,7 +263,7 @@ public:
       viskores::cont::StorageTagPermutation<typename IndexArrayHandleType::StorageTag,
                                             typename ValueArrayHandleType::StorageTag>>));
 
-  /// Construct a permuation array with index and value arrays.
+  /// Construct a permutation array with index and value arrays.
   VISKORES_CONT
   ArrayHandlePermutation(const IndexArrayHandleType& indexArray,
                          const ValueArrayHandleType& valueArray)
@@ -274,7 +274,7 @@ public:
   /// @brief Return the array used for indices.
   ///
   /// The index array provides how indices get permuted. When a value is retrieved from an
-  /// `ArrayHandlePermutation`, an index is retrived from this index array, and this new
+  /// `ArrayHandlePermutation`, an index is retrieved from this index array, and this new
   /// index is used to retrieve a value from the value array.
   VISKORES_CONT IndexArrayHandleType GetIndexArray() const
   {
@@ -284,7 +284,7 @@ public:
   /// @brief Return the array used for values.
   ///
   /// The index array provides how indices get permuted. When a value is retrieved from an
-  /// `ArrayHandlePermutation`, an index is retrived from this index array, and this new
+  /// `ArrayHandlePermutation`, an index is retrieved from this index array, and this new
   /// index is used to retrieve a value from the value array.
   VISKORES_CONT ValueArrayHandleType GetValueArray() const
   {

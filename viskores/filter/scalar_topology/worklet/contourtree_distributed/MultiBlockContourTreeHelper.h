@@ -148,7 +148,7 @@ public:
     unsigned int computeRegularStructure)
 
   {
-    // compute the global mesh index and initalize the local contour tree mesh
+    // compute the global mesh index and initialize the local contour tree mesh
     if (computeRegularStructure == 1)
     {
       // Compute the global mesh index
@@ -170,7 +170,7 @@ public:
       // Compute the global mesh index for the partially augmented contour tree. I.e., here we
       // don't need the global mesh index for all nodes, but only for the augmented nodes from the
       // tree. We, hence, permute the sortOrder by contourTree.augmentednodes and then compute the
-      // GlobalMeshIndex by tranforming those indices with our IdRelabler
+      // GlobalMeshIndex by transforming those indices with our IdRelabler
       viskores::worklet::contourtree_augmented::IdArrayType localGlobalMeshIndex;
       viskores::cont::ArrayHandlePermutation<viskores::worklet::contourtree_augmented::IdArrayType,
                                              viskores::worklet::contourtree_augmented::IdArrayType>
@@ -189,7 +189,7 @@ public:
     {
       // We should not be able to get here
       throw viskores::cont::ErrorFilterExecution(
-        "Parallel contour tree requires at least parial boundary augmentation");
+        "Parallel contour tree requires at least partial boundary augmentation");
     }
   }
 
