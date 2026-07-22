@@ -71,7 +71,7 @@
 
 .ubuntu2204_cuda122: &ubuntu2204_cuda122
   image:
-    name: "ghcr.io/viskores/viskores:ci-ubuntu2204_cuda12.2-20250320"
+    name: "ghcr.io/viskores/viskores:ci-ubuntu2204_cuda12.2-20260701"
   extends:
     - .docker_image
 
@@ -89,13 +89,13 @@
 
 .ubuntu2404: &ubuntu2404
   image:
-    name: "ghcr.io/viskores/viskores:ci-ubuntu2404-20260603"
+    name: "ghcr.io/viskores/viskores:ci-ubuntu2404-20260630"
   extends:
     - .docker_image
 
 .ubuntu2404_cuda130: &ubuntu2404_cuda130
   image:
-    name: "ghcr.io/viskores/viskores:ci-ubuntu2404_cuda13.0-20250820"
+    name: "ghcr.io/viskores/viskores:ci-ubuntu2404_cuda13.0-20260630"
   extends:
     - .docker_image
 
