@@ -194,7 +194,7 @@ be adopted and filled into the corresponding places of the merged field array.
 
 ## Fix bug with ExtractGeometry filter
 
-The `ExtractGeometry` filter was outputting datasets containing
+The `ExtractGeometry` filter was outputing datasets containing
 `CellSetPermutation` as the representation for the cells. Although this is
 technically correct and a very fast implementation, it is essentially
 useless. The problem is that any downstream processing will have to know
@@ -260,7 +260,7 @@ filter in the future.
 
 The `CellMeasures` and `MeshQuality` filters had constructors that took the
 metric that the filter should generate. However, this is different than the
-interface of the rest of the filters. To make the interface more consistent,
+iterface of the rest of the filters. To make the interface more consistent,
 these filters now have a default (no argument) constructor, and the metric
 to compute is selected via a method. This makes it more clear what is being
 done.
@@ -388,7 +388,7 @@ This caused compile errors with older versions of cuda.
 There was an issue where if VTK-m was compiled with CUDA support but then
 run on a computer where no CUDA device was available, an inappropriate
 exception was thrown (instead of just disabling the device). The
-initialization code should now properly check for the existence of a CUDA
+initialization code should now properly check for the existance of a CUDA
 device.
 
 # Others
@@ -415,7 +415,7 @@ this change.
    keep the code up to date.
 2. Move the documentation over to Sphinx so that it can be posted online
    and be more easily linked.
-3. Incorporate Doxygen into the guide to keep the documentation
+3. Incoporate Doxygen into the guide to keep the documentation
    consistent.
 4. Build the user guide examples as part of the VTK-m CI to catch
    compatibility changes quickly.

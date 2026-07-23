@@ -280,7 +280,7 @@ kmorel2 0> du -sh *.exe *.dll
 
 After making the singular change to the `Invocation` object to add the
 `DeviceAdapterTag` as a template parameter (which should cause any extra
-compile instances) the compile took **4 minutes and 5 seconds**. Here is the
+compile instances) the compile took **4 minuts and 5 seconds**. Here is the
 new list of binaries.
 
 ```
@@ -379,7 +379,7 @@ following Mask objects are defined.
     all outputs that should be created.
 
 It will be straightforward to implement other versions of masks. (For
-example, you could make a mask class that selects every Nth entry.) Those
+example, you could make a mask class that selectes every Nth entry.) Those
 could be made on an as-needed basis.
 
 ### Implementation
@@ -574,7 +574,7 @@ vtkm::cont::ArrayHandle<vtkm::Float32> pressure;
 vtkm::cont::ArrayHandleConstant<vtkm::Float32> constant(42.0f);
 
 
-// construct from an array handle
+// constrcut from an array handle
 vtkm::cont::ArrayHandleVirtual<vtkm::Float32> v(pressure);
 
 // or assign from an array handle
@@ -1091,7 +1091,7 @@ struct CheckTopology : vtkm::worklet::WorkletMapPointToCell
 };
 
 
-vtkm::worklet::Invoker invoke;
+vtkm::worklet::Ivoker invoke;
 invoke( CheckTopology{}, vtkm::worklet::ScatterPermutation{}, cellset, result );
 ```
 

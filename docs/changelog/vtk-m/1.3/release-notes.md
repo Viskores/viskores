@@ -17,7 +17,7 @@ VTK-m 1.3 Release Notes
     - `ArrayHandleCompositeVector` simplified and made writable.
     - `ArrayHandleExtractComponent` target component is now set at runtime
     - `ArrayHandleSwizzle` component maps are now set at runtime
-3. [Control Environment](#Control-Environment)
+3. [Control Enviornment](#Control-Enviornment)
     - Interfaces for VTK-m spatial search structures added
     - `vtkm::cont::Algorithm` now can be told which device to use at runtime
     - Support `ExecArg` behavior in `vtkm::cont::Algorithm` methods
@@ -31,7 +31,7 @@ VTK-m 1.3 Release Notes
     - Added a `ReleaseResourcesExecution` API for CoordinateSystem to unload execution resources
     - Use the strong typed enums for `vtkm::cont::Field`
     - `vtkm::cont::DeviceAdapterId` has becomes a real constexpr type and not an alias to vtkm::UInt8
-4. [Execution Environment](#Execution-Environment)
+4. [Execution Enviornment](#Execution-Enviornment)
     - User defined execution objects now usable with runtime selection of device adapter
     - `Dot` function name changed
     - Added float version operations for `vtkm::Math Pi()`
@@ -62,7 +62,7 @@ VTK-m 1.3 Release Notes
     - Allow variable arguments to `VTKM_TEST_ASSERT`
     - Support `constexpr` and variadic constructor for Vec
     - `vtkm::Vec< vtkm::Vec<T> >` can't be constructed from `vtkm::Vec<U>`
-    - Use `std::call_once` to construct singletons
+    - Use `std::call_once` to construct singeltons
     - Use `thread_local` in `vtkm::cont::GetGlobalRuntimeDeviceTracker` function if possible
     - Replace `std::random_shuffle` with `std::shuffle`
 
@@ -74,7 +74,7 @@ A device adapter that leverages `OpenMP 4.0` for threading is now available. The
 new adapter is enabled using the CMake option `VTKm_ENABLE_OPENMP` and its
 performance is comparable to the TBB device adapter.
 
-Performance comparisons of `OpenMP` against the `TBB` and  `Serial` device
+Performance comparisions of `OpenMP` against the `TBB` and  `Serial` device
 adapters can be found at: https://gitlab.kitware.com/vtk/vtk-m/-/issues/223
 
 
@@ -92,7 +92,7 @@ on the dispatcher. Although functionally equivalent, it might mean calling
 
 ## Remove TryExecute from each `filter`
 
-The recent change to dispatchers  has embedded a
+The recenet change to dispatchers  has embedded a
 `TryExecute` internally within the `Invoke` function of all dispatchers. This
 means that it is no longer necessary to specify a device when invoking a
 worklet.
@@ -257,7 +257,7 @@ in an executable. This will:
   contexts (linux only) on crashes.
 
 The main logging entry points are the macros VTKM_LOG_S and VTKM_LOG_F,
-which using C++ stream and printf syntax, respectively. Other variants exist,
+which using C++ stream and printf syntax, repectively. Other variants exist,
 including conditional logging and special-purpose logs for writing specific
 events, such as DynamicObject cast results and TryExecute failures.
 
@@ -283,7 +283,7 @@ vtkm::cont::LogLevel::Off (or "-v Off") may be used to silence the log
 completely.
 
 The helper functions vtkm::cont::GetHumanReadableSize and
-vtkm::cont::GetSizeString assist in formatting byte sizes to a more readable
+vtkm::cont::GetSizeString assist in formating byte sizes to a more readable
 format. Similarly, the vtkm::cont::TypeName template functions provide RTTI
 based type-name information. When logging is enabled, these use the logging
 backend to demangle symbol names on supported platforms.
@@ -524,7 +524,7 @@ that maps the input components to the output components.
 This is easier to use and keeps compile times / sizes / memory requirements
 down.
 
-# Control Environment
+# Control Enviornment
 
 ## Interfaces for VTK-m spatial search structures added
 
@@ -724,9 +724,9 @@ const BaseType* moveToDevice(VirtualObjectHandle<BaseType>& handle,
 ## Add new `vtkm::exec` and `vtkm::cont` execution objects
 
 Recent changes to execution objects now have execution objects behave as
-factories that create an object specific for a particular device. Sometimes,
+factories that create an objec specific for a particular device. Sometimes,
 you also need to be able to get an object that behaves properly in the
-control environment. For these cases, a subclass to `vtkm::cont::ExecutionObjectBase`
+control environment. For these cases, a sublcass to `vtkm::cont::ExecutionObjectBase`
 was created.
 
 This subclass is called `vtkm::cont::ExecutionAndControlObjectBase`. In
@@ -800,7 +800,7 @@ private:
 };
 ```
 
-# Execution Environment
+# Execution Enviornment
 
 ## User defined execution objects now usable with runtime selection of device adapter
 
@@ -838,11 +838,11 @@ be removed in the next release.
 
 ## Added float version operations for `vtkm::Math Pi()`
 
-`vtkm::Pi<T>` now supports float and double as `T`.
+`vtkm::Pi<T>` now suports float and double as `T`.
 
 ## `vtkm::Math Pi` functions are now constexpr
 
-Now `PI` related functions are evaluated at compile time as constexpr functions.
+Now `PI` related functions are evalulated at compile time as constexpr functions.
 
 ## `CellDerivativeFor3DCell` has a better version for Vec of Vec fields.
 
@@ -872,7 +872,7 @@ points, like `ArrayHandle::GetPortalControl()` and
 `ArrayHandle::GetPortalConstControl()`, may now throw exception for errors from
 previously executed worklets.
 
-Worklet invocations, synchronization and error reporting happen independently
+Worklet invocations, synchronization and error reporting happen independtly
 on different threads. Therefore, synchronization on one thread does not affect
 any other threads.
 
@@ -1097,7 +1097,7 @@ that make it useful for testing and benchmarking various algorithms.
 
 ## Add a filter to support Lagrangian analysis capabilities
 
-Lagrangian analysis operates in two phases - phase one involves the extraction of flow field information. Phase two involves calculating new particle trajectories using the saved information.
+Lagrangian analysis operates in two phases - phase one involes the extraction of flow field information. Phase two involves calculating new particle trajectories using the saved information.
 
 The lagrangian filter can be used to extract flow field information given a time-varying vector fields. The extracted information is in the form of particle trajectories.
 
@@ -1283,7 +1283,7 @@ The `VTKM_TEST_ASSERT` macro is a very useful tool for performing checks
 in tests. However, it is rather annoying to have to always specify a
 message for the assert. Often the failure is self evident from the
 condition (which is already printed out), and specifying a message is
-both repetitive and annoying.
+both repetative and annoying.
 
 Also, it is often equally annoying to print out additional information
 in the case of an assertion failure. In that case, you have to either
@@ -1486,7 +1486,7 @@ So the solution we have chosen is to disallow the construction of objects such
 as b. This still allows the free implicit cast to go from double to float.
 
 
-## Use `std::call_once` to construct singletons
+## Use `std::call_once` to construct singeltons
 
 By using call_once from C++11, we can simplify the logic in code where we are querying same value variables from multiple threads.
 

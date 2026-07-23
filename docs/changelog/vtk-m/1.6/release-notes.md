@@ -378,7 +378,7 @@ by name.
 
 When you run one of the coordinate transform filters,
 `CylindricalCoordinateTransform` or `SphericalCoordinateTransform`, the
-transform coordinates are placed as the first `CoordinateSystem` in the
+transform coordiantes are placed as the first `CoordinateSystem` in the
 returned `DataSet`. This means that after running this filter, the data
 will be moved to this new coordinate space.
 
@@ -453,7 +453,7 @@ one or more of the following preprocessor macros:
      that filters should directly operate on.
   * `VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED` - a `vtkm::List` of
      `vtkm::cont::CellSet` types that filters should operate on as a
-     structured cell set.
+     strutured cell set.
   * `VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED` - a `vtkm::List` of
      `vtkm::cont::CellSet` types that filters should operate on as an
      unstrutured cell set.
@@ -565,7 +565,7 @@ New storage:
 vtkm::cont::StorageTagConcatenate<StorageTag1, StorageTag2>
 ```
 
-Now a more specific example taken from the unit test of a concatenation of a concatenation.
+Now a more specific example taken from the unit test of a concatination of a concatination.
 
 Old storage:
 ``` cpp
@@ -1116,10 +1116,10 @@ std::vector<vtkm::Id> vector;
 auto array = vtkm::cont::make_ArrayHandleMove(std::move(vector));
 ```
 
-### Make `ArrayHandle` from initializer list
+### Make `ArrayHandle` from initalizer list
 
 A common use case for using `std::vector` (particularly in our unit tests)
-is to quickly add an initializer list into an `ArrayHandle`. Repeating the
+is to quickly add an initalizer list into an `ArrayHandle`. Repeating the
 example from above:
 
 ``` cpp
@@ -1157,7 +1157,7 @@ To combat this, calling `make_ArrayHandle` without a copy flag is
 deprecated. In this way, if you wish to do the faster but more unsafe
 creation of an `ArrayHandle` you should explicitly express that.
 
-This required quite a few changes through the VTK-m source (particularly in
+This requried quite a few changes through the VTK-m source (particularly in
 the tests).
 
 ### Similar changes to `Field`
@@ -1749,7 +1749,7 @@ third of the total size).
 
 Another great advantage of this approach is that even though it takes less
 time to compile and generates less code, it actually covers more cases.
-Have an array containing values of `Vec<short, 13>`? No problem. The values
+Have an array containg values of `Vec<short, 13>`? No problem. The values
 were actually stored in an `ArrayHandleReverse`? It will still work.
 
 ### `ArrayHandleStride`
@@ -1776,7 +1776,7 @@ proper component and skip the length of the `Vec`.
 
 #### Extracting from `ArrayHandleSOA`
 
-Since each component is held in a separate array, they are densely packed.
+Since each component is held in a separate array, they are densly packed.
 Each component could be represented by `ArrayHandleBasic`, but of course we
 use `ArrayHandleStride` to keep the type consistent.
 
@@ -2060,7 +2060,7 @@ invoke(Worklet1{}, input, output1);
 invoke(Worklet2{}, input, output2); // Will not block
 ```
 
-The same `Token` is used for all arguments to the `Worklet`. This detail is
+The same `Token` is used for all arguments to the `Worklet`. This deatil is
 important to prevent deadlocks if the same object is used in more than one
 `Worklet` parameter. As a simple example, if a `Worklet` has a control
 signature like
@@ -2197,7 +2197,7 @@ apply a policy to a cell set, you now have to also provide the filter.
 
 Initially, the probe filter would simply not set a value if a sample was
 outside the input `DataSet`. This is not great as the memory could be
-left uninitialized and lead to unpredictable results. The testing
+left uninitalized and lead to unpredictable results. The testing
 compared these invalid results to 0, which seemed to work but is
 probably unstable.
 
@@ -2304,7 +2304,7 @@ Added the flying edges contouring algorithm to VTK-m. This algorithm only
 works on structured grids, but operates much faster than the traditional
 Marching Cubes algorithm.
 
-The speed of VTK-m's flying edges is comparable to VTK's running on the same
+The speed of VTK-m's flying edges is comprable to VTK's running on the same
 CPUs. VTK-m's implementation also works well on CUDA hardware.
 
 The Flying Edges algorithm was introduced in this paper:

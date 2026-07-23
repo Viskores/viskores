@@ -154,7 +154,7 @@ this change is correct for a variety of reasons.
      behavior of `UnknownArrayHandle`. The latter needed this behavior to
      allow `ArrayHandle`s to be passed as output arguments to methods that
      get automatically converted to `UnknownArrayHandle`.
-  2. Before this change, a `const ArrayHandle&` was still multiple is many
+  2. Before this change, a `const ArrayHandle&` was still multible is many
      way. In particular, it was possible to change the data in the array
      even if the array could not be resized. You could still call things
      like `WritePortal` and `PrepareForInOut`. The fact that you could
@@ -163,7 +163,7 @@ this change is correct for a variety of reasons.
      confusing.
   3. Passing a value by constant reference should be the same, from the
      calling code's perspective, as passing by value. Although the function
-     can change an argument passed by value, that change is not propagated
+     can change an argument passed by value, that change is not propogated
      back to the calling code. However, in the case of `ArrayHandle`,
      calling by value would allow the array to be reallocated from the
      calling side whereas a constant reference would prevent that. This
