@@ -475,12 +475,7 @@ struct CellLocatorBoundingIntervalHierarchy::MakeExecObject
                                 ExecObjType& execObject) const
   {
     execObject = viskores::exec::CellLocatorBoundingIntervalHierarchy<CellSetType>(
-      self.Nodes,
-      self.ProcessedCellIds,
-      cellSet,
-      self.GetCoordinates().GetDataAsMultiplexer(),
-      device,
-      token);
+      self.Nodes, self.ProcessedCellIds, cellSet, self.GetCoordinates(), device, token);
   }
 };
 

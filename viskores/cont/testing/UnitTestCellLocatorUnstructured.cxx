@@ -720,6 +720,40 @@ void TestFindAllCells(LocatorType& locator)
   ValidateFindAllCells(locator, testPts, expCellIds);
 }
 
+template <typename LocatorType>
+void TestCoordinatePrecision(LocatorType& locator, const std::string& locatorName)
+{
+  std::cout << "Test " << locatorName << " coordinate precision" << std::endl;
+
+  constexpr viskores::Float64 minX = 1.0 + 1e-12;
+  const std::vector<viskores::Vec3f_64> points = { { minX, 0.0, 0.0 }, { 2.0, 0.0, 0.0 },
+                                                   { 2.0, 1.0, 0.0 },  { minX, 1.0, 0.0 },
+                                                   { minX, 0.0, 1.0 }, { 2.0, 0.0, 1.0 },
+                                                   { 2.0, 1.0, 1.0 },  { minX, 1.0, 1.0 } };
+  const std::vector<viskores::UInt8> shapes = { viskores::CELL_SHAPE_HEXAHEDRON };
+  const std::vector<viskores::IdComponent> numIndices = { 8 };
+  const std::vector<viskores::Id> connectivity = { 0, 1, 2, 3, 4, 5, 6, 7 };
+  auto dataSet =
+    viskores::cont::DataSetBuilderExplicit::Create(points, shapes, numIndices, connectivity);
+
+  locator.SetCellSet(dataSet.GetCellSet());
+  locator.SetCoordinates(dataSet.GetCoordinateSystem());
+  locator.Update();
+
+  const std::vector<viskores::Vec3f> queryPoints = {
+    { 1.0f, 0.5f, 0.5f },
+    { 1.5f, 0.5f, 0.5f },
+  };
+  auto queryPointsArray = viskores::cont::make_ArrayHandle(queryPoints, viskores::CopyFlag::On);
+  viskores::cont::ArrayHandle<viskores::Id> cellCounts;
+  viskores::cont::Invoker{}(CountAllCellsWorklet{}, queryPointsArray, locator, cellCounts);
+
+  auto cellCountsPortal = cellCounts.ReadPortal();
+  VISKORES_TEST_ASSERT(cellCountsPortal.Get(0) == 0,
+                       "Point below the Float64 cell boundary was reported inside");
+  VISKORES_TEST_ASSERT(cellCountsPortal.Get(1) == 1, "Point inside the Float64 cell was not found");
+}
+
 void TestingCellLocatorUnstructured()
 {
   viskores::UInt32 seed = static_cast<viskores::UInt32>(std::time(nullptr));
@@ -735,6 +769,7 @@ void TestingCellLocatorUnstructured()
   TestCellLocator(locator2L, viskores::Id3(8), 512);  // 3D dataset
   TestCellLocator(locator2L, viskores::Id2(18), 512); // 2D dataset
   TestFindAllCells(locator2L);
+  TestCoordinatePrecision(locator2L, "CellLocatorTwoLevel");
 
   //Test viskores::cont::CellLocatorUniformBins
   viskores::cont::CellLocatorUniformBins locatorUB;
@@ -753,12 +788,14 @@ void TestingCellLocatorUnstructured()
   locatorUB = viskores::cont::CellLocatorUniformBins();
   locatorUB.SetDims({ 32, 32, 32 });
   TestFindAllCells(locatorUB);
+  TestCoordinatePrecision(locatorUB, "CellLocatorUniformBins");
 
   viskores::cont::CellLocatorBoundingIntervalHierarchy locatorBIH;
   std::cout << "Testing CellLocatorBoundingIntervalHierarchy" << std::endl;
   TestCellLocator(locatorBIH, viskores::Id3(8), 512);  // 3D dataset
   TestCellLocator(locatorBIH, viskores::Id2(18), 512); // 2D dataset
   TestFindAllCells(locatorBIH);
+  TestCoordinatePrecision(locatorBIH, "CellLocatorBoundingIntervalHierarchy");
 }
 
 int UnitTestCellLocatorUnstructured(int argc, char* argv[])

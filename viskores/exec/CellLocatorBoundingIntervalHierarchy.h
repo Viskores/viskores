@@ -21,9 +21,8 @@
 #include <viskores/TopologyElementTag.h>
 #include <viskores/VecFromPortalPermute.h>
 #include <viskores/cont/ArrayHandle.h>
-#include <viskores/cont/CoordinateSystem.h>
-#include <viskores/exec/CellInside.h>
-#include <viskores/exec/ParametricCoordinates.h>
+#include <viskores/cont/internal/CellLocatorCoordinates.h>
+#include <viskores/exec/internal/CellLocatorHelpers.h>
 
 namespace viskores
 {
@@ -103,6 +102,20 @@ class VISKORES_ALWAYS_EXPORT CellLocatorBoundingIntervalHierarchy
 
 public:
   VISKORES_CONT
+  CellLocatorBoundingIntervalHierarchy(const NodeArrayHandle& nodes,
+                                       const CellIdArrayHandle& cellIds,
+                                       const CellSetType& cellSet,
+                                       const viskores::cont::CoordinateSystem& coords,
+                                       viskores::cont::DeviceAdapterId device,
+                                       viskores::cont::Token& token)
+    : Nodes(nodes.PrepareForInput(device, token))
+    , CellIds(cellIds.PrepareForInput(device, token))
+    , CellSet(cellSet.PrepareForInput(device, VisitType(), IncidentType(), token))
+    , Coords(viskores::cont::internal::PrepareCellLocatorCoordinates(coords, device, token))
+  {
+  }
+
+  VISKORES_CONT
   CellLocatorBoundingIntervalHierarchy(
     const NodeArrayHandle& nodes,
     const CellIdArrayHandle& cellIds,
@@ -113,7 +126,7 @@ public:
     : Nodes(nodes.PrepareForInput(device, token))
     , CellIds(cellIds.PrepareForInput(device, token))
     , CellSet(cellSet.PrepareForInput(device, VisitType(), IncidentType(), token))
-    , Coords(coords.PrepareForInput(device, token))
+    , Coords(viskores::cont::internal::PrepareCellLocatorCoordinates(coords, device, token))
   {
   }
 
@@ -150,15 +163,7 @@ public:
                                              viskores::Vec3f& pCoords) const
   {
     LastCell lastCell;
-    viskores::Vec<viskores::Id, 1> cellIdsVec = { -1 };
-    viskores::Vec<viskores::Vec3f, 1> pCoordsVec = { viskores::Vec3f() };
-    viskores::IdComponent count = 0;
-    auto status =
-      this->FindCellImpl(IterateMode::FindOne, point, cellIdsVec, pCoordsVec, lastCell, count);
-
-    cellId = cellIdsVec[0];
-    pCoords = pCoordsVec[0];
-    return status;
+    return this->Coords.CastAndCall(FindCellFunctor{}, this, point, cellId, pCoords, lastCell);
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
@@ -167,12 +172,115 @@ public:
                                              viskores::Vec3f& pCoords,
                                              LastCell& lastCell) const
   {
+    return this->Coords.CastAndCall(FindCellFunctor{}, this, point, cellId, pCoords, lastCell);
+  }
+
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
+  VISKORES_EXEC viskores::IdComponent CountAllCells(const viskores::Vec3f& point) const
+  {
+    return this->Coords.CastAndCall(CountAllCellsFunctor{}, this, point);
+  }
+
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
+  template <typename CellIdsType, typename ParametricCoordsVecType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
+                                                 CellIdsType& cellIdsVec,
+                                                 ParametricCoordsVecType& pCoordsVec) const
+  {
+    return this->Coords.CastAndCall(FindAllCellsFunctor{}, this, point, cellIdsVec, pCoordsVec);
+  }
+
+  /// @brief Locate all cell ids containing the provided point.
+  ///
+  /// This method returns the same cell ids as `FindAllCells()` without
+  /// requiring parametric coordinates.
+  ///
+  template <typename CellIdsType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCellIds(const viskores::Vec3f& point,
+                                                   CellIdsType& cellIdsVec) const
+  {
+    return this->Coords.CastAndCall(FindAllCellIdsFunctor{}, this, point, cellIdsVec);
+  }
+
+private:
+  struct FindCellFunctor
+  {
+    template <typename CoordsPortalType>
+    VISKORES_EXEC viskores::ErrorCode operator()(const CoordsPortalType& coords,
+                                                 const CellLocatorBoundingIntervalHierarchy* self,
+                                                 const viskores::Vec3f& point,
+                                                 viskores::Id& cellId,
+                                                 viskores::Vec3f& pCoords,
+                                                 LastCell& lastCell) const
+    {
+      return self->FindCellImpl(coords, point, cellId, pCoords, lastCell);
+    }
+  };
+
+  struct CountAllCellsFunctor
+  {
+    template <typename CoordsPortalType>
+    VISKORES_EXEC viskores::IdComponent operator()(const CoordsPortalType& coords,
+                                                   const CellLocatorBoundingIntervalHierarchy* self,
+                                                   const viskores::Vec3f& point) const
+    {
+      return self->CountAllCellsImpl(coords, point);
+    }
+  };
+
+  struct FindAllCellsFunctor
+  {
+    template <typename CoordsPortalType, typename CellIdsType, typename ParametricCoordsVecType>
+    VISKORES_EXEC viskores::ErrorCode operator()(const CoordsPortalType& coords,
+                                                 const CellLocatorBoundingIntervalHierarchy* self,
+                                                 const viskores::Vec3f& point,
+                                                 CellIdsType& cellIdsVec,
+                                                 ParametricCoordsVecType& pCoordsVec) const
+    {
+      return self->FindAllCellsImpl(coords, point, cellIdsVec, pCoordsVec);
+    }
+  };
+
+  struct FindAllCellIdsFunctor
+  {
+    template <typename CoordsPortalType, typename CellIdsType>
+    VISKORES_EXEC viskores::ErrorCode operator()(const CoordsPortalType& coords,
+                                                 const CellLocatorBoundingIntervalHierarchy* self,
+                                                 const viskores::Vec3f& point,
+                                                 CellIdsType& cellIdsVec) const
+    {
+      return self->FindAllCellIdsImpl(coords, point, cellIdsVec);
+    }
+  };
+
+  enum struct FindCellState
+  {
+    EnterNode,
+    AscendFromNode,
+    DescendLeftChild,
+    DescendRightChild
+  };
+
+  enum struct IterateMode
+  {
+    FindOne,
+    CountAll,
+    FindAll
+  };
+
+  template <typename CoordsPortalType>
+  VISKORES_EXEC viskores::ErrorCode FindCellImpl(const CoordsPortalType& coords,
+                                                 const viskores::Vec3f& point,
+                                                 viskores::Id& cellId,
+                                                 viskores::Vec3f& pCoords,
+                                                 LastCell& lastCell) const
+  {
     cellId = -1;
 
     //Check the last cell.
     if ((lastCell.CellId >= 0) && (lastCell.CellId < this->CellSet.GetNumberOfElements()))
     {
-      if (this->PointInCell(point, lastCell.CellId, pCoords))
+      if (this->PointInCell(coords, point, lastCell.CellId, pCoords))
       {
         cellId = lastCell.CellId;
         return viskores::ErrorCode::Success;
@@ -189,7 +297,8 @@ public:
         viskores::IdComponent count = 0;
         viskores::Vec<viskores::Id, 1> cellIdsVec = { -1 };
         viskores::Vec<viskores::Vec3f, 1> pCoordsVec = { viskores::Vec3f() };
-        if (this->FindInLeaf(IterateMode::FindOne, point, pCoordsVec, node, cellIdsVec, count))
+        if (this->FindInLeaf(
+              coords, IterateMode::FindOne, point, pCoordsVec, node, cellIdsVec, count))
         {
           cellId = cellIdsVec[0];
           lastCell.CellId = cellIdsVec[0];
@@ -208,16 +317,17 @@ public:
     viskores::Vec<viskores::Vec3f, 1> pCoordsVec = { viskores::Vec3f() };
 
     viskores::IdComponent count = 0;
-    auto status =
-      this->FindCellImpl(IterateMode::FindOne, point, cellIdsVec, pCoordsVec, lastCell, count);
+    auto status = this->FindCellsImpl(
+      coords, IterateMode::FindOne, point, cellIdsVec, pCoordsVec, lastCell, count);
 
     cellId = cellIdsVec[0];
     pCoords = pCoordsVec[0];
     return status;
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
-  VISKORES_EXEC viskores::IdComponent CountAllCells(const viskores::Vec3f& point) const
+  template <typename CoordsPortalType>
+  VISKORES_EXEC viskores::IdComponent CountAllCellsImpl(const CoordsPortalType& coords,
+                                                        const viskores::Vec3f& point) const
   {
     viskores::Vec<viskores::Id, 1> cellIdsVec = { -1 };
     viskores::Vec<viskores::Vec3f, 1> pCoordsVec = { viskores::Vec3f() };
@@ -225,19 +335,19 @@ public:
     viskores::IdComponent count = 0;
     LastCell lastCell;
 
-    auto status =
-      this->FindCellImpl(IterateMode::CountAll, point, cellIdsVec, pCoordsVec, lastCell, count);
+    auto status = this->FindCellsImpl(
+      coords, IterateMode::CountAll, point, cellIdsVec, pCoordsVec, lastCell, count);
     if (status == viskores::ErrorCode::Success)
       return count;
 
     return 0;
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
-  template <typename CellIdsType, typename ParametricCoordsVecType>
-  VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
-                                                 CellIdsType& cellIdsVec,
-                                                 ParametricCoordsVecType& pCoordsVec) const
+  template <typename CoordsPortalType, typename CellIdsType, typename ParametricCoordsVecType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCellsImpl(const CoordsPortalType& coords,
+                                                     const viskores::Vec3f& point,
+                                                     CellIdsType& cellIdsVec,
+                                                     ParametricCoordsVecType& pCoordsVec) const
   {
     viskores::IdComponent n = cellIdsVec.GetNumberOfComponents();
     if (pCoordsVec.GetNumberOfComponents() != n)
@@ -251,8 +361,8 @@ public:
 
     LastCell lastCell;
     viskores::IdComponent count = 0;
-    auto status =
-      this->FindCellImpl(IterateMode::FindAll, point, cellIdsVec, pCoordsVec, lastCell, count);
+    auto status = this->FindCellsImpl(
+      coords, IterateMode::FindAll, point, cellIdsVec, pCoordsVec, lastCell, count);
 
     // More than n cells were found.
     //If the size of cellIdsVec is not big enough to hold the number found, return an error.
@@ -262,14 +372,10 @@ public:
     return status;
   }
 
-  /// @brief Locate all cell ids containing the provided point.
-  ///
-  /// This method returns the same cell ids as `FindAllCells()` without
-  /// requiring parametric coordinates.
-  ///
-  template <typename CellIdsType>
-  VISKORES_EXEC viskores::ErrorCode FindAllCellIds(const viskores::Vec3f& point,
-                                                   CellIdsType& cellIdsVec) const
+  template <typename CoordsPortalType, typename CellIdsType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCellIdsImpl(const CoordsPortalType& coords,
+                                                       const viskores::Vec3f& point,
+                                                       CellIdsType& cellIdsVec) const
   {
     viskores::IdComponent n = cellIdsVec.GetNumberOfComponents();
     if (n == 0)
@@ -281,8 +387,8 @@ public:
     IdOnlyParametricCoords pCoordsVec(n);
     LastCell lastCell;
     viskores::IdComponent count = 0;
-    auto status =
-      this->FindCellImpl(IterateMode::FindAll, point, cellIdsVec, pCoordsVec, lastCell, count);
+    auto status = this->FindCellsImpl(
+      coords, IterateMode::FindAll, point, cellIdsVec, pCoordsVec, lastCell, count);
 
     // More than n cells were found.
     // If cellIdsVec is not large enough to hold the number found, return an error.
@@ -292,29 +398,14 @@ public:
     return status;
   }
 
-private:
-  enum struct FindCellState
-  {
-    EnterNode,
-    AscendFromNode,
-    DescendLeftChild,
-    DescendRightChild
-  };
-
-  enum struct IterateMode
-  {
-    FindOne,
-    CountAll,
-    FindAll
-  };
-
-  template <typename CellIdsType, typename ParametricCoordsVecType>
-  VISKORES_EXEC viskores::ErrorCode FindCellImpl(const IterateMode& mode,
-                                                 const viskores::Vec3f& point,
-                                                 CellIdsType& cellIdsVec,
-                                                 ParametricCoordsVecType& pCoordsVec,
-                                                 LastCell& lastCell,
-                                                 viskores::IdComponent& count) const
+  template <typename CoordsPortalType, typename CellIdsType, typename ParametricCoordsVecType>
+  VISKORES_EXEC viskores::ErrorCode FindCellsImpl(const CoordsPortalType& coords,
+                                                  const IterateMode& mode,
+                                                  const viskores::Vec3f& point,
+                                                  CellIdsType& cellIdsVec,
+                                                  ParametricCoordsVecType& pCoordsVec,
+                                                  LastCell& lastCell,
+                                                  viskores::IdComponent& count) const
   {
     viskores::Id nodeIndex = 0;
     FindCellState state = FindCellState::EnterNode;
@@ -337,7 +428,8 @@ private:
       switch (state)
       {
         case FindCellState::EnterNode:
-          state = this->EnterNode(mode, point, cellIdsVec, nodeIndex, pCoordsVec, lastCell, count);
+          state = this->EnterNode(
+            coords, mode, point, cellIdsVec, nodeIndex, pCoordsVec, lastCell, count);
           break;
 
         case FindCellState::AscendFromNode:
@@ -360,8 +452,9 @@ private:
     return viskores::ErrorCode::Success;
   }
 
-  template <typename CellIdsType, typename ParametricCoordsVecType>
-  VISKORES_EXEC FindCellState EnterNode(const IterateMode& mode,
+  template <typename CoordsPortalType, typename CellIdsType, typename ParametricCoordsVecType>
+  VISKORES_EXEC FindCellState EnterNode(const CoordsPortalType& coords,
+                                        const IterateMode& mode,
                                         const viskores::Vec3f& point,
                                         CellIdsType& cellIdsVec,
                                         viskores::Id nodeIndex,
@@ -378,7 +471,7 @@ private:
     if (node.ChildIndex < 0)
     {
       // In a leaf node. Look for a containing cell.
-      if (this->FindInLeaf(mode, point, pCoordsVec, node, cellIdsVec, count))
+      if (this->FindInLeaf(coords, mode, point, pCoordsVec, node, cellIdsVec, count))
       {
         lastCell.NodeIdx = nodeIndex;
         lastCell.CellId = cellIdsVec[0];
@@ -458,8 +551,9 @@ private:
     }
   }
 
-  template <typename CellIdsType, typename ParametricCoordsVecType>
+  template <typename CoordsPortalType, typename CellIdsType, typename ParametricCoordsVecType>
   VISKORES_EXEC bool FindInLeaf(
+    const CoordsPortalType& coords,
     const IterateMode& mode,
     const viskores::Vec3f& point,
     ParametricCoordsVecType& pCoordsVec,
@@ -475,7 +569,7 @@ private:
     {
       viskores::Id cid = this->CellIds.Get(i);
       viskores::Vec3f pCoords;
-      if (this->PointInCell(point, cid, pCoords))
+      if (this->PointInCell(coords, point, cid, pCoords))
       {
         found = true;
         if (mode == IterateMode::FindOne || mode == IterateMode::FindAll)
@@ -507,25 +601,20 @@ private:
       (node.Leaf.Size <= (numCellIds - node.Leaf.Start));
   }
 
-  VISKORES_EXEC bool PointInCell(const viskores::Vec3f& point,
+  template <typename CoordsPortalType>
+  VISKORES_EXEC bool PointInCell(const CoordsPortalType& coords,
+                                 const viskores::Vec3f& point,
                                  viskores::Id& cellId,
                                  viskores::Vec3f& pCoords) const
   {
     using IndicesType = typename CellSetPortal::IndicesType;
     IndicesType cellPointIndices = this->CellSet.GetIndices(cellId);
-    viskores::VecFromPortalPermute<IndicesType, CoordsPortal> cellPoints(&cellPointIndices,
-                                                                         this->Coords);
+    auto cellPoints = viskores::make_VecFromPortalPermute(&cellPointIndices, coords);
     auto cellShape = this->CellSet.GetCellShape(cellId);
-    auto status = viskores::exec::WorldCoordinatesToParametricCoordinates(
-      cellPoints, point, cellShape, pCoords);
-
-    if (status != viskores::ErrorCode::Success)
-      return false;
-
-    if (!viskores::exec::CellInside(pCoords, cellShape))
-      return false;
-
-    return true;
+    bool inside;
+    auto status = viskores::exec::internal::CellLocatorPointInsideCell(
+      point, cellShape, cellPoints, pCoords, inside);
+    return status == viskores::ErrorCode::Success && inside;
   }
 
 
@@ -535,13 +624,10 @@ private:
   using CellIdPortal = typename CellIdArrayHandle::ReadPortalType;
   using CellSetPortal =
     typename CellSetType::template ExecConnectivityType<VisitType, IncidentType>;
-  using CoordsPortal =
-    typename viskores::cont::CoordinateSystem::MultiplexerArrayType::ReadPortalType;
-
   NodePortal Nodes;
   CellIdPortal CellIds;
   CellSetPortal CellSet;
-  CoordsPortal Coords;
+  viskores::cont::internal::CellLocatorCoordinatePortalVariant Coords;
 }; // class CellLocatorBoundingIntervalHierarchy
 
 } // namespace exec

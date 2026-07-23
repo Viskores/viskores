@@ -18,16 +18,14 @@
 #ifndef viskores_exec_CellLocatorUniformBins_h
 #define viskores_exec_CellLocatorUniformBins_h
 
-#include <viskores/exec/CellInside.h>
-#include <viskores/exec/ParametricCoordinates.h>
-
-#include <viskores/cont/ArrayHandle.h>
-#include <viskores/cont/ArrayHandleGroupVecVariable.h>
-#include <viskores/cont/CoordinateSystem.h>
+#include <viskores/exec/internal/CellLocatorHelpers.h>
 
 #include <viskores/TopologyElementTag.h>
 #include <viskores/VecFromPortalPermute.h>
 #include <viskores/VecTraits.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ArrayHandleGroupVecVariable.h>
+#include <viskores/cont/internal/CellLocatorCoordinates.h>
 
 namespace viskores
 {
@@ -50,9 +48,6 @@ class VISKORES_ALWAYS_EXPORT CellLocatorUniformBins
 {
   template <typename T>
   using ReadPortal = typename viskores::cont::ArrayHandle<T>::ReadPortalType;
-
-  using CoordsPortalType =
-    typename viskores::cont::CoordinateSystem::MultiplexerArrayType::ReadPortalType;
 
   using CellIdArrayType = viskores::cont::ArrayHandle<viskores::Id>;
   using CellIdOffsetArrayType = viskores::cont::ArrayHandle<viskores::Id>;
@@ -84,7 +79,7 @@ public:
                                       viskores::TopologyElementTagCell{},
                                       viskores::TopologyElementTagPoint{},
                                       token))
-    , Coords(coords.GetDataAsMultiplexer().PrepareForInput(device, token))
+    , Coords(viskores::cont::internal::PrepareCellLocatorCoordinates(coords, device, token))
   {
   }
 
@@ -102,7 +97,7 @@ public:
   VISKORES_EXEC viskores::ErrorCode FindCellId(const viskores::Vec3f& point,
                                                viskores::Id& cellId) const
   {
-    return this->FindCellImpl(point, cellId, nullptr, nullptr);
+    return this->Coords.CastAndCall(FindCellFunctor{}, this, point, cellId, nullptr, nullptr);
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCellId
@@ -110,7 +105,7 @@ public:
                                                viskores::Id& cellId,
                                                LastCell& lastCell) const
   {
-    return this->FindCellImpl(point, cellId, nullptr, &lastCell);
+    return this->Coords.CastAndCall(FindCellFunctor{}, this, point, cellId, nullptr, &lastCell);
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
@@ -118,7 +113,7 @@ public:
                                              viskores::Id& cellId,
                                              viskores::Vec3f& pCoords) const
   {
-    return this->FindCellImpl(point, cellId, &pCoords, nullptr);
+    return this->Coords.CastAndCall(FindCellFunctor{}, this, point, cellId, &pCoords, nullptr);
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
@@ -127,18 +122,13 @@ public:
                                              viskores::Vec3f& pCoords,
                                              LastCell& lastCell) const
   {
-    return this->FindCellImpl(point, cellId, &pCoords, &lastCell);
+    return this->Coords.CastAndCall(FindCellFunctor{}, this, point, cellId, &pCoords, &lastCell);
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
   VISKORES_EXEC viskores::IdComponent CountAllCells(const viskores::Vec3f& point) const
   {
-    viskores::Id binIdx = this->FindBinIdx(point);
-    if (binIdx == -1)
-      return 0;
-
-    viskores::Vec<viskores::Id, 1> cellIdVec = { -1 };
-    return this->IterateBinCellIds(point, IterateMode::CountAll, cellIdVec, binIdx);
+    return this->Coords.CastAndCall(CountAllCellsFunctor{}, this, point);
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
@@ -147,7 +137,7 @@ public:
                                                  CellIdsType& cellIdVec,
                                                  ParametricCoordsVecType& pCoordsVec) const
   {
-    return this->FindAllCellsImpl(point, cellIdVec, pCoordsVec);
+    return this->Coords.CastAndCall(FindAllCellsFunctor{}, this, point, cellIdVec, pCoordsVec);
   }
 
   /// @brief Locate all cell ids containing the provided point.
@@ -158,7 +148,7 @@ public:
   VISKORES_EXEC viskores::ErrorCode FindAllCellIds(const viskores::Vec3f& point,
                                                    CellIdsType& cellIdVec) const
   {
-    return this->FindAllCellsImpl(point, cellIdVec);
+    return this->Coords.CastAndCall(FindAllCellIdsFunctor{}, this, point, cellIdVec);
   }
 
   VISKORES_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
@@ -167,6 +157,56 @@ public:
   VISKORES_EXEC const CellLocatorUniformBins* operator->() const { return this; }
 
 private:
+  struct FindCellFunctor
+  {
+    template <typename CoordsPortalType>
+    VISKORES_EXEC viskores::ErrorCode operator()(const CoordsPortalType& coords,
+                                                 const CellLocatorUniformBins* self,
+                                                 const viskores::Vec3f& point,
+                                                 viskores::Id& cellId,
+                                                 viskores::Vec3f* pCoords,
+                                                 LastCell* lastCell) const
+    {
+      return self->FindCellImpl(coords, point, cellId, pCoords, lastCell);
+    }
+  };
+
+  struct CountAllCellsFunctor
+  {
+    template <typename CoordsPortalType>
+    VISKORES_EXEC viskores::IdComponent operator()(const CoordsPortalType& coords,
+                                                   const CellLocatorUniformBins* self,
+                                                   const viskores::Vec3f& point) const
+    {
+      return self->CountAllCellsImpl(coords, point);
+    }
+  };
+
+  struct FindAllCellsFunctor
+  {
+    template <typename CoordsPortalType, typename CellIdsType, typename ParametricCoordsVecType>
+    VISKORES_EXEC viskores::ErrorCode operator()(const CoordsPortalType& coords,
+                                                 const CellLocatorUniformBins* self,
+                                                 const viskores::Vec3f& point,
+                                                 CellIdsType& cellIdVec,
+                                                 ParametricCoordsVecType& pCoordsVec) const
+    {
+      return self->FindAllCellsImpl(coords, point, cellIdVec, pCoordsVec);
+    }
+  };
+
+  struct FindAllCellIdsFunctor
+  {
+    template <typename CoordsPortalType, typename CellIdsType>
+    VISKORES_EXEC viskores::ErrorCode operator()(const CoordsPortalType& coords,
+                                                 const CellLocatorUniformBins* self,
+                                                 const viskores::Vec3f& point,
+                                                 CellIdsType& cellIdVec) const
+    {
+      return self->FindAllCellsImpl(coords, point, cellIdVec);
+    }
+  };
+
   enum class IterateMode
   {
     FindOne,
@@ -192,7 +232,9 @@ private:
     return binIdx;
   }
 
-  VISKORES_EXEC viskores::ErrorCode FindCellImpl(const viskores::Vec3f& point,
+  template <typename CoordsPortalType>
+  VISKORES_EXEC viskores::ErrorCode FindCellImpl(const CoordsPortalType& coords,
+                                                 const viskores::Vec3f& point,
                                                  viskores::Id& cellId,
                                                  viskores::Vec3f* pCoords,
                                                  LastCell* lastCell) const
@@ -211,13 +253,13 @@ private:
 
     if ((lastCell != nullptr) && (binIdx == lastCell->BinIdx) && this->LastCellValid(*lastCell))
     {
-      if (this->PointInCell(point, lastCell->CellId, pCoords))
+      if (this->PointInCell(coords, point, lastCell->CellId, pCoords))
       {
         cellId = lastCell->CellId;
         return viskores::ErrorCode::Success;
       }
 
-      if (this->PointInBin(point, lastCell->BinIdx, cellId, pCoords, lastCell->CellId))
+      if (this->PointInBin(coords, point, lastCell->BinIdx, cellId, pCoords, lastCell->CellId))
       {
         lastCell->CellId = cellId;
         return viskores::ErrorCode::Success;
@@ -229,13 +271,13 @@ private:
     if (pCoords != nullptr)
     {
       viskores::Vec<viskores::Vec3f, 1> pCoordsVec;
-      nCells = this->IterateBin(point, IterateMode::FindOne, cellIdVec, pCoordsVec, binIdx);
+      nCells = this->IterateBin(coords, point, IterateMode::FindOne, cellIdVec, pCoordsVec, binIdx);
       if (nCells == 1)
         *pCoords = pCoordsVec[0];
     }
     else
     {
-      nCells = this->IterateBinCellIds(point, IterateMode::FindOne, cellIdVec, binIdx);
+      nCells = this->IterateBinCellIds(coords, point, IterateMode::FindOne, cellIdVec, binIdx);
     }
 
     if (nCells == 1)
@@ -256,6 +298,18 @@ private:
     }
     cellId = -1;
     return viskores::ErrorCode::CellNotFound;
+  }
+
+  template <typename CoordsPortalType>
+  VISKORES_EXEC viskores::IdComponent CountAllCellsImpl(const CoordsPortalType& coords,
+                                                        const viskores::Vec3f& point) const
+  {
+    viskores::Id binIdx = this->FindBinIdx(point);
+    if (binIdx == -1)
+      return 0;
+
+    viskores::Vec<viskores::Id, 1> cellIdVec = { -1 };
+    return this->IterateBinCellIds(coords, point, IterateMode::CountAll, cellIdVec, binIdx);
   }
 
   VISKORES_EXEC bool LastCellValid(const LastCell& lastCell) const
@@ -313,8 +367,9 @@ private:
     }
   };
 
-  template <typename CellIdVecType, typename WriteHitType>
-  VISKORES_EXEC viskores::IdComponent IterateBinImpl(const viskores::Vec3f& point,
+  template <typename CoordsPortalType, typename CellIdVecType, typename WriteHitType>
+  VISKORES_EXEC viskores::IdComponent IterateBinImpl(const CoordsPortalType& coords,
+                                                     const viskores::Vec3f& point,
                                                      const IterateMode& mode,
                                                      CellIdVecType& cellIdVec,
                                                      viskores::Id binIdx,
@@ -328,7 +383,7 @@ private:
     for (viskores::IdComponent i = 0; i < binIds.GetNumberOfComponents(); i++)
     {
       viskores::Id cid = binIds[i];
-      if (this->PointInCell(point, cid, &pc))
+      if (this->PointInCell(coords, point, cid, &pc))
       {
         if (mode != IterateMode::CountAll)
           writeHit(cellCount, cid, pc);
@@ -342,8 +397,9 @@ private:
     return cellCount;
   }
 
-  template <typename CellIdVecType, typename ParametricCoordsVecType>
-  VISKORES_EXEC viskores::IdComponent IterateBin(const viskores::Vec3f& point,
+  template <typename CoordsPortalType, typename CellIdVecType, typename ParametricCoordsVecType>
+  VISKORES_EXEC viskores::IdComponent IterateBin(const CoordsPortalType& coords,
+                                                 const viskores::Vec3f& point,
                                                  const IterateMode& mode,
                                                  CellIdVecType& cellIdVec,
                                                  ParametricCoordsVecType& pCoordsVec,
@@ -353,11 +409,12 @@ private:
     VISKORES_ASSERT(pCoordsVec.GetNumberOfComponents() == n);
     auto writeHit =
       WriteCellAndParametric<CellIdVecType, ParametricCoordsVecType>{ cellIdVec, pCoordsVec };
-    return this->IterateBinImpl(point, mode, cellIdVec, binIdx, writeHit);
+    return this->IterateBinImpl(coords, point, mode, cellIdVec, binIdx, writeHit);
   }
 
-  template <typename CellIdsType, typename ParametricCoordsVecType>
-  VISKORES_EXEC viskores::ErrorCode FindAllCellsImpl(const viskores::Vec3f& point,
+  template <typename CoordsPortalType, typename CellIdsType, typename ParametricCoordsVecType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCellsImpl(const CoordsPortalType& coords,
+                                                     const viskores::Vec3f& point,
                                                      CellIdsType& cellIdVec,
                                                      ParametricCoordsVecType& pCoordsVec) const
   {
@@ -366,19 +423,21 @@ private:
 
     auto writeHit =
       WriteCellAndParametric<CellIdsType, ParametricCoordsVecType>{ cellIdVec, pCoordsVec };
-    return this->FindAllCellsImplCommon(point, cellIdVec, writeHit);
+    return this->FindAllCellsImplCommon(coords, point, cellIdVec, writeHit);
   }
 
-  template <typename CellIdsType>
-  VISKORES_EXEC viskores::ErrorCode FindAllCellsImpl(const viskores::Vec3f& point,
+  template <typename CoordsPortalType, typename CellIdsType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCellsImpl(const CoordsPortalType& coords,
+                                                     const viskores::Vec3f& point,
                                                      CellIdsType& cellIdVec) const
   {
     auto writeHit = WriteCellIdOnly<CellIdsType>{ cellIdVec };
-    return this->FindAllCellsImplCommon(point, cellIdVec, writeHit);
+    return this->FindAllCellsImplCommon(coords, point, cellIdVec, writeHit);
   }
 
-  template <typename CellIdsType, typename WriteHitType>
-  VISKORES_EXEC viskores::ErrorCode FindAllCellsImplCommon(const viskores::Vec3f& point,
+  template <typename CoordsPortalType, typename CellIdsType, typename WriteHitType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCellsImplCommon(const CoordsPortalType& coords,
+                                                           const viskores::Vec3f& point,
                                                            CellIdsType& cellIdVec,
                                                            WriteHitType& writeHit) const
   {
@@ -391,69 +450,34 @@ private:
       return viskores::ErrorCode::CellNotFound;
 
     viskores::IdComponent count =
-      this->IterateBinImpl(point, IterateMode::FindAll, cellIdVec, binIdx, writeHit);
+      this->IterateBinImpl(coords, point, IterateMode::FindAll, cellIdVec, binIdx, writeHit);
     return (count > 0) ? viskores::ErrorCode::Success : viskores::ErrorCode::CellNotFound;
   }
 
-  template <typename CellIdVecType>
-  VISKORES_EXEC viskores::IdComponent IterateBinCellIds(const viskores::Vec3f& point,
+  template <typename CoordsPortalType, typename CellIdVecType>
+  VISKORES_EXEC viskores::IdComponent IterateBinCellIds(const CoordsPortalType& coords,
+                                                        const viskores::Vec3f& point,
                                                         const IterateMode& mode,
                                                         CellIdVecType& cellIdVec,
                                                         viskores::Id binIdx) const
   {
     auto writeHit = WriteCellIdOnly<CellIdVecType>{ cellIdVec };
-    return this->IterateBinImpl(point, mode, cellIdVec, binIdx, writeHit);
+    return this->IterateBinImpl(coords, point, mode, cellIdVec, binIdx, writeHit);
   }
 
-  template <typename PointsVecType>
-  VISKORES_EXEC viskores::Bounds ComputeCellBounds(const PointsVecType& points) const
-  {
-    auto numPoints = viskores::VecTraits<PointsVecType>::GetNumberOfComponents(points);
-
-    viskores::Bounds bounds;
-    for (viskores::IdComponent i = 0; i < numPoints; ++i)
-      bounds.Include(points[i]);
-
-    return bounds;
-  }
-
-  // TODO: This function may return false positives for non 3D cells as the
-  // tests are done on the projection of the point on the cell. Extra checks
-  // should be added to test if the point actually falls on the cell.
-  template <typename CellShapeTag, typename CoordsType>
-  VISKORES_EXEC viskores::ErrorCode PointInsideCell(viskores::Vec3f point,
-                                                    CellShapeTag cellShape,
-                                                    CoordsType cellPoints,
-                                                    viskores::Vec3f& pCoords,
-                                                    bool& inside) const
-  {
-    auto bounds = this->ComputeCellBounds(cellPoints);
-    if (bounds.Contains(point))
-    {
-      VISKORES_RETURN_ON_ERROR(viskores::exec::WorldCoordinatesToParametricCoordinates(
-        cellPoints, point, cellShape, pCoords));
-      inside = viskores::exec::CellInside(pCoords, cellShape);
-    }
-    else
-    {
-      inside = false;
-    }
-    // Return success error code even point is not inside this cell
-    return viskores::ErrorCode::Success;
-  }
-
-  VISKORES_EXEC
-  bool PointInBin(const viskores::Vec3f& point,
-                  const viskores::Id& binIdx,
-                  viskores::Id& cellId,
-                  viskores::Vec3f* pCoords,
-                  const viskores::Id& skipCellId = -1) const
+  template <typename CoordsPortalType>
+  VISKORES_EXEC bool PointInBin(const CoordsPortalType& coords,
+                                const viskores::Vec3f& point,
+                                const viskores::Id& binIdx,
+                                viskores::Id& cellId,
+                                viskores::Vec3f* pCoords,
+                                const viskores::Id& skipCellId = -1) const
   {
     auto binIds = this->CellIds.Get(binIdx);
     for (viskores::IdComponent i = 0; i < binIds.GetNumberOfComponents(); i++)
     {
       viskores::Id cid = binIds[i];
-      if (cid != skipCellId && this->PointInCell(point, cid, pCoords))
+      if (cid != skipCellId && this->PointInCell(coords, point, cid, pCoords))
       {
         cellId = cid;
         return true;
@@ -463,16 +487,18 @@ private:
     return false;
   }
 
-  VISKORES_EXEC
-  bool PointInCell(const viskores::Vec3f& point,
-                   const viskores::Id& cid,
-                   viskores::Vec3f* pCoords) const
+  template <typename CoordsPortalType>
+  VISKORES_EXEC bool PointInCell(const CoordsPortalType& coords,
+                                 const viskores::Vec3f& point,
+                                 const viskores::Id& cid,
+                                 viskores::Vec3f* pCoords) const
   {
     auto indices = this->CellSet.GetIndices(cid);
-    auto pts = viskores::make_VecFromPortalPermute(&indices, this->Coords);
+    auto pts = viskores::make_VecFromPortalPermute(&indices, coords);
     viskores::Vec3f pc;
     bool inside;
-    auto status = this->PointInsideCell(point, this->CellSet.GetCellShape(cid), pts, pc, inside);
+    auto status = viskores::exec::internal::CellLocatorPointInsideCell(
+      point, this->CellSet.GetCellShape(cid), pts, pc, inside);
     if (status == viskores::ErrorCode::Success && inside)
     {
       if (pCoords != nullptr)
@@ -492,7 +518,7 @@ private:
   CellIdReadPortal CellIds;
 
   CellStructureType CellSet;
-  CoordsPortalType Coords;
+  viskores::cont::internal::CellLocatorCoordinatePortalVariant Coords;
 };
 }
 } // viskores::exec

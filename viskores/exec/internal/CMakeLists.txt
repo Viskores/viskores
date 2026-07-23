@@ -17,6 +17,7 @@
 ##============================================================================
 
 set(headers
+  CellLocatorHelpers.h
   ErrorMessageBuffer.h
   FastVec.h
   ReduceByKeyLookup.h

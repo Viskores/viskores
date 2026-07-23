@@ -24,6 +24,7 @@ set(headers
   ArrayTransfer.h
   Buffer.h
   CastInvalidValue.h
+  CellLocatorCoordinates.h
   ConnectivityExplicitInternals.h
   ConvertNumComponentsToOffsetsTemplate.h
   DeviceAdapterAlgorithmGeneral.h

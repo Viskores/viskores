@@ -218,6 +218,7 @@ set(device_sources
   internal/ArrayCopyUnknown.cxx
   internal/ArrayRangeComputeUtils.cxx
   internal/Buffer.cxx
+  internal/CellLocatorCoordinates.cxx
   internal/MapArrayPermutation.cxx
   MergePartitionedDataSet.cxx
   PointLocatorSparseGrid.cxx
