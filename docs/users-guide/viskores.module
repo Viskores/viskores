@@ -15,3 +15,5 @@ TEST_DEPENDS
   viskores_rendering
   viskores_source
   viskores_worklet
+TEST_OPTIONAL_DEPENDS
+  MPI::MPI_CXX
