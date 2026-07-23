@@ -48,6 +48,8 @@ density filters in :secref:`provided-filters:Particle Density`.
 
 **Manish Mathai** for his documentation of rendering features in :chapref:`rendering:Rendering`.
 
+**Vicente Bolea** for his documentation of distributed processing in :chapref:`distributed-systems:Distributed Systems`.
+
 AI was used to assist the writing of some parts of this documentation.
 
 

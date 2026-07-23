@@ -20,3 +20,4 @@ Advanced Development
    worklet-in-out.rst
    generating-cell-sets.rst
    device-algorithms.rst
+   distributed-systems.rst
