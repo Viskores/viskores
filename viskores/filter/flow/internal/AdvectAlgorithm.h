@@ -23,12 +23,18 @@
 #include <viskores/cont/PartitionedDataSet.h>
 #include <viskores/filter/flow/internal/BoundsMap.h>
 #include <viskores/filter/flow/internal/DataSetIntegrator.h>
+#include <viskores/filter/flow/internal/ParticleBlockIds.h>
 #ifdef VISKORES_ENABLE_MPI
 #include <viskores/filter/flow/internal/AdvectAlgorithmTerminator.h>
 #include <viskores/filter/flow/internal/ParticleExchanger.h>
 #include <viskores/thirdparty/diy/diy.h>
 #include <viskores/thirdparty/diy/mpi-cast.h>
 #endif
+
+#include <cstdlib>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace viskores
 {
@@ -85,26 +91,33 @@ public:
   {
     this->ClearParticles();
 
-    viskores::Id n = seeds.GetNumberOfValues();
-    auto portal = seeds.ReadPortal();
+    // Route the seeds to blocks before creating the host-side work queues:
+    // 1. Locate, validate, and order the candidate blocks for each seed.
+    // 2. Select the primary block and rank responsible for each seed.
+    // 3. Keep seeds owned by this rank and compact the results into ArrayHandles.
+    auto routedSeeds =
+      viskores::filter::flow::internal::RouteSeedsToBlocks(seeds, this->BoundsMap, this->Rank);
+    const viskores::Id numSeeds = routedSeeds.Particles.GetNumberOfValues();
+    auto seedPortal = routedSeeds.Particles.ReadPortal();
+    auto candidateBlockIdsPortal = routedSeeds.CandidateBlockIds.ReadPortal();
 
+    // Convert the compacted routing results to the existing host-side queue representation.
     std::vector<std::vector<viskores::Id>> blockIDs;
     std::vector<ParticleType> particles;
-    for (viskores::Id i = 0; i < n; i++)
+    blockIDs.reserve(static_cast<std::size_t>(numSeeds));
+    particles.reserve(static_cast<std::size_t>(numSeeds));
+    for (viskores::Id i = 0; i < numSeeds; ++i)
     {
-      const ParticleType p = portal.Get(i);
-      std::vector<viskores::Id> ids = this->BoundsMap.FindBlocks(p.GetPosition());
+      auto candidateBlockIds = candidateBlockIdsPortal.Get(i);
+      VISKORES_ASSERT(candidateBlockIds.GetNumberOfComponents() > 0);
 
-      //Note: For duplicate blocks, this will give the seeds to the rank that are first in the list.
-      if (!ids.empty())
-      {
-        const auto& ranks = this->BoundsMap.FindRank(ids[0]);
-        if (!ranks.empty() && this->Rank == ranks[0])
-        {
-          particles.emplace_back(p);
-          blockIDs.emplace_back(ids);
-        }
-      }
+      std::vector<viskores::Id> ids;
+      ids.reserve(static_cast<std::size_t>(candidateBlockIds.GetNumberOfComponents()));
+      for (viskores::IdComponent j = 0; j < candidateBlockIds.GetNumberOfComponents(); ++j)
+        ids.emplace_back(candidateBlockIds[j]);
+
+      particles.emplace_back(seedPortal.Get(i));
+      blockIDs.emplace_back(std::move(ids));
     }
     this->SetSeedArray(particles, blockIDs);
   }

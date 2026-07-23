@@ -28,6 +28,7 @@ set(headers
   FilterParticleAdvectionUnsteadyStateImpl.h
   GridMetaData.h
   LagrangianStructureHelpers.h
+  ParticleBlockIds.h
   ParticleAdvector.h
   ParticleExchanger.h
   )
