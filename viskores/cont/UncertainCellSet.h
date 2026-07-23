@@ -32,7 +32,7 @@ namespace cont
 /// except that it also contains a template parameter that provides a
 /// `viskores::List` of potential cell set types.
 ///
-/// These potental types come into play when the `CastAndCall` method is called
+/// These potential types come into play when the `CastAndCall` method is called
 /// (or the `UncertainCellSet` is used in the `viskores::cont::CastAndCall` function).
 /// In this case, the `CastAndCall` will search for `CellSet`s of types that match
 /// this list.

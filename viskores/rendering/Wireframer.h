@@ -234,8 +234,8 @@ public:
     viskores::Float32 y2 = viskores::Round(point2[1]);
     viskores::Float32 z2 = point2[2];
     // If the line is steep, i.e., the height is greater than the width, then
-    // transpose the co-ordinates to prevent "holes" in the line. This ensures
-    // that we pick the co-ordinate which grows at a lesser rate than the other.
+    // transpose the coordinates to prevent "holes" in the line. This ensures
+    // that we pick the coordinate which grows at a lesser rate than the other.
     bool transposed = viskores::Abs(y2 - y1) > viskores::Abs(x2 - x1);
     if (transposed)
     {
@@ -537,7 +537,7 @@ private:
     //
     // detect a 2D camera and set the correct viewport.
     // The View port specifies what the region of the screen
-    // to draw to which baiscally modifies the width and the
+    // to draw to which basically modifies the width and the
     // height of the "canvas"
     //
     viskores::Id xOffset = 0;

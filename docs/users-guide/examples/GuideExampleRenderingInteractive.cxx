@@ -17,7 +17,7 @@
 //============================================================================
 
 #ifdef __APPLE__
-// Glut is depricated on apple, but is sticking around for now. Hopefully
+// Glut is deprecated on apple, but is sticking around for now. Hopefully
 // someone will step up and make FreeGlut or OpenGlut compatible. Or perhaps
 // we should move to GLFW. For now, just disable the warnings.
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -118,7 +118,7 @@ void DoMouseRotate(viskores::rendering::View& view,
   // width/height, to normalized screen coordinates from -1 to 1. Note that y
   // screen coordinates are usually given from the top down whereas our
   // geometry transforms are given from bottom up, so you have to reverse the y
-  // coordiantes.
+  // coordinates.
   viskores::Float32 startX = (2.0f * mouseStartX) / screenWidth - 1.0f;
   viskores::Float32 startY = -((2.0f * mouseStartY) / screenHeight - 1.0f);
   viskores::Float32 endX = (2.0f * mouseEndX) / screenWidth - 1.0f;
@@ -146,7 +146,7 @@ void DoMousePan(viskores::rendering::View& view,
   // width/height, to normalized screen coordinates from -1 to 1. Note that y
   // screen coordinates are usually given from the top down whereas our
   // geometry transforms are given from bottom up, so you have to reverse the y
-  // coordiantes.
+  // coordinates.
   viskores::Float32 startX = (2.0f * mouseStartX) / screenWidth - 1.0f;
   viskores::Float32 startY = -((2.0f * mouseStartY) / screenHeight - 1.0f);
   viskores::Float32 endX = (2.0f * mouseEndX) / screenWidth - 1.0f;
@@ -180,7 +180,7 @@ void DoMouseZoom(viskores::rendering::View& view,
   // to normalized screen coordinates from -1 to 1. Note that y screen
   // coordinates are usually given from the top down whereas our geometry
   // transforms are given from bottom up, so you have to reverse the y
-  // coordiantes.
+  // coordinates.
   viskores::Float32 startY = -((2.0f * mouseStartY) / screenHeight - 1.0f);
   viskores::Float32 endY = -((2.0f * mouseEndY) / screenHeight - 1.0f);
 

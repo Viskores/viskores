@@ -709,7 +709,7 @@ void VolumeRendererStructured::RenderOnDevice(viskores::rendering::raytracing::R
   const bool isSupportedField = ScalarField->IsCellField() || ScalarField->IsPointField();
   if (!isSupportedField)
   {
-    throw viskores::cont::ErrorBadValue("Field not accociated with cell set or points");
+    throw viskores::cont::ErrorBadValue("Field not associated with cell set or points");
   }
   const bool isAssocPoints = ScalarField->IsPointField();
 

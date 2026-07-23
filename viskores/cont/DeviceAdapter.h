@@ -74,7 +74,7 @@ namespace cont
 /// the TBB libraries.
 ///
 /// To execute algorithms on any device, see Algorithm.h which allows
-/// for abitrary device execution.
+/// for arbitrary device execution.
 ///
 struct DeviceAdapterTag___
 {

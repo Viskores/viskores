@@ -74,7 +74,7 @@ namespace tree_grafter
 {
 
 // In TreeGrafter.GraftInteriorForests to compute attachmentCounter to
-// check whether additional attachement points need to be transferred
+// check whether additional attachment points need to be transferred
 class CalculateAttachementCounterWorklet : public viskores::worklet::WorkletMapField
 {
 public:

@@ -95,7 +95,7 @@ public:
   SetInteriorForestWorklet() {}
 
   // Allow for different portal type for the meshGlobalIds as they may be a fancy
-  // array handle rather than a portal direclty to a IdArrayType
+  // array handle rather than a portal directly to a IdArrayType
   template <typename InFieldPortalType, typename GlobalIdFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& sortId,
                                 const viskores::Id& isNecessary,

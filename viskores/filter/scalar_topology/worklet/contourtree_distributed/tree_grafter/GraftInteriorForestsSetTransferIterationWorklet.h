@@ -79,7 +79,7 @@ class GraftInteriorForestsSetTransferIterationWorklet : public viskores::worklet
 {
 public:
   // NOTE: supernodeType is sized to ContourTree.Supernodes.GetNumberOfValues() so we can use it for our iteration
-  // NOTE: for whenTransferred we neeed need FieldInOut type to avoid overwrite of existing value as not all values will be updated
+  // NOTE: for whenTransferred we need FieldInOut type to avoid overwrite of existing value as not all values will be updated
   using ControlSignature = void(FieldIn supernodeType,       // input
                                 FieldIn hierarchicalSuperId, // input
                                 FieldInOut whenTransferred   // output

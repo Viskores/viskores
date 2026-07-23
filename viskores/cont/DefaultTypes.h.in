@@ -27,7 +27,7 @@
 // VISKORES_DEFAULT_STORAGE_LIST - a viskores::List of storage tags for fields that
 //     filters should directly operate on.
 // VISKORES_DEFAULT_CELL_SET_LIST_STRUCTURED - a viskores::List of viskores::cont::CellSet types
-//     that filters should operate on as a strutured cell set.
+//     that filters should operate on as a structured cell set.
 // VISKORES_DEFAULT_CELL_SET_LIST_UNSTRUCTURED - a viskores::List of viskores::cont::CellSet types
 //     that filters should operate on as an unstrutured cell set.
 // VISKORES_DEFAULT_CELL_SET_LIST - a viskores::List of viskores::cont::CellSet types that filters

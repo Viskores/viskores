@@ -67,7 +67,7 @@
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
 
-// distibuted contour tree includes
+// distributed contour tree includes
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/BoundaryTree.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalContourTree.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/InteriorForest.h>
@@ -110,7 +110,7 @@
 #include <string>
 #include <utility>
 
-// TODO: Change all pointers to std mangaged pointers or use references (the memory for those pointers should be managed outside in the filter)
+// TODO: Change all pointers to std managed pointers or use references (the memory for those pointers should be managed outside in the filter)
 
 namespace viskores
 {
@@ -350,7 +350,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryVertices(
   this->BoundaryTreeData->NumBoundary = this->BoundaryVertexSuperset.GetNumberOfValues();
   // Identify the points that are boundary critical and update this->BoundaryVertexSuperset,
   // and this->BoundaryIndices accordingly by removing all boundary vertices that are
-  // not boundary cirtical, and hence, are not neccessary for merging neighboring data blocks
+  // not boundary cirtical, and hence, are not necessary for merging neighboring data blocks
   if (boundaryCritical)
   {
     viskores::worklet::contourtree_distributed::bract_maker::FindBoundaryVerticesIsNecessaryWorklet
@@ -688,7 +688,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindNecessaryInterior
 { // FindNecessaryInteriorSupernodes
   //  1. Identify the necessary supernodes (between two boundary points & still critical)
   //  1.A.  Start by setting all of them to "unnecessary"
-  // Initalize isNecessary with False
+  // Initialize isNecessary with False
   viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
                                     false, this->ContourTree.Supernodes.GetNumberOfValues()),
                                   this->InteriorForestData->IsNecessary);
@@ -753,7 +753,7 @@ void BoundaryTreeMaker<MeshType,
   // first count how many are needed, then resize the arrays
   this->NumNecessary =
     viskores::cont::Algorithm::Reduce(isNecessaryAndInterior, static_cast<viskores::Id>(0));
-  // We need to grow the arrays, without loosing our original data, so we need
+  // We need to grow the arrays, without losing our original data, so we need
   // to create new arrays of the approbriate size, copy our data in and then
   // assign. TODO: Would be great if Viskores allow resize without losing the values
   if (this->NumNecessary == 0)
@@ -777,7 +777,7 @@ void BoundaryTreeMaker<MeshType,
       0                           // start inserting at 0
     );
     // Set the added values to 0
-    // TODO: Check if it is really necessary to initalize the new values
+    // TODO: Check if it is really necessary to initialize the new values
     viskores::cont::Algorithm::CopySubRange(
       viskores::cont::make_ArrayHandleConstant<viskores::Id>(0, this->NumBoundary), // set to 0
       0,                                                                            // start index
@@ -802,7 +802,7 @@ void BoundaryTreeMaker<MeshType,
       0                      // start inserting at 0
     );
     // Set the added values to 0
-    // TODO: Check if it is really necessary to initalize the new values
+    // TODO: Check if it is really necessary to initialize the new values
     viskores::cont::Algorithm::CopySubRange(
       viskores::cont::make_ArrayHandleConstant<viskores::Id>(0, this->NumBoundary), // set to 0
       0,                                                                            // start index
@@ -940,7 +940,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryTreeSuper
 
 /// compresses out supernodes in the interior that have become regular in the BRACT
 ///
-/// Side-effects: This function has the cummulative side effects of
+/// Side-effects: This function has the cumulative side effects of
 /// - this->SetUpAndDownNeighbours();
 /// - this->IdentifyRegularisedSupernodes();
 /// - this->AddTerminalFlagsToUpDownNeighbours();
@@ -1140,7 +1140,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
   //    2.  Work out the new superarcs, which is slightly tricky, since they point inbound.
   //      For each necessary vertex N, the inbound vertex I in the original contour tree can point to:
   //      i.    Another necessary vertex (in which case we keep the superarc)
-  //      ii.    Nothing (in the case of the root) - again, we keep it, since we already know it's necessar
+  //      ii.    Nothing (in the case of the root) - again, we keep it, since we already know it's necessary
   //      iii.  An unnecessary vertex (i.e. any other case).  Here, the treatment is more complex.
   //          In this case, we know that the pointer-doubling has forced the up/down neighbours of I
   //          to point to necessary vertices (or nothing).  And since we know that there is an inbound
@@ -1159,7 +1159,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
   // to hold the total number of necessary vertices
   this->NumKept =
     viskores::cont::ArrayGetValue(keptInBoundaryTree.GetNumberOfValues() - 1, keptInBoundaryTree);
-  // create an array to store the new superarc Ids and initalize it with NO_SUCH_ELEMENT
+  // create an array to store the new superarc Ids and initialize it with NO_SUCH_ELEMENT
   viskores::worklet::contourtree_augmented::IdArrayType newSuperarc;
   viskores::cont::Algorithm::Copy(
     viskores::cont::make_ArrayHandleConstant(
@@ -1237,7 +1237,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
 
   //    6.  Resize both vertex IDs and superarcs, and copy in by sorted order
   // copy the vertex index with indirection, and using the sort order NOT the regular ID
-  // the following Copy operation is equivilant to
+  // the following Copy operation is equivalent to
   // bract->vertexIndex[bractID] = mesh->SortIndex(newVertexIndex[vertexSorter[bractID]]);
   viskores::cont::Algorithm::Copy(
     viskores::cont::make_ArrayHandlePermutation(

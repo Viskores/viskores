@@ -230,9 +230,9 @@ VISKORES_EXEC bool FindConnectedCellOwnerships(viskores::FloatDefault cosFeature
           else
           {
             currentTestingCellIndex =
-              -1; // Either seperated by previous visit, boundary or non-manifold
+              -1; // Either separated by previous visit, boundary or non-manifold
           }
-          // cells is smaller than the thresold and the nighboring cell has not been visited
+          // cells is smaller than the threshold and the neighboring cell has not been visited
         }
       }
       regionIndex++;

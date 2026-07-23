@@ -67,7 +67,7 @@ struct InitFunctor
   template <typename Device>
   VISKORES_CONT void operator()(Device, EnabledTimerImplTuple& timerImpls)
   {
-    //We don't use the runtime device tracker to very initializtion support
+    //We don't use the runtime device tracker to very initialization support
     //so that the following use case is supported:
     //
     // GetRuntimeDeviceTracker().Disable( openMP );

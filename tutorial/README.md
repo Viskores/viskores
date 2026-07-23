@@ -22,7 +22,7 @@ from the [Viskores git repository].
 
 ### Downloading a Viskores Release Tarball
 
-Souce code archives for every Viskores release are posted on the [Viskores
+Source code archives for every Viskores release are posted on the [Viskores
 releases page] in multiple archive formats. Simply download an archive for
 the desired version of Viskores and extract the contents from that archive.
 

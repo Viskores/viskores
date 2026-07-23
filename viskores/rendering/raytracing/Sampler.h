@@ -59,7 +59,7 @@ VISKORES_EXEC
 viskores::Vec3f_32 CosineWeightedHemisphere(const viskores::Int32& sampleNum,
                                             const viskores::Vec3f_32& normal)
 {
-  //generate orthoganal basis about normal
+  //generate orthogonal basis about normal
   int kz = 0;
   if (viskores::Abs(normal[0]) > viskores::Abs(normal[1]))
   {

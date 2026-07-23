@@ -60,7 +60,7 @@ namespace filter
 namespace scalar_topology
 {
 
-/// \brief Compute branch decompostion from distributed contour tree
+/// \brief Compute branch decomposition from distributed contour tree
 class VISKORES_FILTER_SCALAR_TOPOLOGY_EXPORT ExtractTopVolumeContoursFilter
   : public viskores::filter::Filter
 {

@@ -107,7 +107,7 @@ public:
       //See if we can step by currStep
       IntegratorStatus status = this->Integrator.CheckStep(particle, currStep, currVelocity);
 
-      if (status.CheckOk()) //Integration step succedded.
+      if (status.CheckOk()) //Integration step succeeded.
       {
         //See if this point is in/out.
         auto newPos = particle.GetPosition() + currStep * currVelocity;
@@ -120,7 +120,7 @@ public:
         }
         else
         {
-          //The step succedded, but the next point is outside.
+          //The step succeeded, but the next point is outside.
           //Step too long. Set range to: {stepRange[0], currStep} and continue.
           stepRange[1] = currStep;
         }

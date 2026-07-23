@@ -60,7 +60,7 @@
 
 // This header contains a collection of classes used to describe the boundary
 // of a mesh, for each main mesh type (i.e., 2D, 3D, and ContourTreeMesh).
-// For each mesh type, there are two classes, the actual boundary desriptor
+// For each mesh type, there are two classes, the actual boundary descriptor
 // class and an ExectionObject class with the PrepareForInput function that
 // Viskores expects to generate the object for the execution environment.
 

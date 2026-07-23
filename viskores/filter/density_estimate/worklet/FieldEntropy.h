@@ -91,7 +91,7 @@ public:
       setBinInformationContentDispatcher(binWorklet);
     setBinInformationContentDispatcher.Invoke(binArray, informationContent);
 
-    ///// calculate entropy by summing up information conetent of all bins /////
+    ///// calculate entropy by summing up information content of all bins /////
     viskores::Float64 initEntropyValue = 0;
     viskores::Float64 entropy =
       viskores::cont::Algorithm::Reduce(informationContent, initEntropyValue, viskores::Sum());

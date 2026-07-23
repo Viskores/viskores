@@ -184,6 +184,6 @@ endif()
 include(ViskoresWrappers)
 include(ViskoresRenderingContexts)
 
-# Setup diy magic of chosing the appropriate mpi/no_mpi library to link against
+# Setup diy magic of choosing the appropriate mpi/no_mpi library to link against
 include(ViskoresDIYUtils)
 viskores_diy_init_target()

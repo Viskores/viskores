@@ -52,7 +52,7 @@ public:
   ///
   /// The VOI is specified using the 3D indices of the structured mesh. Meshes with fewer
   /// than 3 dimensions will ignore the extra dimensions in the VOI. The VOI is inclusive
-  /// on the minium index and exclusive on the maximum index.
+  /// on the minimum index and exclusive on the maximum index.
   ///
   /// By default the VOI is the entire input.
   VISKORES_CONT

@@ -103,7 +103,7 @@ public:
   {
   }
 
-  // Main constructure used in the code
+  // Main constructor used in the code
   VISKORES_CONT
   MeshStructureContourTreeMesh(const cpp2_ns::IdArrayType neighborConnectivity,
                                const cpp2_ns::IdArrayType neighborOffsets,

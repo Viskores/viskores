@@ -33,7 +33,7 @@ class PartitionedDataSet;
 /// \brief This function can merge multiple data sets into on data set.
 /// This function assume all input partitions have the same coordinates systems.
 /// If a field does not exist in a specific partition but exists in other partitions,
-/// the invalide value will be used to fill the coresponding region of that field in the merged data set.
+/// the invalid value will be used to fill the corresponding region of that field in the merged data set.
 VISKORES_CONT_EXPORT
 VISKORES_CONT
 viskores::cont::DataSet MergePartitionedDataSet(

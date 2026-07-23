@@ -114,7 +114,7 @@ public:
 
   /// @brief Scale the input field.
   ///
-  /// Each coordinate is multiplied by tghe associated scale factor.
+  /// Each coordinate is multiplied by the associated scale factor.
   VISKORES_CONT void SetScale(const viskores::FloatDefault& s)
   {
     matrix = viskores::Transform3DScale(s, s, s);

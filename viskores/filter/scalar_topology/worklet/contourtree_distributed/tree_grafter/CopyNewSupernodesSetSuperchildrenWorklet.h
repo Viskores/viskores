@@ -78,7 +78,7 @@ namespace tree_grafter
 class CopyNewSupernodesSetSuperchildrenWorklet : public viskores::worklet::WorkletMapField
 {
 public:
-  // TODO: Access to  hierarchicalTreeSuperarcs and hierarchicalTreeHyperparents could potentially be imporved by using an ArrayView instead
+  // TODO: Access to  hierarchicalTreeSuperarcs and hierarchicalTreeHyperparents could potentially be improved by using an ArrayView instead
   using ControlSignature = void(
     FieldIn newSupernodeIndex, // input array starting at 0 to NewSupernodes.GetNumberOfValues();
     WholeArrayIn hierarchicalTreeSuperarcs,     //input

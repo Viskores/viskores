@@ -131,7 +131,7 @@ inline TestEqualResult test_equal_images(
 {
   std::vector<std::string> fileNames;
 
-  // Check to see if there are multiple versions of the file of the format filenName#.png.
+  // Check to see if there are multiple versions of the file of the format fileName#.png.
   auto found = fileName.rfind(".");
   auto prefix = fileName.substr(0, found);
   auto suffix = fileName.substr(found, fileName.length());

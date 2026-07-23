@@ -57,7 +57,7 @@ struct ViskoresDeviceArg : public opt::Arg
     if (!ViskoresDeviceArg::DeviceIsAvailable(id))
     {
       VISKORES_LOG_ALWAYS_S(viskores::cont::LogLevel::Error,
-                            "Unavailable device specificed after option '"
+                            "Unavailable device specified after option '"
                               << std::string(option.name, static_cast<size_t>(option.namelen))
                               << "': '" << option.arg << "'.\nValid devices are: "
                               << ViskoresDeviceArg::GetValidDeviceNames() << "\n");

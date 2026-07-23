@@ -198,8 +198,8 @@ static void PartitionedDataSetFieldTest()
     VISKORES_TEST_ASSERT(pds.GetNumberOfFields() == 2, "Wrong number of fields");
 
     //Make sure fields are there and of the right type.
-    VISKORES_TEST_ASSERT(pds.HasPartitionsField("id"), "id field misssing.");
-    VISKORES_TEST_ASSERT(pds.HasGlobalField("global_scalar"), "global_scalar field misssing.");
+    VISKORES_TEST_ASSERT(pds.HasPartitionsField("id"), "id field missing.");
+    VISKORES_TEST_ASSERT(pds.HasGlobalField("global_scalar"), "global_scalar field missing.");
 
 
     for (int j = 0; j < 2; j++)

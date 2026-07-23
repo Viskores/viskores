@@ -758,7 +758,7 @@ protected:
   /// you cannot just create an intermediate `viskores::Vec` of the correct size. Typically,
   /// you must allocate the output array (for example, with
   /// `viskores::cont::ArrayHandleRuntimeVec`), and the worklet must iterate over the
-  /// components and store them in the prealocated output.
+  /// components and store them in the preallocated output.
   ///
   template <typename Functor, typename... Args>
   VISKORES_CONT void CastAndCallVariableVecField(

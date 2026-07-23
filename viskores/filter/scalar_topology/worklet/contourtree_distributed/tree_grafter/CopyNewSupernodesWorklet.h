@@ -118,7 +118,7 @@ public:
     const InFieldPortalType& newSupernodesPortal,
     const InFieldPortalType& contourTreeSupernodesPortal,
     const SortOrderPortalType&
-      meshSortOrderPortal, // depending on the mesh type these may be differnt fancy arrays
+      meshSortOrderPortal, // depending on the mesh type these may be different fancy arrays
     const InFieldPortalType& hierarchicalTreeIdPortal,
     const InFieldPortalType& whenTransferredPortal,
     const InFieldPortalType& hierarchicalSuperparentPortal,

@@ -139,7 +139,7 @@ namespace worklet
 namespace contourtree_distributed
 {
 
-/// Facture class for augmenting the hierarchical contour tree to enable computations of measures, e.g., volumne
+/// Facture class for augmenting the hierarchical contour tree to enable computations of measures, e.g., volume
 template <typename FieldType>
 class HierarchicalAugmenter
 { // class HierarchicalAugmenter
@@ -544,7 +544,7 @@ void HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints(viskores::Id r
   }
 
   //  4.  resize the out array. We don't need to allocate here because in step 5. the Copy
-  //      algorithm will do the initalization for us
+  //      algorithm will do the initialization for us
 
   //  5.  copy the points we want
   {
@@ -623,7 +623,7 @@ void HierarchicalAugmenter<FieldType>::RetrieveInAttachmentPoints()
 
   // II. copy the additional points into them
   {
-    // The following sequence of copy operations implements the following for from the orginal code
+    // The following sequence of copy operations implements the following for from the original code
     // for (viskores::Id inAttachmentPoint = 0; inAttachmentPoint < inGlobalRegularIDs.size(); inAttachmentPoint++)
     // globalRegularIDs[attachmentPoint]  =  inGlobalRegularIDs[outAttachmentPoint];
     auto tempGlobalRegularIdsView = viskores::cont::make_ArrayHandleView(
@@ -734,7 +734,7 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
 #endif
   // 1a.  We now need to suppress duplicates,
   {
-    // Sort the attachement Ids
+    // Sort the attachment Ids
     viskores::worklet::contourtree_distributed::hierarchical_augmenter::
       AttachmentSuperparentAndIndexComparator attachmentSuperparentAndIndexComparator(
         this->SuperparentRounds, this->GlobalRegularIds, this->SupernodeIds);
@@ -968,7 +968,7 @@ void HierarchicalAugmenter<FieldType>::UpdateHyperstructure(viskores::Id roundNu
     this->Invoke(updateHyperstructureSetSuperchildrenWorklet,
                  this->AugmentedTree->Hypernodes,   // input
                  augmentedTreeSuperarcsView,        // input
-                 augmentedTreeHyperparentsView,     // inpu
+                 augmentedTreeHyperparentsView,     // input
                  this->AugmentedTree->Superchildren // output
     );
   }
@@ -1055,7 +1055,7 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
 #endif
 
     // We now compress to get the set of nodes to transfer. I.e., remove all
-    // NO_SUCH_ELEMENT entires and copy the values to keep to our proper arrays
+    // NO_SUCH_ELEMENT entries and copy the values to keep to our proper arrays
     viskores::worklet::contourtree_augmented::NotNoSuchElementPredicate notNoSuchElementPredicate;
     viskores::cont::Algorithm::CopyIf(
       tempRegularNodesNeeded,   // input data
@@ -1075,7 +1075,7 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
   viskores::Id numExistingRegular = this->AugmentedTree->RegularNodeGlobalIds.GetNumberOfValues();
   viskores::Id numTotalRegular = numExistingRegular + numRegNeeded;
   {
-    // Resize the array, while preserving the orginial values and initalizing new values
+    // Resize the array, while preserving the original values and initializing new values
     this->AugmentedTree->RegularNodeGlobalIds.AllocateAndFill(
       numTotalRegular, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
     this->AugmentedTree->DataValues.AllocateAndFill(
@@ -1183,7 +1183,7 @@ void HierarchicalAugmenter<FieldType>::RetrieveOldSupernodes(viskores::Id roundN
     this->BaseTree->NumSupernodesInRound.ReadPortal().Get(roundNumber));
 
   {
-    // Reset this-KeptSupernodes to the right size and initalize with NO_SUCH_ELEMENT.
+    // Reset this-KeptSupernodes to the right size and initialize with NO_SUCH_ELEMENT.
     viskores::cont::Algorithm::Copy(
       // Create const array to copy
       viskores::cont::ArrayHandleConstant<viskores::Id>(
@@ -1201,7 +1201,7 @@ void HierarchicalAugmenter<FieldType>::RetrieveOldSupernodes(viskores::Id roundN
       // Stencil with baseTree->superarcs[supernodeID]
       viskores::cont::make_ArrayHandleView(
         this->NewSupernodeIds, supernodeIndexBase, this->KeptSupernodes.GetNumberOfValues()),
-      // And the CopyIf compresses the array to eliminate unnecssary elements
+      // And the CopyIf compresses the array to eliminate unnecessary elements
       // save to this->KeptSupernodes
       this->KeptSupernodes,
       // then our predicate identifies all necessary points. These

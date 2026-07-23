@@ -237,7 +237,7 @@ std::string GetLogErrorContext()
 VISKORES_CONT
 std::string GetStackTrace(viskores::Int32 skip)
 {
-  (void)skip; // unsed when logging disabled.
+  (void)skip; // unused when logging disabled.
 
   std::string result;
 

@@ -269,7 +269,7 @@ void DoRenderTest(viskores::rendering::CanvasRayTracer& canvas,
   DoRenderTest(canvas, *mapper, dataSetsFields, outputFile, options);
 }
 
-} // annonymous namesapce
+} // anonymous namespace
 
 namespace viskores
 {

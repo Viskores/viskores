@@ -134,14 +134,14 @@ public:
         const std::string fieldName,
         const viskores::rendering::Color& color);
 
-  /// Create an `Actor` object that renders a set of cells positioned by a given coordiante
+  /// Create an `Actor` object that renders a set of cells positioned by a given coordinate
   /// system. A field to apply psudocoloring is also provided. The default colormap is applied.
   /// The cells, coordinates, and field are typically pulled from a `viskores::cont::DataSet` object.
   Actor(const viskores::cont::UnknownCellSet& cells,
         const viskores::cont::CoordinateSystem& coordinates,
         const viskores::cont::Field& scalarField);
 
-  /// Create an `Actor` object that renders a set of cells positioned by a given coordiante
+  /// Create an `Actor` object that renders a set of cells positioned by a given coordinate
   /// system. A field to apply psudocoloring is also provided. A color table providing the map
   /// from scalar values to colors is also provided.
   /// The cells, coordinates, and field are typically pulled from a `viskores::cont::DataSet` object.
@@ -150,7 +150,7 @@ public:
         const viskores::cont::Field& scalarField,
         const viskores::cont::ColorTable& colorTable);
 
-  /// Create an `Actor` object that renders a set of cells positioned by a given coordiante
+  /// Create an `Actor` object that renders a set of cells positioned by a given coordinate
   /// system. A constant color to apply to the object is also provided.
   /// The cells and coordinates are typically pulled from a `viskores::cont::DataSet` object.
   // Why do you have to provide a `Field` if a constant color is provided?

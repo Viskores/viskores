@@ -282,7 +282,7 @@ struct ListAppendImpl<viskores::List<T0s...>,
 
 } // namespace detail
 
-/// Concatinates a set of lists into a single list.
+/// Concatenates a set of lists into a single list.
 ///
 /// Note that this does not work correctly with `viskores::ListUniversal`.
 template <typename... Lists>

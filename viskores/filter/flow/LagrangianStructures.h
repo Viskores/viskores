@@ -32,7 +32,7 @@ namespace flow
 
 /// @brief Compute the finite time Lyapunov exponent (FTLE) of a vector field.
 ///
-/// The FTLE is computed by advecting particles throughout the vector field and analyizing
+/// The FTLE is computed by advecting particles throughout the vector field and analyzing
 /// where they diverge or converge. By default, the points of the input `viskores::cont::DataSet`
 /// are all advected for this computation unless an auxiliary grid is established.
 ///

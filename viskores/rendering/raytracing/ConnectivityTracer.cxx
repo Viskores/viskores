@@ -221,7 +221,7 @@ void ConnectivityTracer::SetVolumeData(const viskores::cont::Field& scalarField,
   const bool isSupportedField = ScalarField.IsCellField() || ScalarField.IsPointField();
   if (!isSupportedField)
   {
-    throw viskores::cont::ErrorBadValue("Field not accociated with cell set or points");
+    throw viskores::cont::ErrorBadValue("Field not associated with cell set or points");
   }
   FieldAssocPoints = ScalarField.IsPointField();
 
@@ -248,7 +248,7 @@ void ConnectivityTracer::SetEnergyData(const viskores::cont::Field& absorption,
   bool isSupportedField = absorption.GetAssociation() == viskores::cont::Field::Association::Cells;
   if (!isSupportedField)
     throw viskores::cont::ErrorBadValue("Absorption Field '" + absorption.GetName() +
-                                        "' not accociated with cells");
+                                        "' not associated with cells");
   ScalarField = absorption;
   CellSet = cellSet;
   Coords = coords;
@@ -260,7 +260,7 @@ void ConnectivityTracer::SetEnergyData(const viskores::cont::Field& absorption,
   {
     if (emission.GetAssociation() != viskores::cont::Field::Association::Cells)
       throw viskores::cont::ErrorBadValue("Emission Field '" + emission.GetName() +
-                                          "' not accociated with cells");
+                                          "' not associated with cells");
     HasEmission = true;
     EmissionField = emission;
   }

@@ -192,7 +192,7 @@ VISKORES_CONT viskoresdiy::DiscreteBounds ComputeBlockIndices(
     // Number of blocks/divisions along axis is number of unique origins along this axis
     diyDivisions.push_back(static_cast<int>(origins_block->Origins.size()));
 
-    // Block index aling this axis is the index of the origin in that list
+    // Block index along this axis is the index of the origin in that list
     for (viskores::Id ds_no = 0; ds_no < input.GetNumberOfPartitions(); ++ds_no)
     {
       diyBlockCoords[ds_no].push_back(static_cast<int>(std::find(origins_block->Origins.begin(),

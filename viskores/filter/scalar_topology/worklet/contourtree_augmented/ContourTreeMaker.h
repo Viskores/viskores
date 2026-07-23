@@ -153,7 +153,7 @@ public:
   // computes the regular arcs in the contour tree. Augment the contour tree with all regular vertices.
   void ComputeRegularStructure(MeshExtrema& meshExtrema);
 
-  // compute the parital regular arcs by augmenting the contour tree with the relevant vertices on the boundary
+  // compute the partial regular arcs by augmenting the contour tree with the relevant vertices on the boundary
   template <class Mesh, class MeshBoundaryExecObj>
   void ComputeBoundaryRegularStructure(MeshExtrema& meshExtrema,
                                        const Mesh& mesh,
@@ -400,7 +400,7 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
   // set up the array which tracks which supernodes to deal with on which iteration:
   // it's plus 2 because there's an "extra" iteration for the root
   // and it's useful to store the size as one beyond that
-  // initalize with 0's to be safe
+  // initialize with 0's to be safe
   viskores::cont::Algorithm::Copy(
     viskores::cont::ArrayHandleConstant<viskores::Id>(0, this->ContourTreeResult.NumIterations + 2),
     this->ContourTreeResult.FirstSupernodePerIteration);
@@ -474,7 +474,7 @@ inline void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema)
     this->ContourTreeResult.Supernodes,
     this->ContourTreeResult.Superparents); // superparents array permmuted by the supernodes array
   viskores::cont::Algorithm::Copy(supernodesIndex, permutedSuperparents);
-  // The above copy is equivlant to
+  // The above copy is equivalent to
   // for (indexType supernode = 0; supernode < this->ContourTreeResult.supernodes.size(); supernode++)
   //    this->ContourTreeResult.superparents[this->ContourTreeResult.Supernodes[supernode]] = supernode;
 
@@ -549,7 +549,7 @@ inline void ContourTreeMaker::ComputeBoundaryRegularStructure(
   auto permutedSuperparents =
     viskores::cont::make_ArrayHandlePermutation(this->ContourTreeResult.Supernodes, superparents);
   viskores::cont::Algorithm::Copy(supernodesIndex, permutedSuperparents);
-  // The above copy is equivlant to
+  // The above copy is equivalent to
   // for (indexType supernode = 0; supernode < this->ContourTreeResult.Supernodes.size(); supernode++)
   //    superparents[this->ContourTreeResult.Supernodes[supernode]] = supernode;
 

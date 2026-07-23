@@ -171,7 +171,7 @@ described in the [Sphinx
 documentation](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#role-numref)
 
 ``` restructuredtext
-:numref:`Example %s representes an equilateral triangle<ex:EquilateralTriangle>`
+:numref:`Example %s represents an equilateral triangle<ex:EquilateralTriangle>`
 using the :class:`Vec` class.
 ```
     

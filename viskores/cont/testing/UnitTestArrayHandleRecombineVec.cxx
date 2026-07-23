@@ -95,7 +95,7 @@ struct TestRecombineVecAsOutput
     invoke(PassThrough{}, baseArray, recombinedArray);
     VISKORES_TEST_ASSERT(test_equal_ArrayHandles(baseArray, outputArray));
 
-    // Try outputing to a recombine vec inside of another fancy ArrayHandle.
+    // Try outputting to a recombine vec inside of another fancy ArrayHandle.
     auto reverseOutput = viskores::cont::make_ArrayHandleReverse(recombinedArray);
     invoke(PassThrough{}, baseArray, reverseOutput);
     VISKORES_TEST_ASSERT(test_equal_ArrayHandles(baseArray, reverseOutput));

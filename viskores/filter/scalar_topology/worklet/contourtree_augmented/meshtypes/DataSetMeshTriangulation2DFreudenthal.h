@@ -99,7 +99,7 @@ public:
   /// @param meshSize viskores::Id2 object describing the number of vertices in x and y
   DataSetMeshTriangulation2DFreudenthal(viskores::Id2 meshSize);
 
-  /// Helper function to create a boundary excution object for the mesh. The MeshBoundary2DExec object
+  /// Helper function to create a boundary execution object for the mesh. The MeshBoundary2DExec object
   /// implements functions for using in worklets in Viskores's execution environment related the boundary
   /// of the mesh.
   MeshBoundary2DExec GetMeshBoundaryExecutionObject() const;
@@ -182,7 +182,7 @@ inline void DataSetMeshTriangulation2DFreudenthal::GetBoundaryVertices(
   );
 }
 
-// Overwrite the implemenation from the base DataSetMesh parent class
+// Overwrite the implementation from the base DataSetMesh parent class
 inline void DataSetMeshTriangulation2DFreudenthal::GetOwnedVerticesByGlobalId(
   const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
   IdArrayType& ownedVertices) const

@@ -118,7 +118,7 @@
 
 // Define a pair of macros, VISKORES_THIRDPARTY_PRE_INCLUDE and VISKORES_THIRDPARTY_POST_INCLUDE,
 // that should be wrapped around any #include for a tbb or thrust header file. Mostly
-// this is used to set pragmas that dissable warnings that Viskores checks for
+// this is used to set pragmas that disable warnings that Viskores checks for
 // but tbb and thrust does not.
 #if (defined(VISKORES_GCC) || defined(VISKORES_CLANG))
 
@@ -218,7 +218,7 @@
 // For example by default Intel, PGI, and IBM compilers use the standard library
 // that is provided by a systems default C++ compiler ( generally gcc ). For this
 // reason we have a define that states we are compiling with GLIBCXX_4 which
-// is missing some usefull C++ standard library components
+// is missing some useful C++ standard library components
 //
 #define VISKORES_USING_GLIBCXX_4
 #endif

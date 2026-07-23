@@ -127,7 +127,7 @@ public:
 
     // In serial this worklet implements the following operation
     /*
-    // NOTE: in contrast to the original imlementation this worklet starts the iteration at
+    // NOTE: in contrast to the original implementation this worklet starts the iteration at
     //       0 for simplicity, hence, we need to check this case separately here
     for (viskores::Id hyperarc = 1; hyperarc < hyperarcTargetSortPermutation.size(); hyperarc++)
     { // per hyperarc

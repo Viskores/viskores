@@ -37,7 +37,7 @@ namespace viskoresstd
 {
 
 // GCC 4.8 and 4.9 standard library does not support std::is_trivially_copyable.
-// There is no relyable way to get this information (since it has to come special from
+// There is no reliable way to get this information (since it has to come special from
 // the compiler). For our purposes, we will report as nothing being trivially copyable,
 // which causes us to call the constructors with everything. This should be fine unless
 // some other part of the compiler is trying to check for trivial copies (perhaps nvcc

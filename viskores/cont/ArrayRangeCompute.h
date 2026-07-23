@@ -47,7 +47,7 @@ namespace cont
 ///
 /// The optional `computeFiniteRange` parameter specifies whether if non-finite
 /// values in the array should be ignored to compute the finite range of
-/// the array. For Vec types, individual component values are considered independantly.
+/// the array. For Vec types, individual component values are considered independently.
 ///
 /// The optional `device` parameter can be used to specify a device to run the
 /// range computation on. The default value is `viskores::cont::DeviceAdapterTagAny{}`.

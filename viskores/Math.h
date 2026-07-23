@@ -2668,7 +2668,7 @@ static inline VISKORES_EXEC_CONT viskores::Vec<T, N> CopySign(const viskores::Ve
 ///@}
 
 ///@{
-/// Decompose floating poing value
+/// Decompose floating point value
 ///
 inline VISKORES_EXEC_CONT viskores::Float32 Frexp(viskores::Float32 x, viskores::Int32 *exponent)
 {

@@ -86,10 +86,10 @@ class GetBranchVolumeWorklet : public viskores::worklet::WorkletMapField
 public:
   using ControlSignature = void(
     FieldIn lowerDirection, // (input) lower end superarc ID with direction information
-    FieldIn lowerIntrinsic, // (input) lower end superarc intrisic volume
+    FieldIn lowerIntrinsic, // (input) lower end superarc intrinsic volume
     FieldIn lowerDependent, // (input) lower end superarc dependent volume
     FieldIn upperDirection, // (input) upper end superarc ID with direction information
-    FieldIn upperIntrinsic, // (input) upper end superarc intrisic volume
+    FieldIn upperIntrinsic, // (input) upper end superarc intrinsic volume
     FieldIn upperDependent, // (input) upper end superarc dependent volume
     FieldIn isLowerLeaf,    // (input) bool, whether the lower end is a leaf
     FieldIn isUpperLeaf,    // (input) bool, whether the upper end is a leaf

@@ -159,7 +159,7 @@ public:
       default:
       {
         // Code path not expected to execute in correct cases
-        // Supress unused variable warning
+        // Suppress unused variable warning
         cellShape = viskores::UInt8(0);
         numVerts = viskores::IdComponent(0);
       }
@@ -274,7 +274,7 @@ public:
   }
 
 private:
-  // Variables required for strucutred grids
+  // Variables required for structured grids
   viskores::Id3 CellDims;
   viskores::Id3 PointDims;
   bool Is3D = true;

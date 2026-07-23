@@ -530,7 +530,7 @@ This association of field values to mesh elements and the structure of the cell 
 Field Class
 ==============================
 
-Fields are manged by the :class:`viskores::cont::Field` class.
+Fields are managed by the :class:`viskores::cont::Field` class.
 
 .. doxygenclass:: viskores::cont::Field
 
@@ -603,7 +603,7 @@ The number of fields in a :class:`viskores::cont::DataSet` is returned by :func:
 
 .. doxygenfunction:: viskores::cont::DataSet::GetNumberOfFields
 
-It is possible to iterate over all fields of a :class:`viskores::cont::DataSet` by quering the number of fields and then retrieving the fields by index.
+It is possible to iterate over all fields of a :class:`viskores::cont::DataSet` by querying the number of fields and then retrieving the fields by index.
 
 .. doxygenfunction:: viskores::cont::DataSet::GetField(viskores::Id) const
 .. doxygenfunction:: viskores::cont::DataSet::GetField(viskores::Id)
@@ -685,8 +685,8 @@ You can test whether a :class:`viskores::cont::DataSet` has a field without havi
 
 .. doxygenfunction:: viskores::cont::DataSet::HasCoordinateSystem
 
-Coordiante systems can also be retrieved by index.
-Because most ``DataSet``'s contain exactly one coordiante system, it is common to pick the coordinate system at index 0, which is the default argument.
+Coordinate systems can also be retrieved by index.
+Because most ``DataSet``'s contain exactly one coordinate system, it is common to pick the coordinate system at index 0, which is the default argument.
 
 .. doxygenfunction:: viskores::cont::DataSet::GetCoordinateSystem(viskores::Id) const
 

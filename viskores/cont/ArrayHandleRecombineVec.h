@@ -412,7 +412,7 @@ struct RecombineVecMetaData
     this->ArrayBufferOffsets = src.ArrayBufferOffsets;
 
     this->PortalBuffers.clear();
-    // Intentionally not copying portals. Portals will be recreated from proper array when requsted.
+    // Intentionally not copying portals. Portals will be recreated from proper array when requested.
 
     return *this;
   }

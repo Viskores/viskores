@@ -71,7 +71,7 @@ namespace hierarchical_volumetric_branch_decomposer
 
 /// Template parameter is bool indicating whether we are processing up- or
 /// down best volumes and corresponding whether we need to use the low or
-/// high end of the edge. Note: We make this a template paramter so that
+/// high end of the edge. Note: We make this a template parameter so that
 /// the corresponding if statement can already be optimozed away during
 /// compile time.
 template <bool IsDown>
@@ -148,7 +148,7 @@ public:
         } // last in group
       }   // not the last one
     }     // if(this->IsDown)
-    else // Processing the Up arrays. This is essentiall the same, but we need to use the lower end of the edge instead
+    else // Processing the Up arrays. This is essentially the same, but we need to use the lower end of the edge instead
     {
       // if it's the last one
       if (actualSuperarcIndex == NumberActualSuperarcs - 1)

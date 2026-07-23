@@ -324,7 +324,7 @@ if(Viskores_ENABLE_KOKKOS AND NOT TARGET viskores_kokkos)
   find_package(Kokkos 3.7 REQUIRED)
 
   # We must empty this property for every kokkos backend device since it
-  # contains a generator expresion which breaks some of our users builds.
+  # contains a generator expression which breaks some of our users builds.
   set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_COMPILE_DEFINITIONS "")
 
   if (CUDA IN_LIST Kokkos_DEVICES)

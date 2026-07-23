@@ -163,7 +163,7 @@ struct VarientSizesExecObj : viskores::cont::ExecutionObjectBase
 
 struct TestVariantExecObjectPadding : viskores::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldOut a, FieldOut c, ExecObject varient);
+  using ControlSignature = void(FieldOut a, FieldOut c, ExecObject variant);
   // Using an output field as the domain is weird, but it works.
   using InputDomain = _1;
 
@@ -178,7 +178,7 @@ struct TestVariantExecObjectPadding : viskores::worklet::WorkletMapField
 
 struct TestVariantExecObjectNoPadding : viskores::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldOut a, FieldOut b, FieldOut c, ExecObject varient);
+  using ControlSignature = void(FieldOut a, FieldOut b, FieldOut c, ExecObject variant);
   // Using an output field as the domain is weird, but it works.
   using InputDomain = _1;
 
@@ -195,7 +195,7 @@ struct TestVariantExecObjectNoPadding : viskores::worklet::WorkletMapField
 
 struct TestVariantExecObjectLarger : viskores::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldOut c, FieldOut d, FieldOut e, ExecObject varient);
+  using ControlSignature = void(FieldOut c, FieldOut d, FieldOut e, ExecObject variant);
   // Using an output field as the domain is weird, but it works.
   using InputDomain = _1;
 

@@ -183,7 +183,7 @@ public:
 
     if (!this->Resource->IsRegistered() || resize)
     {
-      //register the buffer as being used by cuda. This needs to be done everytime
+      //register the buffer as being used by cuda. This needs to be done every time
       //we change the size of the buffer. That is why we only change the buffer
       //size as infrequently as possible
       this->Resource->Register(this->State.GetHandle());

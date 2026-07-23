@@ -40,7 +40,7 @@ VISKORES_FILTER_CORE_EXPORT VISKORES_CONT bool viskores::filter::MapFieldPermuta
   }
   catch (...)
   {
-    VISKORES_LOG_S(viskores::cont::LogLevel::Warn, "Faild to map field " << inputField.GetName());
+    VISKORES_LOG_S(viskores::cont::LogLevel::Warn, "Failed to map field " << inputField.GetName());
     return false;
   }
 }
@@ -64,7 +64,7 @@ VISKORES_FILTER_CORE_EXPORT VISKORES_CONT bool viskores::filter::MapFieldPermuta
   catch (...)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                   "Faild to coordinate system " << inputCoords.GetName());
+                   "Failed to coordinate system " << inputCoords.GetName());
     return false;
   }
 }

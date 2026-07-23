@@ -1,6 +1,6 @@
 #!/bin/sh
 
-extentions_to_change="cxx cpp cu h hxx hpp"
+extensions_to_change="cxx cpp cu h hxx hpp"
 
 tags_to_change=" \
     FieldIn
@@ -31,21 +31,21 @@ if [ $# -ne 1 ]
 then
     echo "USAGE: $0 <directory>"
     echo
-    echo "This script seaches for C++ source files and removes the template"
+    echo "This script searches for C++ source files and removes the template"
     echo "arguments of select ControlSignature tags that have changed since"
     echo "Viskores 1.3. This script searches through all subdirectories of the"
     echo "given directory. Files with the following extensions are processed:"
     echo
-    echo "   $extentions_to_change"
+    echo "   $extensions_to_change"
 
     exit 1
 fi
 
 find_command="find '$1' -name 'not-a-name'"
 
-for extention in $extentions_to_change
+for extension in $extensions_to_change
 do
-    find_command="$find_command -o -name '*.$extention'"
+    find_command="$find_command -o -name '*.$extension'"
 done
 
 sed_command="sed"

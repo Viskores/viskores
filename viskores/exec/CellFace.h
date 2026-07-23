@@ -276,7 +276,7 @@ static inline VISKORES_EXEC viskores::ErrorCode CellFaceLocalIndex(viskores::IdC
 /// the same if and only if the faces contain the same points.
 ///
 /// Note that this property is only true if the mesh is conforming. That is, any two neighboring
-/// cells that share a face have the same points on that face. This preculdes 2 faces sharing more
+/// cells that share a face have the same points on that face. This precludes 2 faces sharing more
 /// than a single point or single edge.
 ///
 template <typename CellShapeTag, typename GlobalPointIndicesVecType>

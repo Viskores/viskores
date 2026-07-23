@@ -267,8 +267,8 @@ VISKORES_CONT void CellLocatorUniformBins::Build()
   // cellCount = {3, 1, 1, 0}
   // These are set using RecordBinsPerCell worklet, which does the following
   // for each cell
-  //   compute cell bbox and list of overlaping bins
-  //   for each overlaping bin
+  //   compute cell bbox and list of overlapping bins
+  //   for each overlapping bin
   //     add the bin id to binsPerCell starting at binOffset
   //     add the cell id to the CellIds starting at binOffset
   //     increment CellCount for the bin (uses an atomic for thread safety).

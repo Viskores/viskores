@@ -74,7 +74,7 @@ namespace contourtree_maker_inc
 {
 
 // Worklet to find the RHE of each segment. This worklet is used for both the join and split tree.
-// In the case of the join tre we should use the updegree as input and for the split tree the downdegree
+// In the case of the join tree we should use the updegree as input and for the split tree the downdegree
 class FindDegrees_FindRHE : public viskores::worklet::WorkletMapField
 {
 public:

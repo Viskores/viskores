@@ -296,7 +296,7 @@ private:
       branchSaddle,  // (output)
       branchParent); // (output)
 
-    // Create explicit representation of the branch decompostion from the array representation
+    // Create explicit representation of the branch decomposition from the array representation
     using ValueArray = viskores::cont::ArrayHandle<DataValueType>;
     ValueArray dataField;
 
@@ -318,7 +318,7 @@ private:
         dataField,
         dataFieldIsSorted);
 
-    // Simplify the contour tree of the branch decompostion
+    // Simplify the contour tree of the branch decomposition
     branchDecompositionRoot->SimplifyToSize(numComp, usePersistenceSorter);
 
     int contourType = 0;

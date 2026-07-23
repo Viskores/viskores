@@ -173,7 +173,7 @@ public:
   };
 
   // Traverses the active cells and mark the connected points as active,
-  // propogating the reference pointId.
+  // propagating the reference pointId.
   class WorkletMarkActivePoints : public viskores::worklet::WorkletVisitCellsWithPoints
   {
   public:
@@ -215,7 +215,7 @@ public:
       // There must be one valid point in each cell:
       VISKORES_ASSERT("Reference point not found." && refPtId != INVALID_ID);
 
-      // Propogate the reference point to other cell members
+      // Propagate the reference point to other cell members
       for (viskores::IdComponent p = 0; p < points.GetNumberOfComponents(); ++p)
       {
         const viskores::Id pointId = points[p];

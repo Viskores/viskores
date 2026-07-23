@@ -75,8 +75,8 @@ namespace contourtree_distributed
 namespace hierarchical_augmenter
 {
 
-// Implementatin of predicate used in HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints
-// to determine whether an attachement points needs to be transferred
+// Implementation of predicate used in HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints
+// to determine whether an attachment points needs to be transferred
 class IsAttachementPointNeededPredicateImpl
 {
 public:
@@ -114,7 +114,7 @@ private:
 
 
 // Predicate ExecutonObject used in HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints
-// to determine whether an attachement points needs to be transferred
+// to determine whether an attachment points needs to be transferred
 class IsAttachementPointNeededPredicate : public viskores::cont::ExecutionObjectBase
 {
 public:

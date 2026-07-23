@@ -212,7 +212,7 @@ template <typename T0>
 union VariantUnionTD<T0>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0> Placeholder;
 
   T0 V0;
@@ -223,7 +223,7 @@ template <typename T0>
 union VariantUnionNTD<T0>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0> Placeholder;
 
   T0 V0;
@@ -236,7 +236,7 @@ template <typename T0, typename T1>
 union VariantUnionTD<T0, T1>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1> Placeholder;
 
   T0 V0;
@@ -248,7 +248,7 @@ template <typename T0, typename T1>
 union VariantUnionNTD<T0, T1>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1> Placeholder;
 
   T0 V0;
@@ -262,7 +262,7 @@ template <typename T0, typename T1, typename T2>
 union VariantUnionTD<T0, T1, T2>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2> Placeholder;
 
   T0 V0;
@@ -275,7 +275,7 @@ template <typename T0, typename T1, typename T2>
 union VariantUnionNTD<T0, T1, T2>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2> Placeholder;
 
   T0 V0;
@@ -290,7 +290,7 @@ template <typename T0, typename T1, typename T2, typename T3>
 union VariantUnionTD<T0, T1, T2, T3>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3> Placeholder;
 
   T0 V0;
@@ -304,7 +304,7 @@ template <typename T0, typename T1, typename T2, typename T3>
 union VariantUnionNTD<T0, T1, T2, T3>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3> Placeholder;
 
   T0 V0;
@@ -320,7 +320,7 @@ template <typename T0, typename T1, typename T2, typename T3, typename T4>
 union VariantUnionTD<T0, T1, T2, T3, T4>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3, T4> Placeholder;
 
   T0 V0;
@@ -335,7 +335,7 @@ template <typename T0, typename T1, typename T2, typename T3, typename T4>
 union VariantUnionNTD<T0, T1, T2, T3, T4>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3, T4> Placeholder;
 
   T0 V0;
@@ -352,7 +352,7 @@ template <typename T0, typename T1, typename T2, typename T3, typename T4, typen
 union VariantUnionTD<T0, T1, T2, T3, T4, T5>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3, T4, T5> Placeholder;
 
   T0 V0;
@@ -368,7 +368,7 @@ template <typename T0, typename T1, typename T2, typename T3, typename T4, typen
 union VariantUnionNTD<T0, T1, T2, T3, T4, T5>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3, T4, T5> Placeholder;
 
   T0 V0;
@@ -386,7 +386,7 @@ template <typename T0, typename T1, typename T2, typename T3, typename T4, typen
 union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6> Placeholder;
 
   T0 V0;
@@ -403,7 +403,7 @@ template <typename T0, typename T1, typename T2, typename T3, typename T4, typen
 union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6> Placeholder;
 
   T0 V0;
@@ -422,7 +422,7 @@ template <typename T0, typename T1, typename T2, typename T3, typename T4, typen
 union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6, T7> Placeholder;
 
   T0 V0;
@@ -440,7 +440,7 @@ template <typename T0, typename T1, typename T2, typename T3, typename T4, typen
 union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6, T7> Placeholder;
 
   T0 V0;
@@ -461,8 +461,8 @@ template <typename T0, typename T1, typename T2, typename T3, typename T4, typen
 union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>
 {
   // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
+  // if another entry in the variant has a struct with padding. Place an item that requires
+  // everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...> Placeholder;
 
   T0 V0;
@@ -483,8 +483,8 @@ template <typename T0, typename T1, typename T2, typename T3, typename T4, typen
 union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>
 {
   // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
+  // if another entry in the variant has a struct with padding. Place an item that requires
+  // everything to be copied.
   SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...> Placeholder;
 
   T0 V0;

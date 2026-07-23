@@ -99,7 +99,7 @@ class ContourTreeAugmented
 public:
   /*!
   * Log level to be used for outputting timing information. Default is viskores::cont::LogLevel::Perf
-  * Use viskores::cont::LogLevel::Off to disable outputing the results via viskores logging here. The
+  * Use viskores::cont::LogLevel::Off to disable outputting the results via viskores logging here. The
   * results are saved in the TimingsLogString variable so we can use it to do our own logging
   */
   viskores::cont::LogLevel TimingsLogLevel = viskores::cont::LogLevel::Perf;
@@ -125,8 +125,8 @@ public:
   *                 as an input. The MeshBoundary is used to augment the contour tree with the
   *                 mesh boundary vertices. It is needed only if we want to augement by the
   *                 mesh boundary and computeRegularStructure is False (i.e., if we compute
-  *                 the full regular strucuture this is not needed because all vertices
-  *                 (including the boundary) will be addded to the tree anyways.
+  *                 the full regular structure this is not needed because all vertices
+  *                 (including the boundary) will be added to the tree anyways.
   */
   template <typename FieldType,
             typename StorageType,
@@ -154,9 +154,9 @@ public:
   /*!
    * Run the contour tree analysis. This helper function is used to
    * allow one to run the contour tree in a consistent fashion independent
-   * of whether the data is 2D, 3D, or 3D_MC. This function initalizes
+   * of whether the data is 2D, 3D, or 3D_MC. This function initializes
    * the approbritate mesh class from the contourtree_augmented worklet
-   * and constructs ths mesh boundary exectuion object to be used. It the
+   * and constructs this mesh boundary execution object to be used. It the
    * subsequently calls RunContourTree method to compute the actual contour tree.
    *
    *  fieldArray   : Needed only as a pass-through value but not used in this case
@@ -251,8 +251,8 @@ private:
   *                 as an input. The MeshBoundary is used to augment the contour tree with the
   *                 mesh boundary vertices. It is needed only if we want to augement by the
   *                 mesh boundary and computeRegularStructure is False (i.e., if we compute
-  *                 the full regular strucuture this is not needed because all vertices
-  *                 (including the boundary) will be addded to the tree anyways.
+  *                 the full regular structure this is not needed because all vertices
+  *                 (including the boundary) will be added to the tree anyways.
   */
   template <typename FieldType,
             typename StorageType,

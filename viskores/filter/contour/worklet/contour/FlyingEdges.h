@@ -79,7 +79,7 @@ viskores::cont::CellSetSingleType<> execute(
 
   auto metaDataSums = viskores::cont::make_ArrayHandleGroupVec<3>(metaDataLinearSums);
 
-  // Since sharedState can be re-used between invocations of contour,
+  // Since sharedState can be reused between invocations of contour,
   // we need to make sure we reset the size of the Interpolation
   // arrays so we don't execute Pass5 over an array that is too large
   sharedState.InterpolationEdgeIds.ReleaseResources();

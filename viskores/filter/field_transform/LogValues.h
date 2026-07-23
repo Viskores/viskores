@@ -80,7 +80,7 @@ public:
   ///
   /// Before taking the logarithm, this filter will check the value to this minimum
   /// value and clamp it to the minimum value if it is lower. This is useful to
-  /// prevent values from approching negative infinity.
+  /// prevent values from approaching negative infinity.
   ///
   /// By default, no minimum value is used.
   viskores::FloatDefault GetMinValue() const { return this->MinValue; }

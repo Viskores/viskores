@@ -134,7 +134,7 @@ public:
     // this *MAY* make certain sorts run faster
     augmentedTreeRegularNodeSortOrderValue = newRegularId;
 
-    // NOTE: we can skip this step since Regular2supernode is already initalized with NO_SUCH_ELEMENT
+    // NOTE: we can skip this step since Regular2supernode is already initialized with NO_SUCH_ELEMENT
     // since these are *ALL* only regular nodes, this one's easy:
     // augmentedTree->regular2supernode  [newRegularID]    =  NO_SUCH_ELEMENT;
 

@@ -217,7 +217,7 @@ viskores::cont::CellSetSingleType<> MergeCellSetsSingleType(
       continue;
     }
     auto cellSet = partitionedDataSet.GetPartition(partitionIndex).GetCellSet();
-    // Grabing the connectivity and copy it into the larger connectivity array
+    // Grabbing the connectivity and copy it into the larger connectivity array
     viskores::cont::CellSetSingleType<> singleType =
       cellSet.AsCellSet<viskores::cont::CellSetSingleType<>>();
     const viskores::cont::ArrayHandle<viskores::Id> connPerDataSet =
@@ -256,7 +256,7 @@ viskores::cont::CellSetExplicit<> MergeCellSetsExplicit(
   viskores::cont::ConvertNumComponentsToOffsets(numIndices, offsets, numIndicesTotal);
   numIndices.ReleaseResources();
 
-  //Merging connectivity/indicies array
+  //Merging connectivity/indices array
   viskores::cont::ArrayHandle<viskores::Id> indices;
   MergeIndices(partitionedDataSet, offsets, numIndicesTotal, indices, firstNonEmptyPartitionId);
 

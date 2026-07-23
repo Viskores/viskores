@@ -145,7 +145,7 @@ public:
       viskores::AtomicLoad(reinterpret_cast<APIType*>(this->Data + index), order));
   }
 
-  /// @brief Peform an atomic addition with sequentially consistent memory
+  /// @brief Perform an atomic addition with sequentially consistent memory
   /// ordering.
   /// @param index The index of the array element that will be added to.
   /// @param value The addend of the atomic add operation.
@@ -171,7 +171,7 @@ public:
       reinterpret_cast<APIType*>(this->Data + index), static_cast<APIType>(value), order));
   }
 
-  /// @brief Peform an atomic store to memory while enforcing, at minimum, "release"
+  /// @brief Perform an atomic store to memory while enforcing, at minimum, "release"
   /// memory ordering.
   /// @param index The index of the array element that will be added to.
   /// @param value The value to write for the atomic store operation.

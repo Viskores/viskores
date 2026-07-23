@@ -38,7 +38,7 @@ namespace filter
 namespace mesh_info
 {
 
-/// @brief Compute for each cell a metric derived from the Jacobian matric with normalization involving edge length.
+/// @brief Compute for each cell a metric derived from the Jacobian matrix with normalization involving edge length.
 ///
 /// This only produces values for triangles, quadrilaterals, tetrahedra, and hexahedra.
 ///

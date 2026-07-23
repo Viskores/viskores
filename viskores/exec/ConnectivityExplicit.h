@@ -60,13 +60,13 @@ public:
 
   /// @brief The tag representing the cell shape of the visited elements.
   ///
-  /// The tag type is allways `viskores::CellShapeTagGeneric` and its id is filled with the
+  /// The tag type is always `viskores::CellShapeTagGeneric` and its id is filled with the
   /// identifier for the appropriate shape.
   using CellShapeTag = viskores::CellShapeTagGeneric;
 
   /// @brief Returns a tagfor the cell shape associated with the element at the given index.
   ///
-  /// The tag type is allways `viskores::CellShapeTagGeneric` and its id is filled with the
+  /// The tag type is always `viskores::CellShapeTagGeneric` and its id is filled with the
   /// identifier for the appropriate shape.
   VISKORES_EXEC
   CellShapeTag GetCellShape(viskores::Id index) const

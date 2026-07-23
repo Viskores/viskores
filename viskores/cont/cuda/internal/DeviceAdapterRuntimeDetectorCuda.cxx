@@ -62,7 +62,7 @@ void queryNumberOfDevicesandHighestArchSupported(viskores::Int32& nod, viskores:
   nod = numDevices;
   has = archVersion;
 }
-} // anonymous namspace
+} // anonymous namespace
 
 #endif
 

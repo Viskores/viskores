@@ -81,7 +81,7 @@ namespace contourtree_distributed
 /// \brief Boundary Restricted Augmented Contour Tree (BRACT)
 ///
 /// A contour tree for boundary vertices with the interior abstracted.
-/// This is primarily a data storage class. The actual constuction of
+/// This is primarily a data storage class. The actual construction of
 /// the BoundaryTree performed by the BoundaryTreeMaker
 /// As a data store, this class primarily stores a set of arrays
 /// and provides convenience functions for interacting with the
@@ -274,7 +274,7 @@ std::string BoundaryTree::PrintGlobalDot(
     }
   } // per node
   resultStream << "\t}" << std::endl;
-  // Return the resulting strin
+  // Return the resulting string
   return resultStream.str();
 } //PrintGlobalDot
 

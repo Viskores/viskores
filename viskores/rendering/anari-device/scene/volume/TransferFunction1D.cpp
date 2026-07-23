@@ -180,7 +180,7 @@ void TransferFunction1D::finalize()
     // NOTE: I am not at all convinced that this is a good idea. If we are
     // getting an array, that probably means that the client has already sampled
     // the colors to the desired level, and we should just use that array.
-    // Insetad, we are building peicewise linear segments and then resampling
+    // Instead, we are building piecewise linear segments and then resampling
     // again.
     if (viskoresColors.IsBaseComponentType<viskores::Float32>())
     {

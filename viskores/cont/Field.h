@@ -201,7 +201,7 @@ public:
   /// Note that the returned array is likely to be compatible with `VISKORES_FIELD_TYPE_LIST`, but
   /// not guaranteed. In particular, if this field contains `Vec`s, the returned array will also
   /// contain `Vec`s of the same size. For example, if the field contains `viskores::Vec2i_16` values,
-  /// they will (likely) be converted to `viskores::Vec2f`. Howver, `viskores::Vec2f` may still not be
+  /// they will (likely) be converted to `viskores::Vec2f`. However, `viskores::Vec2f` may still not be
   /// in `VISKORES_FIELD_TYPE_LIST`.
   ///
   VISKORES_CONT viskores::cont::UnknownArrayHandle GetDataWithExpectedTypes() const;
@@ -218,7 +218,7 @@ public:
   /// Note that the returned array is likely to be compatible with `VISKORES_FIELD_TYPE_LIST`, but
   /// not guaranteed. In particular, if this field contains `Vec`s, the returned array will also
   /// contain `Vec`s of the same size. For example, if the field contains `viskores::Vec2i_16` values,
-  /// they will (likely) be converted to `viskores::Vec2f`. Howver, `viskores::Vec2f` may still not be
+  /// they will (likely) be converted to `viskores::Vec2f`. However, `viskores::Vec2f` may still not be
   /// in `VISKORES_FIELD_TYPE_LIST`.
   ///
   VISKORES_CONT void ConvertToExpected();

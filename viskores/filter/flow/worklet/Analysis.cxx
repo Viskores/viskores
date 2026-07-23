@@ -93,7 +93,7 @@ public:
   using ExecutionSignature = void(_1, _2, _3);
 
   // Offset is number of points in streamline.
-  // 1 (inital point) + number of steps taken (p.NumSteps - initalNumSteps)
+  // 1 (initial point) + number of steps taken (p.NumSteps - initalNumSteps)
   template <typename ParticleType>
   VISKORES_EXEC void operator()(const ParticleType& p,
                                 const viskores::Id& initialNumSteps,

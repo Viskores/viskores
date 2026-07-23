@@ -147,7 +147,7 @@ void DoTest()
   std::cout << "**** Test Basic Arrays *****" << std::endl;
   viskores::testing::Testing::TryTypes(TryTypeFunctor{});
 
-  std::cout << std::endl << "**** Test Uniform Point Coordiantes *****" << std::endl;
+  std::cout << std::endl << "**** Test Uniform Point Coordinates *****" << std::endl;
   TryArray(viskores::cont::ArrayHandleUniformPointCoordinates(ARRAY3_DIM));
 
   std::cout << std::endl << "**** Test Cartesian Product *****" << std::endl;

@@ -385,7 +385,7 @@ public:
     Precision& minU,
     Precision& viskoresNotUsed(minV),
     LeafPortalType leafs,
-    const Precision& minDistance) const // report intesections past this distance
+    const Precision& minDistance) const // report intersections past this distance
   {
     const viskores::Id cylCount = leafs.Get(currentNode);
     for (viskores::Id i = 1; i <= cylCount; ++i)
@@ -667,7 +667,7 @@ void CylinderIntersector::IntersectionDataImp(Ray<Precision>& rays,
   const bool isSupportedField = scalarField.IsCellField() || scalarField.IsPointField();
   if (!isSupportedField)
   {
-    throw viskores::cont::ErrorBadValue("Field not accociated with a cell set");
+    throw viskores::cont::ErrorBadValue("Field not associated with a cell set");
   }
 
   viskores::worklet::DispatcherMapField<detail::CalculateNormals>(detail::CalculateNormals())

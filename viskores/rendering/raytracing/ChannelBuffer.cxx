@@ -157,7 +157,7 @@ void ChannelBuffer<Precision>::Resize(const viskores::Id newSize)
 class ExtractChannel : public viskores::worklet::WorkletMapField
 {
 protected:
-  viskores::Id NumChannels; // the nnumber of channels in the buffer
+  viskores::Id NumChannels; // the number of channels in the buffer
   viskores::Id ChannelNum;  // the channel to extract
 
 public:

@@ -267,7 +267,7 @@ void TestStatistics()
 } // TestFieldStatistics
 }
 
-//More deatiled tests can be found in the UnitTestStatisticsFilter
+//More detailed tests can be found in the UnitTestStatisticsFilter
 int UnitTestStatisticsFilterMPI(int argc, char* argv[])
 {
   viskoresdiy::mpi::environment env(argc, argv);

@@ -44,7 +44,7 @@ namespace scalar_topology
 
 // Constructor to  record information about spatial decomposition
 // TODO/FIXME: Add this information to PartitionedDataSet, so that we do
-// not need to pass it sperately (or check if it can already be derived from
+// not need to pass it separately (or check if it can already be derived from
 // information stored in PartitionedDataSet)
 VISKORES_CONT DistributedBranchDecompositionFilter::DistributedBranchDecompositionFilter(
   viskores::Id3,
@@ -332,7 +332,7 @@ DistributedBranchDecompositionFilter::DoExecutePartitions(
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
-  // Now we have collected the branches, we do a global reduction to exchance branch end information
+  // Now we have collected the branches, we do a global reduction to exchange branch end information
   // across all compute ranks
   auto exchangeBranchEndsFunctor =
     viskores::filter::scalar_topology::internal::ExchangeBranchEndsFunctor(this->TimingsLogLevel);

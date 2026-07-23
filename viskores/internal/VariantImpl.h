@@ -331,7 +331,7 @@ public:
   template <typename T>
   using CanStore = std::integral_constant<bool, (IndexOf<T>::value >= 0)>;
 
-  /// Returns whether the given type can be respresented in this Variant.
+  /// Returns whether the given type can be represented in this Variant.
   ///
   template <typename T>
   VISKORES_DEVICE static constexpr bool GetCanStore()

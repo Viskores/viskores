@@ -1602,7 +1602,7 @@ public:
     //
     // Execute the test for the current settings
     //
-    TestContourTreeAugmentedSteps3D(false,                   // don't use marchin cubes
+    TestContourTreeAugmentedSteps3D(false,                   // don't use marching cubes
                                     computeRegularStructure, // fully augment the tree
                                     expectedResults);
 

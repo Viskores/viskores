@@ -160,7 +160,7 @@ public:
     Precision& viskoresNotUsed(minU),
     Precision& viskoresNotUsed(minV),
     LeafPortalType leafs,
-    const Precision& minDistance) const // report intesections past this distance
+    const Precision& minDistance) const // report intersections past this distance
   {
     const viskores::Id sphereCount = leafs.Get(currentNode);
     for (viskores::Id i = 1; i <= sphereCount; ++i)
@@ -365,7 +365,7 @@ void SphereIntersector::IntersectionDataImp(Ray<Precision>& rays,
   if (!isSupportedField)
   {
     throw viskores::cont::ErrorBadValue(
-      "SphereIntersector: Field not accociated with a cell set or field");
+      "SphereIntersector: Field not associated with a cell set or field");
   }
 
   viskores::worklet::DispatcherMapField<detail::CalculateNormals>(detail::CalculateNormals())

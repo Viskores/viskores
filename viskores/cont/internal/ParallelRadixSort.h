@@ -78,7 +78,7 @@
 //   void RunParentTask(TaskType task);
 //
 //   // Run an child task in a new thread. The function may be blocking or
-//   // non-blocking, and 'data' is an abitrary object passed to the parent
+//   // non-blocking, and 'data' is an arbitrary object passed to the parent
 //   // task's operator() (See the TBB implementation for details).
 //   template <typename TaskType, typename ParentTaskThreadData>
 //   void RunChildTasks(ParentTaskThreadData data, TaskType left, TaskType right);

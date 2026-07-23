@@ -45,7 +45,7 @@ public:
 
   /// @brief Establish a transformation from Cartesian to spherical coordinates.
   VISKORES_CONT void SetCartesianToSpherical() { CartesianToSpherical = true; }
-  /// @brief Establish a transformation from spherical to Cartesian coordiantes.
+  /// @brief Establish a transformation from spherical to Cartesian coordinates.
   VISKORES_CONT void SetSphericalToCartesian() { CartesianToSpherical = false; }
 
 private:

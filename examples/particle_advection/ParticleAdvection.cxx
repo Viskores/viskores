@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  //create seeds randomly placed withing the bounding box of the data.
+  //create seeds randomly placed within the bounding box of the data.
   viskores::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
   std::vector<viskores::Particle> seeds;
 

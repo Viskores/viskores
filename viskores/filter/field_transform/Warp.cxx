@@ -60,7 +60,7 @@ struct WarpWorklet : viskores::worklet::WorkletMapField
   }
 };
 
-// The warp filter operates on 3 arrays: coordiantes, directions, and scale factors. Rather than
+// The warp filter operates on 3 arrays: coordinates, directions, and scale factors. Rather than
 // try to satisfy every possible array type we expect, which would add to a lot of possibilities
 // (especially because we add the constant varieties), we will just extract components as either
 // `viskores::Float32` or `viskores::Float64`. That way for each we just need just 6 combinations. We can

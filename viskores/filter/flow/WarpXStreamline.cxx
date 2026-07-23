@@ -34,9 +34,9 @@ VISKORES_CONT WarpXStreamline::FieldType WarpXStreamline::GetField(
   const auto& electric = this->GetEField();
   const auto& magnetic = this->GetBField();
   if (!dataset.HasPointField(electric) && !dataset.HasCellField(electric))
-    throw viskores::cont::ErrorFilterExecution("Unsupported field assocation");
+    throw viskores::cont::ErrorFilterExecution("Unsupported field association");
   if (!dataset.HasPointField(magnetic) && !dataset.HasCellField(magnetic))
-    throw viskores::cont::ErrorFilterExecution("Unsupported field assocation");
+    throw viskores::cont::ErrorFilterExecution("Unsupported field association");
   auto eAssoc = dataset.GetField(electric).GetAssociation();
   auto bAssoc = dataset.GetField(magnetic).GetAssociation();
   if (eAssoc != bAssoc)

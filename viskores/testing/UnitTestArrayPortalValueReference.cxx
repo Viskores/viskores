@@ -329,7 +329,7 @@ void DoTest()
 {
   // We are not testing on the default (exemplar) types because we want to test operators, and
   // many basic C types could fail on basic operations. Small integer types (such as unsigned
-  // bytes) get automatically promoted to larger types, so doing somthing like a += operation
+  // bytes) get automatically promoted to larger types, so doing something like a += operation
   // causes annoying compiler warnings. Float types are also problematic because comparison
   // operations like == can fail even when you expect the values to be the same.
   viskores::testing::Testing::TryTypes(

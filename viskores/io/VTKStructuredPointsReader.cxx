@@ -88,7 +88,7 @@ void VTKStructuredPointsReader::Read()
     }
 
     //Two ways the file can describe the dimensions. The proper way is by
-    //using the DIMENSIONS keyword, but VisIt written VTK files spicify data
+    //using the DIMENSIONS keyword, but VisIt written VTK files specify data
     //bounds instead, as a FIELD
     if (readSpacing && !visitBounds.empty())
     {

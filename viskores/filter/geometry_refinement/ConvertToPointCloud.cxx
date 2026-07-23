@@ -53,7 +53,7 @@ viskores::cont::DataSet ConvertToPointCloud::DoExecute(const viskores::cont::Dat
     else if (this->AssociateFieldsWithCells && field.IsPointField() &&
              !input.HasCoordinateSystem(field.GetName()))
     {
-      // The user asked to convert point fields to cell fields. (They are interchangable in
+      // The user asked to convert point fields to cell fields. (They are interchangeable in
       // point clouds.)
       outData.AddCellField(field.GetName(), field.GetData());
     }

@@ -32,7 +32,7 @@ void TestSurfaceNormals()
   std::cout << "Generate Image for SurfaceNormals filter" << std::endl;
 
   // NOTE: This dataset stores a shape value of 7 for polygons.  The
-  // VTKDataSetReader currently converts all polygons with 4 verticies to
+  // VTKDataSetReader currently converts all polygons with 4 vertices to
   // quads (shape 9).
   auto pathname =
     viskores::cont::testing::Testing::DataPath("unstructured/SurfaceNormalsTestDataSet.vtk");

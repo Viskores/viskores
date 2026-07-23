@@ -351,7 +351,7 @@ Branch<T>::~Branch()
 } // ~Branch()
 
 
-// TODO this recursive accumlation of values does not lend itself well to the use of VISKORES data structures
+// TODO this recursive accumulation of values does not lend itself well to the use of VISKORES data structures
 template <typename T>
 void Branch<T>::GetRelevantValues(int type, T eps, std::vector<T>& values) const
 { // GetRelevantValues()

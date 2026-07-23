@@ -152,7 +152,7 @@ inline void PermuteArrayWithRawIndex(const ArrayType& input,
 } // PermuteArrayWithRawIndex()
 
 
-// transform functor used in ContourTreeMesh to flag indicies as other when using the CombinedVectorClass
+// transform functor used in ContourTreeMesh to flag indices as other when using the CombinedVectorClass
 struct MarkOther
 {
   VISKORES_EXEC_CONT

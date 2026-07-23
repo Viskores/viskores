@@ -241,7 +241,7 @@ public:
 
   /// \brief Call a functor using the underlying cell set type.
   ///
-  /// `CastAndCallForTypes` attemts to cast the held cell set to a specific type
+  /// `CastAndCallForTypes` attempts to cast the held cell set to a specific type
   /// and then calls the given functor with the cast cell set. You must specify
   /// the `CellSetList` (in a `viskores::List`) as a template argument.
   ///

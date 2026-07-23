@@ -218,7 +218,7 @@ struct ArrayCopyConcreteSrc
         " with ArrayCopy is inefficient. It is highly recommended you use another method "
         "such as viskores::cont::ArrayCopyDevice.");
     // Still call the precompiled `ArrayCopy`. You will get another warning after this,
-    // but it will still technically work, albiet slowly.
+    // but it will still technically work, albeit slowly.
     viskores::cont::ArrayCopy(viskores::cont::UnknownArrayHandle{ source }, destination);
   }
 };

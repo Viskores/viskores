@@ -101,7 +101,7 @@ void Triangle::finalize()
 
   // Get the connection array.
   // Note that ANARI provides the connection array as a series of triples
-  // whereas Viskores wants a flat array of indices. The easist way to do the
+  // whereas Viskores wants a flat array of indices. The easiest way to do the
   // conversion (while sharing pointers) is to use ArrayHandleRuntimeVec.
   viskores::cont::ArrayHandleRuntimeVec<viskores::Id> connectionArray(3);
   viskores::cont::ArrayCopyShallowIfPossible(this->m_index->dataAsViskoresArray(), connectionArray);

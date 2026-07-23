@@ -76,8 +76,8 @@ namespace hierarchical_augmenter
 {
 
 
-/// Predicate used in HierarchicalAugmenter<FieldType>::Initalize to determine
-/// whether a node is an attachement point
+/// Predicate used in HierarchicalAugmenter<FieldType>::Initialize to determine
+/// whether a node is an attachment point
 class IsAttachementPointPredicateImpl
 {
 public:
@@ -100,7 +100,7 @@ public:
   { // constructor
     this->Presimplify = ((volumeArray != NULL) && (presimplifyThreshold > 0));
     // If we presimplify then store the volumeArray. Otherwise we don't need to volume array and we
-    // set it to another portal, just to make sure the variable is being initalized with something
+    // set it to another portal, just to make sure the variable is being initialized with something
     this->VolumeArrayPortal =
       this->Presimplify ? volumeArray->PrepareForInput(device, token) : this->WhichRoundPortal;
   } // constructor
@@ -120,7 +120,7 @@ public:
       // suppress if it's volume is at or below the threshold
       if (this->VolumeArrayPortal.Get(supernode) <= this->PresimplifyThreshold)
       {                    // below threshold
-        predicate = false; // do not keep attachement point below the simplification threshold
+        predicate = false; // do not keep attachment point below the simplification threshold
       }                    // below threshold
     }
     return predicate;

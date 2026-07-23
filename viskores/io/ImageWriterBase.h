@@ -34,10 +34,10 @@ namespace io
 /// are represented as a point field in a 2D uniform dataset.
 ///
 /// `ImageWriterBase` can be constructed from a file, canvas, or ArrayHandle.  It can
-/// also be empy constructed and filled in with a dataset later.
+/// also be empty constructed and filled in with a dataset later.
 ///
 /// `ImageWriterBase` implements virtual methods for writing files.  Ideally,
-/// these methods will be overriden in various subclasses to implement specific
+/// these methods will be overridden in various subclasses to implement specific
 /// functionality for writing data to specific image file-types.
 ///
 class VISKORES_IO_EXPORT ImageWriterBase

@@ -80,9 +80,9 @@ class ClarifyBranchEndSupernodeTypeWorklet : public viskores::worklet::WorkletMa
 public:
   using ControlSignature = void(
     FieldIn lowerSuperarcId, // (input) lower end superarc ID
-    FieldIn lowerIntrinsic,  // (input) lower end superarc intrisic volume
+    FieldIn lowerIntrinsic,  // (input) lower end superarc intrinsic volume
     FieldIn upperSuperarcId, // (input) upper end superarc ID
-    FieldIn upperIntrinsic,  // (input) upper end superarc intrisic volume
+    FieldIn upperIntrinsic,  // (input) upper end superarc intrinsic volume
     FieldIn branchRoot,      // (input) branch root superarc ID
     FieldInOut isLowerLeaf,  // (input/output) bool, whether the lower end is a leaf
     FieldInOut isUpperLeaf   // (input/output) bool, whether the upper end is a leaf

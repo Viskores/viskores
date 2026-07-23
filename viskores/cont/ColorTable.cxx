@@ -43,7 +43,7 @@ struct MinDelta<viskores::Float64>
   static constexpr viskores::Int64 value = 2048L;
 };
 
-// Reperesents the following:
+// Represents the following:
 // T m = std::numeric_limits<T>::min();
 // EquivSizeIntT im;
 // std::memcpy(&im, &m, sizeof(T));

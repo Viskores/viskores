@@ -82,7 +82,7 @@ public:
     FieldIn permutedDependetValues,      // dependentValues permuted by actualSuperarcs
     FieldIn permutedIntrinsicValues,     // intrinsicValues permuted by actualSuperarcs
     FieldOut permutedUpVolume,           // upVolume permuted by actualSuperarcs
-    FieldOut permitedDownVolume          // downVolume permited by actualSuperarcs
+    FieldOut permitedDownVolume          // downVolume permitted by actualSuperarcs
   );
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
@@ -126,7 +126,7 @@ public:
       upVolume = (this->TotalVolume - dependentValue) + (intrinsicValue - 1);
     } // descending superarc
 
-    /* // This worklet implements the follwing loop
+    /* // This worklet implements the following loop
          for (viskores::Id actualSuperarc = 0; actualSuperarc < nActualSuperarcs; actualSuperarc++)
       { // per actual superarc
         // retrieve the superarc ID

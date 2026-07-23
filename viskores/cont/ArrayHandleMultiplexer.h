@@ -414,7 +414,7 @@ struct ArrayHandleMultiplexerTraits
 /// \c ArrayHandleMultiplexer is defined over a set of possible \c ArrayHandle types. Any
 /// one of these \c ArrayHandles may be assigned to the \c ArrayHandleMultiplexer.
 ///
-/// When a value is retreived from the \c ArrayHandleMultiplexer, the multiplexer checks to
+/// When a value is retrieved from the \c ArrayHandleMultiplexer, the multiplexer checks to
 /// see which type of array is currently stored in it. It then redirects to the \c ArrayHandle
 /// of the appropriate type.
 ///

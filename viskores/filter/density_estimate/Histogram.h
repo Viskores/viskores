@@ -77,7 +77,7 @@ public:
   /// @brief Returns the range used for most recent execute.
   ///
   /// If `SetRange` is used to specify a non-empty range, then this range will
-  /// be returned. Otherwise, the coputed range is returned.
+  /// be returned. Otherwise, the computed range is returned.
   /// This value is only valid after a call to `Execute`.
   VISKORES_CONT viskores::Range GetComputedRange() const { return this->ComputedRange; }
 

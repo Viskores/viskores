@@ -63,10 +63,10 @@ TestingRuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagKokkos>::TestR
   deviceOptions.ViskoresDeviceInstance.SetOption(5);
   config.Initialize(deviceOptions);
   VISKORES_TEST_ASSERT(config.SetThreads(1) == internal::RuntimeDeviceConfigReturnCode::NOT_APPLIED,
-                       "Shouldn't be able to set threads after kokkos is initalized");
+                       "Shouldn't be able to set threads after kokkos is initialized");
   VISKORES_TEST_ASSERT(config.SetDeviceInstance(1) ==
                          internal::RuntimeDeviceConfigReturnCode::NOT_APPLIED,
-                       "Shouldn't be able to set device instnace after kokkos is initalized");
+                       "Shouldn't be able to set device instance after kokkos is initialized");
 
   // make sure all the values are the same
   VISKORES_TEST_ASSERT(config.GetThreads(testValue) ==

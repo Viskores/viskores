@@ -39,7 +39,7 @@ namespace resampling
 /// The most important feature of this geometry is its coordinate system.
 /// When you call `Execute()`, the output will be the data specified with
 /// `SetGeometry()` but will have the fields of the input to `Execute()`
-/// transferred to it. The fields are transfered by probing the input data
+/// transferred to it. The fields are transferred by probing the input data
 /// set at the point locations of the geometry.
 ///
 class VISKORES_FILTER_RESAMPLING_EXPORT Probe : public viskores::filter::Filter

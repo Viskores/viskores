@@ -450,7 +450,7 @@ public:
   /// it is likely going to cause problems pulling the data back out. To get around this
   /// problem, you can call this method to convert the data to a form that is likely to
   /// be recognized. This conversion is likely but not guaranteed because not all types
-  /// are convertable to something recognizable.
+  /// are convertible to something recognizable.
   ///
   VISKORES_CONT void ConvertToExpected();
 

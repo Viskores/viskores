@@ -178,7 +178,7 @@ inline VISKORES_EXEC viskores::Int32 uint2int(viskores::UInt32 x)
   return static_cast<viskores::Int32>((x ^ 0xaaaaaaaau) - 0xaaaaaaaau);
 }
 
-// Note: I die a little inside everytime I write this sort of template
+// Note: I die a little inside every time I write this sort of template
 template <viskores::Int32 BlockSize,
           typename PortalType,
           template <int Size, typename Portal>

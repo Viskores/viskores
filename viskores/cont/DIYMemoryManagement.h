@@ -29,7 +29,7 @@ namespace cont
 
 VISKORES_CONT_EXPORT viskores::cont::DeviceAdapterId GetDIYDeviceAdapter();
 
-/// \brief Wraps viskoresdiy::Master::exchange by setting its appropiate viskoresdiy::MemoryManagement.
+/// \brief Wraps viskoresdiy::Master::exchange by setting its appropriate viskoresdiy::MemoryManagement.
 VISKORES_CONT_EXPORT void DIYMasterExchange(viskoresdiy::Master& master, bool remote = false);
 
 }

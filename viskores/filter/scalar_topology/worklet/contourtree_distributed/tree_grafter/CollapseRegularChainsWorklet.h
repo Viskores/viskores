@@ -74,7 +74,7 @@ namespace contourtree_distributed
 namespace tree_grafter
 {
 
-// Worklet implementing the inner parallel loop to collaps the regular chains in TreeGrafter.CollapseRegularChains
+// Worklet implementing the inner parallel loop to collapse the regular chains in TreeGrafter.CollapseRegularChains
 class CollapseRegularChainsWorklet : public viskores::worklet::WorkletMapField
 {
 public:

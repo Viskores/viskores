@@ -202,7 +202,7 @@ struct SharedSupersImpl<viskoresstd::index_sequence<Indices...>, Supers...>
 // want to inherit from the `ArrayExtractComponentImpl`s of these storage types. However,
 // if the template specifies multiple storage types, two of the same might be specified,
 // and it is illegal in C++ to directly inherit from the same type twice. This special
-// superclass accepts a variable amout of superclasses. Inheriting from this will inherit
+// superclass accepts a variable amount of superclasses. Inheriting from this will inherit
 // from all these superclasses, and duplicates are allowed.
 template <typename... Supers>
 using DuplicatedSuperclasses =

@@ -28,12 +28,12 @@ namespace
 {
 
 // A function that checks for abort request.
-// This function will be called by `TryExecute` befaure lauching a device task
+// This function will be called by `TryExecute` befaure launching a device task
 // to check if abort has been requested.
 // For this test case, we are using a simple logic of returning true for the
 // `abortAt`th check.
 // If this test is failing, one of the things to check would be to see if the
-// `Contour` filter has changed such that it no longer has atleast `abortAt`
+// `Contour` filter has changed such that it no longer has at least `abortAt`
 // task invocations.
 bool ShouldAbort()
 {

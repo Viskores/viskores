@@ -136,7 +136,7 @@ void RuntimeDeviceTracker::Reset()
   this->Internals->Reset();
 
   // We use this instead of calling CheckDevice/SetDeviceState so that
-  // when we use logging we get better messages stating we are reseting
+  // when we use logging we get better messages stating we are resetting
   // the devices.
   viskores::cont::RuntimeDeviceInformation runtimeDevice;
   for (viskores::Int8 i = 1; i < VISKORES_MAX_DEVICE_ADAPTER_ID; ++i)

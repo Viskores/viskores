@@ -79,7 +79,7 @@ public:
     ExecObject findRegularByGlobal,
     WholeArrayIn baseTreeRegular2Supernode,
     WholeArrayInOut
-      newSupernodeIds // output/input (both are necessary since not all valyes will be overwritten)
+      newSupernodeIds // output/input (both are necessary since not all values will be overwritten)
   );
 
   using ExecutionSignature = void(_1, _2, _3, _4, _5);

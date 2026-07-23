@@ -202,7 +202,7 @@ protected:
   /// Implementation of GetOwnedVerticesByGlobalId used internally by derived classes to
   /// implement the specific variant of the function .The implementations vary based on the
   /// MeshBoundary object used, and so derived classes just need to specify their mesh
-  /// boundary object and then call this funtion
+  /// boundary object and then call this function
   /// @param[in] mesh For derived meshes set simply to this. Derived meshes inherit also from ExecutionObjectBase
   ///                 and as such have PrepareForExecution functions that return a MeshBoundary object that
   ///                 we can use here. We are passing in the mesh since the base DataSetMesh class does
@@ -230,7 +230,7 @@ void DataSetMesh::GetOwnedVerticesByGlobalIdImpl(
   IdArrayType& ownedVertices) const
 {
   // use temporary array since we need to compress these at the end via CopyIf so we
-  // can move the values to keep to the ownedVertices ouput array then
+  // can move the values to keep to the ownedVertices output array then
   IdArrayType tempOwnedVertices;
   // Fancy array for the running mesh index
   viskores::cont::ArrayHandleIndex meshIndexArray(this->GetNumberOfVertices());
@@ -238,7 +238,7 @@ void DataSetMesh::GetOwnedVerticesByGlobalIdImpl(
     viskores::worklet::contourtree_augmented::data_set_mesh::GetOwnedVerticesByGlobalIdWorklet(
       localToGlobalIdRelabeler);
   viskores::cont::Invoker invoke;
-  invoke(ownedVerticesWorklet, // worklet ot run
+  invoke(ownedVerticesWorklet, // worklet to run
          meshIndexArray,       // input mesh index to map
          mesh,                 // input the mesh object
          tempOwnedVertices     // output

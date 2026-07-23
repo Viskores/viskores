@@ -78,7 +78,7 @@ struct Ray
   VISKORES_EXEC_CONT
   Vector Evaluate(CoordType param) const;
 
-  /// Return the minmum distance from \a point to this line/ray.
+  /// Return the minimum distance from \a point to this line/ray.
   ///
   /// Note that when the direction has zero length, this simplifies
   /// the distance between \a point and the ray's origin.
@@ -162,7 +162,7 @@ struct LineSegment
   VISKORES_EXEC_CONT
   Vector Evaluate(CoordType param) const;
 
-  /// Return the minmum distance from \a point to this line segment.
+  /// Return the minimum distance from \a point to this line segment.
   ///
   /// Note that when the endpoints are coincident, this simplifies
   /// the distance between \a point and either endpoint.
