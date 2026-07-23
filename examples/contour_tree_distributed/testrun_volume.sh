@@ -9,17 +9,6 @@
 ##============================================================================
 
 
-##=============================================================================
-##
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##
-##=============================================================================
 
 mkdir -p out
 DATA_DIR=${DATA_DIR:-${HOME}/devel/parallel-peak-pruning/Data/2D}

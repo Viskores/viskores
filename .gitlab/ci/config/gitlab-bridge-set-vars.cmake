@@ -6,17 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##=============================================================================
-##
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##
-##=============================================================================
 
 # In the gitlab CI our PRs branches tip commit is not the head commit of the
 # PR, it is instead the so called merged_commit_sha as described in the GitHub
