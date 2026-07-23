@@ -20,6 +20,8 @@
 #include <viskores/cont/ArrayHandleCartesianProduct.h>
 #include <viskores/cont/CellLocatorRectilinearGrid.h>
 #include <viskores/cont/CellSetStructured.h>
+#include <viskores/cont/ErrorBadValue.h>
+#include <viskores/cont/internal/ArrayGetMonotonicity.h>
 
 #include <viskores/exec/CellLocatorRectilinearGrid.h>
 
@@ -35,6 +37,18 @@ void CellLocatorRectilinearGrid::Build()
 
   if (!coords.GetData().IsType<RectilinearType>())
     throw viskores::cont::ErrorBadType("Coordinates are not rectilinear type.");
+
+  RectilinearType rectilinearCoords = coords.GetData().AsArrayHandle<RectilinearType>();
+  using Monotonicity = viskores::cont::internal::ArrayMonotonicity;
+  if (viskores::cont::internal::ArrayGetStrictMonotonicity(rectilinearCoords.GetFirstArray()) ==
+        Monotonicity::NotMonotonic ||
+      viskores::cont::internal::ArrayGetStrictMonotonicity(rectilinearCoords.GetSecondArray()) ==
+        Monotonicity::NotMonotonic ||
+      viskores::cont::internal::ArrayGetStrictMonotonicity(rectilinearCoords.GetThirdArray()) ==
+        Monotonicity::NotMonotonic)
+  {
+    throw viskores::cont::ErrorBadValue("Rectilinear coordinate axes must be strictly monotonic.");
+  }
 
   if (cellSet.CanConvert<Structured2DType>())
   {

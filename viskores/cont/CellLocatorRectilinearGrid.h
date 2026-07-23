@@ -33,6 +33,7 @@ namespace cont
 /// For this cell locator to work, it has to be given a cell set of type
 /// `viskores::cont::CellSetStructured` and a coordinate system using a
 /// `viskores::cont::ArrayHandleCartesianProduct` for its data.
+/// Each active coordinate axis must be strictly monotonic, either increasing or decreasing.
 class VISKORES_CONT_EXPORT CellLocatorRectilinearGrid : public viskores::cont::CellLocatorBase
 {
   using Structured2DType = viskores::cont::CellSetStructured<2>;

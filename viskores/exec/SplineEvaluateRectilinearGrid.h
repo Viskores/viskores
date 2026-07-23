@@ -47,6 +47,7 @@ public:
     : Bounds(bounds)
     , Field(field.PrepareForInput(device, token))
   {
+    auto coordsControlPortal = rectCoords.ReadPortal();
     auto coordsExecPortal = rectCoords.PrepareForInput(device, token);
 
     this->AxisPortals[0] = coordsExecPortal.GetFirstPortal();
@@ -56,6 +57,13 @@ public:
     this->NumX = this->AxisPortals[0].GetNumberOfValues();
     this->NumY = this->AxisPortals[1].GetNumberOfValues();
     this->NumZ = this->AxisPortals[2].GetNumberOfValues();
+
+    this->AxisReversed[0] = coordsControlPortal.GetFirstPortal().Get(this->NumX - 1) <
+      coordsControlPortal.GetFirstPortal().Get(0);
+    this->AxisReversed[1] = coordsControlPortal.GetSecondPortal().Get(this->NumY - 1) <
+      coordsControlPortal.GetSecondPortal().Get(0);
+    this->AxisReversed[2] = coordsControlPortal.GetThirdPortal().Get(this->NumZ - 1) <
+      coordsControlPortal.GetThirdPortal().Get(0);
   }
 
   VISKORES_EXEC viskores::ErrorCode Evaluate(const viskores::Vec3f& point,
@@ -68,9 +76,12 @@ public:
     auto y = point[1];
     auto z = point[2];
 
-    viskores::Id iu = this->FindIndex(this->AxisPortals[0], this->NumX, point[0]);
-    viskores::Id iv = this->FindIndex(this->AxisPortals[1], this->NumY, point[1]);
-    viskores::Id iw = this->FindIndex(this->AxisPortals[2], this->NumZ, point[2]);
+    viskores::Id iu =
+      this->FindIndex(this->AxisPortals[0], this->NumX, point[0], this->AxisReversed[0]);
+    viskores::Id iv =
+      this->FindIndex(this->AxisPortals[1], this->NumY, point[1], this->AxisReversed[1]);
+    viskores::Id iw =
+      this->FindIndex(this->AxisPortals[2], this->NumZ, point[2], this->AxisReversed[2]);
 
     VISKORES_ASSERT(this->NumX >= 4 && this->NumY >= 4);
 
@@ -166,26 +177,27 @@ public:
 private:
   VISKORES_EXEC viskores::Id FindIndex(const AxisPortalType& axis,
                                        const viskores::Id& N,
-                                       viskores::FloatDefault val) const
+                                       viskores::FloatDefault val,
+                                       bool axisReversed) const
   {
-    // 1) Binary search for the largest index i with coords[i] <= val
+    // 1) Find the last logical index not past val in the axis direction.
     viskores::Id left = 0;
     viskores::Id right = N - 1;
     while (left <= right)
     {
       viskores::Id mid = left + (right - left) / 2;
-      if (axis.Get(mid) <= val)
+      if ((!axisReversed && axis.Get(mid) <= val) || (axisReversed && axis.Get(mid) >= val))
       {
-        // mid is still ≤ val, so it might be our i
+        // This coordinate is at or before val in the axis direction.
         left = mid + 1;
       }
       else
       {
-        // coords[mid] > val, so the index we want is below mid
+        // This coordinate is after val in the axis direction.
         right = mid - 1;
       }
     }
-    // when loop ends, `right` is the last index where coords[right] <= val
+    // `right` is the last logical index not past val.
     viskores::Id i = right;
 
     // 2) Clamp i into [1, N-3]
@@ -205,11 +217,11 @@ private:
                                                     viskores::FloatDefault p3,
                                                     viskores::FloatDefault x) const
   {
-    // 1) Compute interval lengths
+    // 1) Compute signed interval lengths
     viskores::FloatDefault h0 = x1 - x0;
     viskores::FloatDefault h1 = x2 - x1;
     viskores::FloatDefault h2 = x3 - x2;
-    VISKORES_ASSERT(h0 > 0.0f && h1 > 0.0f && h2 > 0.0f);
+    VISKORES_ASSERT((h0 > 0.0f && h1 > 0.0f && h2 > 0.0f) || (h0 < 0.0f && h1 < 0.0f && h2 < 0.0f));
 
 
     // 2) Compute right‐hand sides for second‐derivative system
@@ -249,6 +261,7 @@ private:
   viskores::Id NumX;
   viskores::Id NumY;
   viskores::Id NumZ;
+  bool AxisReversed[3];
 };
 } //namespace exec
 } //namespace viskores

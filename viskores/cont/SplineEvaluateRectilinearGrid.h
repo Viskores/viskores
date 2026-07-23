@@ -36,6 +36,7 @@ namespace cont
 /// means the data set must use `viskores::cont::ArrayHandleCartesianProduct` for its
 /// coordinate system. This evaluator will throw an error if the data set does not meet
 /// these requirements.
+/// Each active coordinate axis must be strictly monotonic, either increasing or decreasing.
 ///
 /// Right now, this evaluator only supports scalar fields on 3D uniform grids. The field to be
 /// evaluated is specified by name.
