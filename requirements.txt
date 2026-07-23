@@ -1,0 +1,66 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+# Python packages used for Python bindings. Install with
+#
+# ```sh
+# pip install -r requirements.txt
+# ```
+
+# Dependencies also listed in pyproject.toml must use the same version
+# constraint. Check them with Utilities/Scripts/check-python-dependencies.py.
+
+# ----------------------------------------------------------------------
+# Used for Python bindings (Viskores_ENABLE_PYTHON_BINDINGS).
+numpy>=1.20.0
+nanobind>=2.0.0
+
+# ----------------------------------------------------------------------
+# Used to verify generated code.
+pyexpander
+
+# ----------------------------------------------------------------------
+# Used for replicating CI with docker (Utilities/CI/reproduce_ci_env.py)
+PyYAML>=6.0.2
+
+# ----------------------------------------------------------------------
+# Used for building documentation.
+breathe==4.35.0
+readthedocs-sphinx-search==0.3.2
+readthedocs-sphinx-search==0.3.2
+sphinx==7.2.6
+sphinx-rtd-theme==1.3.0
+sphinxcontrib-moderncmakedomain==3.27.0
+sphinxcontrib-packages==1.1.2
+# sphinx dependencies
+alabaster==0.7.13
+babel==2.13.0
+docutils==0.18.1
+certifi==2024.7.4
+imagesize==1.4.1
+jinja2==3.1.6
+packaging==23.2
+pygments==2.20.0
+requests==2.33.0
+snowballstemmer==2.2.0
+sphinxcontrib-applehelp==1.0.7
+sphinxcontrib-devhelp==1.0.5
+sphinxcontrib-htmlhelp==2.0.4
+sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-qthelp==1.0.6
+sphinxcontrib-serializinghtml==1.1.9
+# sphinx-rtd-theme dependencies
+sphinxcontrib-jquery==4.1
+# sphinxcontrib-packages dependencies
+distro==1.8.0
+# requests dependencies
+charset-normalizer==3.3.0
+idna==3.15
+urllib3==2.7.0
+# jinja2 dependencies
+markupsafe==2.1.3

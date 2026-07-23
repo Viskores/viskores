@@ -6,28 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
-
-set(Viskores_PYTHON_NANOBIND_MIN_VERSION "2.0.0")
-
-execute_process(
-  COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
-  OUTPUT_VARIABLE _viskores_interop_python_nanobind_cmake_dir
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  RESULT_VARIABLE _viskores_interop_python_nanobind_result
-)
-if(NOT _viskores_interop_python_nanobind_result EQUAL 0)
-  message(FATAL_ERROR
-    "nanobind ${Viskores_PYTHON_NANOBIND_MIN_VERSION} or newer is required to "
-    "build viskores_interop_python. Install with: pip install 'nanobind>="
-    "${Viskores_PYTHON_NANOBIND_MIN_VERSION}'.")
-endif()
-
-find_package(nanobind ${Viskores_PYTHON_NANOBIND_MIN_VERSION} CONFIG REQUIRED
-  PATHS "${_viskores_interop_python_nanobind_cmake_dir}"
-  NO_DEFAULT_PATH
-)
-
 set(headers
   ArrayHandleToNumPy.h
   NumPyToArrayHandle.h

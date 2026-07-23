@@ -52,6 +52,13 @@ jobs:
           path: ./format.patch
           if-no-files-found: ignore
 
+  python-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Python dependency constraints
+        run: python3 ./Utilities/Scripts/check-python-dependencies.py
+
   path-lengths:
     runs-on: ubuntu-latest
     steps:
