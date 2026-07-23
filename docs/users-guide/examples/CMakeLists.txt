@@ -81,6 +81,15 @@ set(examples_device
   )
 set(extra_libs)
 
+if(Viskores_ENABLE_MPI)
+  list(APPEND examples
+    GuideExampleDIYSerialization.cxx
+    )
+  list(APPEND examples_device
+    GuideExampleDIY.cxx
+    )
+endif()
+
 viskores_find_gl(OPTIONAL GL GLUT)
 if(TARGET GLUT::GLUT)
   list(APPEND examples

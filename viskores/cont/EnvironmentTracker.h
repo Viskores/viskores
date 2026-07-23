@@ -36,9 +36,11 @@ namespace cont
 class VISKORES_CONT_EXPORT EnvironmentTracker
 {
 public:
+  /// @brief Set a global communicator to be used by Viskores.
   VISKORES_CONT
   static void SetCommunicator(const viskoresdiy::mpi::communicator& comm);
 
+  /// @brief Get the global communicator to be used by Viskores.
   VISKORES_CONT
   static const viskoresdiy::mpi::communicator& GetCommunicator();
 };
