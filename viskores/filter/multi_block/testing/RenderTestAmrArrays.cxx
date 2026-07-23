@@ -60,7 +60,6 @@ void TestAmrArraysExecute(int dim, int numberOfLevels, int cellsPerDimension)
   //  result.PrintSummary(std::cout);
 
   viskores::rendering::testing::RenderTestOptions testOptions;
-  testOptions.AllowedPixelErrorRatio = 0.001f;
   testOptions.ColorTable = viskores::cont::ColorTable("inferno");
   testOptions.EnableAnnotations = false;
   viskores::rendering::testing::RenderTest(
