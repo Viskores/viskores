@@ -22,6 +22,7 @@
 #include <viskores/filter/resampling/viskores_filter_resampling_export.h>
 
 #include <viskores/Deprecated.h>
+#include <viskores/cont/ArrayHandle.h>
 
 namespace viskores
 {
@@ -42,6 +43,9 @@ namespace resampling
 /// for Large-scale Simulation Data Summarization" by Biswas, Dutta, Pulido, and Ahrens
 /// as published in _In Situ Infrastructures for Enabling Extreme-scale Analysis and
 /// Visualization_ (ISAV 2018).
+///
+/// When the input is a `viskores::cont::PartitionedDataSet`, the histogram includes
+/// all partitions and MPI ranks.
 ///
 /// The cell set of the input data is removed and replaced with a set with a vertex
 /// cell for each point. This effectively converts the data to a point cloud.
@@ -92,9 +96,19 @@ public:
 
 private:
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
+  VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
+    const viskores::cont::PartitionedDataSet& input) override;
+
+  VISKORES_CONT void PreExecute(const viskores::cont::PartitionedDataSet& input);
+  VISKORES_CONT void PostExecute();
+
   viskores::Id NumberOfBins = 10;
   viskores::FloatDefault SampleFraction = 0.1f;
   viskores::UInt32 Seed = 0;
+  viskores::cont::ArrayHandle<viskores::FloatDefault> Probabilities;
+  viskores::Float64 HistogramMinimum = 0;
+  viskores::Float64 HistogramBinDelta = 0;
+  bool InExecutePartitions = false;
 };
 
 } // namespace resampling

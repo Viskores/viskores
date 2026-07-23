@@ -16,12 +16,15 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/ArrayHandleCounting.h>
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
 #include <viskores/cont/Invoker.h>
+#include <viskores/cont/PartitionedDataSet.h>
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/filter/entity_extraction/ThresholdPoints.h>
 #include <viskores/filter/resampling/HistSampling.h>
+#include <viskores/filter/resampling/testing/TestingHistSampling.h>
 #include <viskores/worklet/WorkletMapField.h>
 namespace
 {
@@ -88,9 +91,52 @@ void TestHistSamplingSingleBlock()
   VISKORES_TEST_ASSERT(thresholdDataSet.GetField("scalarField").GetNumberOfValues() == 7);
 }
 
+void TestHistSamplingPartitionedDataSetUsesGlobalHistogram(bool runMultiThreaded)
+{
+  // Zeros dominate the first partition but are globally rare, so all nine must be retained.
+  viskores::cont::PartitionedDataSet input;
+  input.AppendPartition(viskores::filter::resampling::testing::MakePointCloudPartition(10, 9, 0));
+  input.AppendPartition(viskores::filter::resampling::testing::MakePointCloudPartition(90, 0, 10));
+
+  viskores::filter::resampling::HistSampling histSample;
+  histSample.SetNumberOfBins(2);
+  histSample.SetSampleFraction(0.2f);
+  histSample.SetActiveField("scalarField", viskores::cont::Field::Association::Points);
+  histSample.SetThreadsPerCPU(2);
+  histSample.SetRunMultiThreadedFilter(runMultiThreaded);
+  auto output = histSample.Execute(input);
+
+  VISKORES_TEST_ASSERT(output.GetNumberOfPartitions() == 2);
+  const auto& firstPartition = output.GetPartition(0);
+  viskores::filter::entity_extraction::ThresholdPoints selectGloballyRareValues;
+  selectGloballyRareValues.SetActiveField("scalarField");
+  selectGloballyRareValues.SetCompactPoints(true);
+  selectGloballyRareValues.SetThresholdBelow(0.5);
+  auto globallyRareValues = selectGloballyRareValues.Execute(firstPartition);
+
+  VISKORES_TEST_ASSERT(
+    test_equal_ArrayHandles(globallyRareValues.GetField("pointId").GetData(),
+                            viskores::cont::make_ArrayHandleCounting(
+                              viskores::Id{ 0 }, viskores::Id{ 1 }, viskores::Id{ 9 })));
+}
+
+void TestHistSamplingEmptyPartitionedDataSet()
+{
+  viskores::cont::PartitionedDataSet input;
+
+  viskores::filter::resampling::HistSampling histSample;
+  histSample.SetActiveField("scalarField", viskores::cont::Field::Association::Points);
+  auto output = histSample.Execute(input);
+
+  VISKORES_TEST_ASSERT(output.GetNumberOfPartitions() == 0);
+}
+
 void TestHistSampling()
 {
   TestHistSamplingSingleBlock();
+  TestHistSamplingPartitionedDataSetUsesGlobalHistogram(false);
+  TestHistSamplingPartitionedDataSetUsesGlobalHistogram(true);
+  TestHistSamplingEmptyPartitionedDataSet();
 } // TestHistSampling
 
 }
