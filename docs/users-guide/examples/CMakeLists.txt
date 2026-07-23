@@ -72,6 +72,7 @@ set(examples_device
   GuideExampleSimpleHistogram.cxx
   GuideExampleSumOfAngles.cxx
   GuideExampleTriangleQuality.cxx
+  GuideExampleTryExecute.cxx
   GuideExampleUnknownArrayHandle.cxx
   GuideExampleUseWorkletMapField.cxx
   GuideExampleUseWorkletPointNeighborhood.cxx
