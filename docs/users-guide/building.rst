@@ -392,7 +392,7 @@ These package variables can be used to query whether optional components are sup
 
    find_package(Viskores REQUIRED)
 
-   if (NOT Viskores::ENABLE::RENDERING)
+   if (NOT Viskores_ENABLE_RENDERING)
      message(FATAL_ERROR "Viskores must be built with rendering on.")
    endif()
 
