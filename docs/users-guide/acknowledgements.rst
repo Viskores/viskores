@@ -42,9 +42,7 @@ density filters in :secref:`provided-filters:Particle Density`.
 
 .. ArrayHandleRandomUniformBits.
 
-**James Kress** for his documentation on |Viskores|'s testing classes.
-
-.. todo:: Add reference to testing classes when available.
+**James Kress** for his documentation on |Viskores|'s testing classes in :chapref:`testing:Regression Testing`.
 
 **Manish Mathai** for his documentation of rendering features in :chapref:`rendering:Rendering`.
 

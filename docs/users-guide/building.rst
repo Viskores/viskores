@@ -174,6 +174,7 @@ The following list contains the most common configuration parameters.
 
    If on, the |Viskores| build includes building many test programs.
    The |Viskores| source includes hundreds of regression tests to ensure quality during development.
+   See :secref:`testing:Running Regression Testing` for instructions on running them.
 
 .. cmake:variable:: Viskores_ENABLE_TUTORIALS
 
