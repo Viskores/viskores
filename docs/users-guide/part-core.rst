@@ -6,3 +6,4 @@ Core Development
    :maxdepth: 2
 
    try-execute.rst
+   implementing-device-adapters.rst

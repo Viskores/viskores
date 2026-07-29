@@ -42,9 +42,8 @@ class VISKORES_CONT_EXPORT RuntimeDeviceOption
 {
 public:
   /// Constructs a RuntimeDeviceOption, sets the Source to NOT_SET
-  /// params:
-  ///   index - index location of this command line argument in an option::Option array
-  ///   envName - The environment variable name of this option
+  /// @param index Location of this command line argument in an option::Option array
+  /// @param envName The environment variable name of this option
   VISKORES_CONT RuntimeDeviceOption(const viskores::Id& index, const std::string& envName);
 
   VISKORES_CONT virtual ~RuntimeDeviceOption() noexcept;

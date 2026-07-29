@@ -53,9 +53,14 @@ public:
   /// Calls Initialize for each of this class's current configuration options and marks
   /// the options as initialized.
   VISKORES_CONT void Initialize(const option::Option* options);
+
+  /// Returns whether this device has been initialized.
   VISKORES_CONT bool IsInitialized() const;
 
+  /// Holds the number of threads this device is configured to use.
   RuntimeDeviceOption ViskoresNumThreads;
+
+  /// Holds the device instance being used by Viskores.
   RuntimeDeviceOption ViskoresDeviceInstance;
 
 protected:
