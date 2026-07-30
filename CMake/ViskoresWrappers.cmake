@@ -450,7 +450,7 @@ function(viskores_add_target_information uses_viskores_target)
 
   if(Viskores_TI_DEVICE_SOURCES)
     foreach(target IN LISTS targets)
-      target_link_libraries(${target} 
+      target_link_libraries(${target}
         PRIVATE $<TARGET_NAME_IF_EXISTS:viskores_exec>  $<TARGET_NAME_IF_EXISTS:viskores::viskores_exec>)
     endforeach()
 
