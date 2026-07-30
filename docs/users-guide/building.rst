@@ -12,7 +12,7 @@ Getting |Viskores|
 |Viskores| is an open source software product where the code is made freely available.
 To get the latest released version of |Viskores|, go to the |Viskores| releases page:
 
-  https://github.com/Viskores/viskores/-/releases
+  https://github.com/Viskores/viskores/releases
 
 From there with your favorite browser you may download the source code from any of the recent |Viskores| releases in a variety of different archive files such as zip or tar gzip.
 
@@ -392,7 +392,7 @@ These package variables can be used to query whether optional components are sup
 
    find_package(Viskores REQUIRED)
 
-   if (NOT Viskores::ENABLE::RENDERING)
+   if (NOT Viskores_ENABLE_RENDERING)
      message(FATAL_ERROR "Viskores must be built with rendering on.")
    endif()
 
