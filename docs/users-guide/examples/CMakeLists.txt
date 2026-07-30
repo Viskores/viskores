@@ -54,6 +54,7 @@ set(examples_device
   GuideExampleCellEdgesFaces.cxx
   GuideExampleCellLocator.cxx
   GuideExampleCellOperations.cxx
+  GuideExampleCustomDeviceAdapter.cxx
   GuideExampleDataSetCreation.cxx
   GuideExampleDeviceAdapterAlgorithms.cxx
   GuideExampleErrorHandling.cxx
