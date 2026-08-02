@@ -36,6 +36,23 @@ namespace density_estimate
 {
 namespace detail
 {
+class PartitionedFieldRange : public viskores::filter::Filter
+{
+public:
+  PartitionedFieldRange() { this->SetOutputFieldName("range"); }
+
+private:
+  viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override
+  {
+    viskores::cont::DataSet output;
+    output.AddField({ this->GetOutputFieldName(),
+                      viskores::cont::Field::Association::WholeDataSet,
+                      viskores::cont::FieldRangeCompute(
+                        input, this->GetActiveFieldName(), this->GetActiveFieldAssociation()) });
+    return output;
+  }
+};
+
 class DistributedHistogram
 {
   class Reducer
@@ -215,7 +232,10 @@ VISKORES_CONT viskores::cont::DataSet Histogram::DoExecute(const viskores::cont:
                 delta,
                 binArray);
 
-    this->BinDelta = static_cast<viskores::Float64>(delta);
+    if (!this->InExecutePartitions)
+    {
+      this->BinDelta = static_cast<viskores::Float64>(delta);
+    }
   };
 
   fieldArray.CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldScalar,
@@ -247,13 +267,50 @@ VISKORES_CONT void Histogram::PreExecute(const viskores::cont::PartitionedDataSe
   }
   else
   {
-    auto handle = viskores::cont::FieldRangeGlobalCompute(
-      input, this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+    detail::PartitionedFieldRange fieldRange;
+    fieldRange.SetActiveField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+    fieldRange.SetThreadsPerCPU(this->GetThreadsPerCPU());
+    fieldRange.SetThreadsPerGPU(this->GetThreadsPerGPU());
+    fieldRange.SetRunMultiThreadedFilter(this->GetRunMultiThreadedFilter());
+    auto rangeOutput = fieldRange.Execute(input);
+
+    std::vector<viskores::Range> localRanges;
+    for (const auto& partition : rangeOutput)
+    {
+      const auto ranges = partition.GetField(fieldRange.GetOutputFieldName())
+                            .GetData()
+                            .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Range>>();
+      localRanges.resize(
+        std::max(localRanges.size(), static_cast<std::size_t>(ranges.GetNumberOfValues())));
+      auto portal = ranges.ReadPortal();
+      for (viskores::IdComponent component = 0; component < ranges.GetNumberOfValues(); ++component)
+      {
+        localRanges[static_cast<std::size_t>(component)] =
+          localRanges[static_cast<std::size_t>(component)] + portal.Get(component);
+      }
+    }
+    auto handle = viskores::cont::detail::MergeRangesGlobal(
+      viskores::cont::make_ArrayHandleMove(std::move(localRanges)));
     if (handle.GetNumberOfValues() != 1)
     {
       throw viskores::cont::ErrorFilterExecution("expecting scalar field.");
     }
     this->ComputedRange = handle.ReadPortal().Get(0);
+  }
+
+  if (input.GetNumberOfPartitions() > 0)
+  {
+    const auto& fieldArray = this->GetFieldFromDataSet(input.GetPartition(0)).GetData();
+    auto setBinDelta = [&](const auto& concrete)
+    {
+      using T = typename std::decay_t<decltype(concrete)>::ValueType;
+      const T fieldRange =
+        static_cast<T>(this->ComputedRange.Max) - static_cast<T>(this->ComputedRange.Min);
+      const T delta = fieldRange / static_cast<T>(this->NumberOfBins);
+      this->BinDelta = static_cast<viskores::Float64>(delta);
+    };
+    // Dispatch on an empty instance to resolve the float fallback type without copying values.
+    this->CastAndCallScalarField(fieldArray.NewInstance(), setBinDelta);
   }
   this->InExecutePartitions = true;
 }

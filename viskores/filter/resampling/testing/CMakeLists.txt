@@ -21,14 +21,29 @@ set(unit_tests
 set(unit_tests_device
   UnitTestHistSampling.cxx
   )
+set(testing_headers
+  TestingHistSampling.h
+  )
+
+set_source_files_properties(${testing_headers} PROPERTIES NOT_A_TEST TRUE)
 
 set(libraries
   viskores_filter_resampling
   )
 
 viskores_unit_tests(
-  SOURCES ${unit_tests}
+  SOURCES ${unit_tests} ${testing_headers}
   DEVICE_SOURCES ${unit_tests_device}
   LIBRARIES ${libraries}
   USE_VISKORES_JOB_POOL
 )
+
+if (Viskores_ENABLE_MPI)
+  viskores_unit_tests(
+    MPI
+    SOURCES ${testing_headers}
+    DEVICE_SOURCES UnitTestHistSamplingMPI.cxx
+    LIBRARIES ${libraries}
+    USE_VISKORES_JOB_POOL
+  )
+endif()
