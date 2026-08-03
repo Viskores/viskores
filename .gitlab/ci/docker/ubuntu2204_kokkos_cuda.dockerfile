@@ -61,7 +61,7 @@ RUN mkdir -p /opt/kokkos/build && \
           -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \
           -DKokkos_ENABLE_CUDA_LAMBDA=ON \
           -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=OFF \
-          -DKokkos_ARCH_AMPERE80=ON && \
+          -DKokkos_ARCH_HOPPER90=ON && \
     cmake --build . -j 8 && \
     cmake --install . && \
     cd ..; rm -rf kokkos-$KOKKOS_VERSION.tar.gz kokkos-$KOKKOS_VERSION bld
