@@ -20,7 +20,6 @@
 
 .kokkos_rocm_vars: &kokkos_rocm_vars
   variables:
-    CCACHE_BASEDIR:          "$CI_PROJECT_DIR"
     CCACHE_COMPILERCHECK:    "content"
     # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
     CCACHE_IGNOREOPTIONS:    "-isystem=*"
@@ -51,6 +50,7 @@ ubuntu2204_hip_kokkos37:
     VISKORES_SETTINGS:       "benchmarks+kokkos+hip+no_rendering+ccache"
     NO_TESTING:              "ON"
   after_script:
+    - export PATH="${CI_PROJECT_DIR}/.gitlab/ccache:${PATH}"
     - ccache -v -s
     - ccache -z
 
@@ -72,6 +72,7 @@ ubuntu2204_hip_kokkos43:
     VISKORES_SETTINGS:       "benchmarks+kokkos+hip+no_rendering+no_testing+ccache"
     NO_TESTING:              "ON"
   after_script:
+    - export PATH="${CI_PROJECT_DIR}/.gitlab/ccache:${PATH}"
     - ccache -v -s
     - ccache -z
 
