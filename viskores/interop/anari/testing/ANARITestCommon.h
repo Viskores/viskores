@@ -41,7 +41,7 @@ static void setColorMap(anari_cpp::Device d, viskores::interop::anari::ANARIMapp
   auto opacityArray = anari_cpp::newArray1D(d, ANARI_FLOAT32, 2);
   auto* opacities = anari_cpp::map<float>(d, opacityArray);
   opacities[0] = 0.f;
-  opacities[1] = 1.f;
+  opacities[1] = 0.999f;
   anari_cpp::unmap(d, opacityArray);
 
   mapper.SetANARIColorMap(colorArray, opacityArray, true);
