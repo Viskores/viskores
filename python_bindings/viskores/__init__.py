@@ -6,4 +6,10 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-__all__ = []
+from ._viskores import Range
+from ._viskores import Bounds
+
+__all__ = [
+    "Range",
+    "Bounds",
+]
