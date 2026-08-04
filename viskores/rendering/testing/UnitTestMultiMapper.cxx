@@ -77,7 +77,7 @@ void MultiMapperRender(const viskores::cont::DataSet& ds1,
   mapper2.RenderCells(
     ds2.GetCellSet(), ds2.GetCoordinateSystem(), field2, colorTable2, camera, range2);
 
-  VISKORES_TEST_ASSERT(test_equal_images(canvas, outputFile));
+  VISKORES_TEST_ASSERT(test_equal_images(outputFile, canvas));
 }
 
 void RenderTests()

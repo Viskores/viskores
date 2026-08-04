@@ -28,11 +28,15 @@ set(headers
 
 set(sources
   RenderTest.cxx
+  )
+
+set(device_sources
   Testing.cxx
   )
 
 viskores_library(
   NAME viskores_rendering_testing
-  SOURCES ${sources}
   HEADERS ${headers}
+  SOURCES ${sources}
+  DEVICE_SOURCES ${device_sources}
   )

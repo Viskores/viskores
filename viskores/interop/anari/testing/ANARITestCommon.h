@@ -108,7 +108,8 @@ static void renderTestANARIImage(anari_cpp::Device d,
 
   image.AddPointField("color", colorArray);
 
-  VISKORES_TEST_ASSERT(test_equal_images(image, imgName));
+  VISKORES_TEST_ASSERT(
+    test_equal_images(imgName, colorArray, viskores::Id2{ fb.width, fb.height }));
 }
 
 } // namespace
