@@ -102,6 +102,7 @@ public:
   enum struct Preset
   {
     Default,
+    Fast,
     CoolToWarm,
     CoolToWarmExtended,
     Viridis,
@@ -140,6 +141,7 @@ public:
   /// Currently supports the following color tables:
   ///
   /// "Default"
+  /// "Fast"
   /// "Cool to Warm"
   /// "Cool to Warm Extended"
   /// "Viridis"
@@ -229,6 +231,7 @@ public:
   ///
   /// Currently supports the following color tables:
   /// "Default"
+  /// "Fast"
   /// "Cool to Warm"
   /// "Cool to Warm Extended"
   /// "Viridis"
