@@ -175,7 +175,7 @@ Runtime Device Configuration
 All device adapter implementations must create a specialization of :class:`viskores::cont::internal::RuntimeDeviceConfiguration`.
 This specialization must inherit from :class:`viskores::cont::internal::RuntimeDeviceConfigurationBase`.
 :class:`viskores::cont::internal::RuntimeDeviceConfiguration` provides various ``Set*`` and ``Get*`` methods for setting and accessing device-specific runtime parameters.
-The superclass provides :func:`viskores::cont::internal::RuntimeDeviceConfigurationBase`, which takes a :class:`viskores::cont::internal::RuntimeDeviceConfigurationOptions` argument used to set device parameters when |Viskores| is initialized.
+The superclass provides :func:`viskores::cont::internal::RuntimeDeviceConfigurationBase::Initialize`, which takes a :class:`viskores::cont::internal::RuntimeDeviceConfigurationOptions` argument used to set device parameters when |Viskores| is initialized.
 
 .. doxygenclass:: viskores::cont::internal::RuntimeDeviceConfigurationBase
    :members:
@@ -189,7 +189,7 @@ The superclass provides :func:`viskores::cont::internal::RuntimeDeviceConfigurat
    :members:
 
 Specializations of :class:`viskores::cont::internal::RuntimeDeviceConfiguration` must override :func:`viskores::cont::internal::RuntimeDeviceConfigurationBase::GetDevice`, which returns a :struct:`viskores::cont::DeviceAdapterId` for the device that the runtime configuration oversees.
-Specializations are not required to override the other methods defined in :class:`viskores::cont::internal::RuntimeDeviceConfigurationBase`4.
+Specializations are not required to override the other methods defined in :class:`viskores::cont::internal::RuntimeDeviceConfigurationBase`.
 These methods should be overridden only if suitable device-specific runtime parameters can be set or queried.
 
 Continuing our example of a device adapter based on C++11's ``std::thread`` class, here is the implementation of ``RuntimeDeviceConfiguration``, which by convention would be placed in the ``viskores/cont/cxx11/internal/RuntimeDeviceConfigurationCxx11Thread.h`` header file.
@@ -250,9 +250,6 @@ This is handled internally by :class:`viskores::exec::internal::ErrorMessageBuff
 
 Before :func:`viskores::cont::DeviceAdapterAlgorithm::Schedule` executes the functor it is given, it should allocate a small string array in the execution environment, initialize it to the empty string, encapsulate the array in an :class:`viskores::exec::internal::ErrorMessageBuffer` object, and set this buffer object in the functor.
 When execution completes, :func:`viskores::cont::DeviceAdapterAlgorithm::Schedule` should check whether an error exists in this buffer and throw :class:`viskores::cont::ErrorExecution` if an error has been reported.
-
-.. doxygenclass:: viskores::cont::ErrorExecution
-   :members:
 
 .. commonerrors::
    Exceptions are generally not supposed to be thrown in the execution environment, but it can happen on devices that support them.
