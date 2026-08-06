@@ -36,6 +36,8 @@ struct Surface : public Object
 
   viskores::Bounds bounds() const;
 
+  viskores::Range fieldRange() const { return this->m_fieldRange; }
+
   bool isValid() const override;
 
 private:
@@ -46,6 +48,7 @@ private:
   viskores::cont::DataSet m_dataSet;
   viskores::cont::Field m_field;
   viskores::cont::ArrayHandle<viskores::Vec4f_32> m_colorMap;
+  viskores::Range m_fieldRange;
 };
 
 } // namespace viskores_device

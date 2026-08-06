@@ -37,7 +37,9 @@ struct Image1DSampler : public Sampler
 
   bool getColors(const viskores::cont::DataSet& data,
                  viskores::cont::Field& field,
-                 viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const override;
+                 viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+                 Mat4f_32& inFieldTransform,
+                 viskores::Vec4f_32& inFieldOffset) const override;
 
 private:
   Mat4f_32 m_inTransform;

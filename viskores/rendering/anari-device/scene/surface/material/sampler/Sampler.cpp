@@ -24,7 +24,9 @@ struct UnknownSampler : viskores_device::Sampler
 
   bool getColors(const viskores::cont::DataSet& data,
                  viskores::cont::Field& field,
-                 viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const override;
+                 viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+                 viskores_device::Mat4f_32& inFieldTransform,
+                 viskores::Vec4f_32& inFieldOffset) const override;
 };
 
 UnknownSampler::UnknownSampler(viskores_device::ViskoresDeviceGlobalState* d)
@@ -48,7 +50,9 @@ bool UnknownSampler::isValid() const
 
 bool UnknownSampler::getColors(const viskores::cont::DataSet&,
                                viskores::cont::Field&,
-                               viskores::cont::ArrayHandle<viskores::Vec4f_32>&) const
+                               viskores::cont::ArrayHandle<viskores::Vec4f_32>&,
+                               viskores_device::Mat4f_32&,
+                               viskores::Vec4f_32&) const
 {
   // invalid
   return false;

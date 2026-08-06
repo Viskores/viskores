@@ -45,11 +45,13 @@ void MatteMaterial::finalize()
 
 void MatteMaterial::getColors(const viskores::cont::DataSet& data,
                               viskores::cont::Field& field,
-                              viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const
+                              viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+                              Mat4f_32& inFieldTransform,
+                              viskores::Vec4f_32& inFieldOffset) const
 {
   if (this->m_sampler && this->m_sampler->isValid())
   {
-    if (this->m_sampler->getColors(data, field, colorMap))
+    if (this->m_sampler->getColors(data, field, colorMap, inFieldTransform, inFieldOffset))
     {
       return;
     }
@@ -64,6 +66,8 @@ void MatteMaterial::getColors(const viskores::cont::DataSet& data,
                                  viskores::cont::Field::Association::Points,
                                  viskores::cont::make_ArrayHandleConstant(
                                    viskores::Float32{ 0.0f }, data.GetNumberOfPoints()) };
+  viskores::MatrixIdentity(inFieldTransform);
+  inFieldOffset = viskores::Vec4f_32{ 0 };
 }
 
 } // namespace viskores_device
