@@ -9,6 +9,7 @@
 .. |Cool-to-Warm| image:: ../../data/users-guide/images/color-tables/Cool-to-Warm.png
 .. |Cool-to-Warm-Extended| image:: ../../data/users-guide/images/color-tables/Cool-to-Warm-Extended.png
 .. |Default| image:: ../../data/users-guide/images/color-tables/Default.png
+.. |Fast| image:: ../../data/users-guide/images/color-tables/Fast.png
 .. |Gray-to-Red| image:: ../../data/users-guide/images/color-tables/Gray-to-Red.png
 .. |Green| image:: ../../data/users-guide/images/color-tables/Green.png
 .. |Inferno| image:: ../../data/users-guide/images/color-tables/Inferno.png
