@@ -36,6 +36,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       mpich \
       ninja-build \
       pkg-config \
+      python3-dev \
+      python3-numpy \
+      python3-pip \
       software-properties-common \
       && \
     rm -rf /var/lib/apt/lists/*
@@ -59,5 +62,7 @@ RUN curl -L https://github.com/KhronosGroup/ANARI-SDK/archive/refs/tags/v$ANARI_
     cmake --build build && \
     cmake --install build && \
     rm -rf *
+
+RUN pip install --break-system-packages nanobind
 
 WORKDIR /root
