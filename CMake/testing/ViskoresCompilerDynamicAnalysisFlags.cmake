@@ -48,7 +48,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
 endif()
 
 if(VISKORES_COMPILER_IS_CLANG OR VISKORES_COMPILER_IS_GNU)
-  viskores_option(Viskores_ENABLE_SANITIZER "Build with sanitizer support." OFF)
+  option(Viskores_ENABLE_SANITIZER "Build with sanitizer support." OFF)
   mark_as_advanced(Viskores_ENABLE_SANITIZER)
 
   set(Viskores_USE_SANITIZER "address" CACHE STRING "The sanitizer to use")

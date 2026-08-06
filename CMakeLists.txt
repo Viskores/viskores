@@ -85,32 +85,23 @@ endif()
 set(Viskores_BINARY_INCLUDE_DIR "${Viskores_BINARY_DIR}/include")
 
 #-----------------------------------------------------------------------------
-# viskores_option(variable doc [initial])
-#   Provides an option if it is not already defined.
-# This can be replaced when CMake 3.13 is our cmake_minimum_required
-macro (viskores_option variable)
-  if (NOT DEFINED "${variable}")
-    option("${variable}" ${ARGN})
-  endif ()
-endmacro ()
-
 # Configurable Options
-viskores_option(Viskores_ENABLE_CUDA "Enable Cuda support" OFF)
-viskores_option(Viskores_ENABLE_KOKKOS "Enable Kokkos support" OFF)
-viskores_option(Viskores_ENABLE_OPENMP "Enable OpenMP support" OFF)
-viskores_option(Viskores_ENABLE_TBB "Enable TBB support" OFF)
-viskores_option(Viskores_ENABLE_RENDERING "Enable rendering library" ON)
-viskores_option(Viskores_ENABLE_BENCHMARKS "Enable Viskores Benchmarking" OFF)
-viskores_option(Viskores_ENABLE_MPI "Enable MPI support" OFF)
-viskores_option(Viskores_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
-viskores_option(Viskores_ENABLE_EXAMPLES "Build examples" OFF)
-viskores_option(Viskores_ENABLE_TUTORIALS "Build tutorials" OFF)
-viskores_option(Viskores_ENABLE_PYTHON_BINDINGS "Build Python bindings" OFF)
+option(Viskores_ENABLE_CUDA "Enable Cuda support" OFF)
+option(Viskores_ENABLE_KOKKOS "Enable Kokkos support" OFF)
+option(Viskores_ENABLE_OPENMP "Enable OpenMP support" OFF)
+option(Viskores_ENABLE_TBB "Enable TBB support" OFF)
+option(Viskores_ENABLE_RENDERING "Enable rendering library" ON)
+option(Viskores_ENABLE_BENCHMARKS "Enable Viskores Benchmarking" OFF)
+option(Viskores_ENABLE_MPI "Enable MPI support" OFF)
+option(Viskores_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
+option(Viskores_ENABLE_EXAMPLES "Build examples" OFF)
+option(Viskores_ENABLE_TUTORIALS "Build tutorials" OFF)
+option(Viskores_ENABLE_PYTHON_BINDINGS "Build Python bindings" OFF)
 if (NOT DEFINED Viskores_ENABLE_TESTING)
     if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
-      viskores_option(Viskores_ENABLE_TESTING "Enable Viskores Testing" ON)
+      option(Viskores_ENABLE_TESTING "Enable Viskores Testing" ON)
     else()
-      viskores_option(Viskores_ENABLE_TESTING "Enable Viskores Testing" OFF)
+      option(Viskores_ENABLE_TESTING "Enable Viskores Testing" OFF)
     endif()
 endif()
 
@@ -146,51 +137,51 @@ mark_as_advanced(Viskores_Doxygen_HTML_output)
 
 # We may want to make finer controls on whether libraries/modules get built.
 # VTK uses the concept of groups for its modules
-viskores_option(Viskores_BUILD_ALL_LIBRARIES
+option(Viskores_BUILD_ALL_LIBRARIES
   "Build all libraries by default. (Can be overridden for each library.)"
   ON
   )
 mark_as_advanced(Viskores_BUILD_ALL_LIBRARIES)
 
-viskores_option(Viskores_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
-viskores_option(Viskores_USE_64BIT_IDS "Use 64-bit indices." ON)
+option(Viskores_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
+option(Viskores_USE_64BIT_IDS "Use 64-bit indices." ON)
 
-viskores_option(Viskores_ENABLE_HDF5_IO "Enable HDF5 support" OFF)
+option(Viskores_ENABLE_HDF5_IO "Enable HDF5 support" OFF)
 if (Viskores_ENABLE_HDF5_IO)
   find_package(HDF5 REQUIRED COMPONENTS HL)
 endif()
 
 # If the linked HDF5 is parallel, we need to add the MPI include directory
 # for its dependencies
-viskores_option(Viskores_HDF5_IS_PARALLEL "HDF5 library is parallel" OFF)
+option(Viskores_HDF5_IS_PARALLEL "HDF5 library is parallel" OFF)
 mark_as_advanced(Viskores_HDF5_IS_PARALLEL)
 
 # Viskores will turn on logging by default, but will set the default
 # logging level to WARN.  This option should not be visible by default
 # in the GUI, as ERROR and WARN level logging should not interfere
 # with the performance of viskores
-viskores_option(Viskores_ENABLE_LOGGING "Enable Viskores Logging" ON)
+option(Viskores_ENABLE_LOGGING "Enable Viskores Logging" ON)
 
 # When Viskores is embedded into larger projects they may desire to turn off
 # Viskores internal assert checks when in debug mode to improve debug runtime
 # performance.
-viskores_option(Viskores_NO_ASSERT "Disable assertions in debugging builds." OFF)
+option(Viskores_NO_ASSERT "Disable assertions in debugging builds." OFF)
 
 # The CUDA compiler (as of CUDA 11) takes a surprising long time to compile
 # kernels with assert in them. By default we turn off asserts when compiling
 # for CUDA devices.
-viskores_option(Viskores_NO_ASSERT_CUDA "Disable assertions for CUDA devices." ON)
+option(Viskores_NO_ASSERT_CUDA "Disable assertions for CUDA devices." ON)
 
 # The HIP compiler (as of ROCm 3.7) takes a surprising long time to compile
 # kernels with assert in them they generate `printf` calls which are very
 # slow ( cause massive register spillage). By default we turn off asserts when
 # compiling for HIP devices.
-viskores_option(Viskores_NO_ASSERT_HIP "Disable assertions for HIP devices." ON)
+option(Viskores_NO_ASSERT_HIP "Disable assertions for HIP devices." ON)
 
 # When Viskores is embedded into larger projects that wish to make end user
 # applications they want to only install libraries and don't want CMake/headers
 # installed.
-viskores_option(Viskores_INSTALL_ONLY_LIBRARIES "install only viskores libraries and no headers" OFF)
+option(Viskores_INSTALL_ONLY_LIBRARIES "install only viskores libraries and no headers" OFF)
 
 # Install examples projects
 cmake_dependent_option(Viskores_INSTALL_EXAMPLES "Install examples" OFF "NOT Viskores_ENABLE_EXAMPLES" ON)
@@ -200,28 +191,28 @@ cmake_dependent_option(Viskores_INSTALL_EXAMPLES "Install examples" OFF "NOT Vis
 # rather than exporting all symbols. This flag is added so that consumers
 # which require static builds can force all symbols on, which is something
 # VTK does.
-viskores_option(Viskores_HIDE_PRIVATE_SYMBOLS "Hide symbols from libraries." ON)
+option(Viskores_HIDE_PRIVATE_SYMBOLS "Hide symbols from libraries." ON)
 
-viskores_option(BUILD_SHARED_LIBS "Build Viskores with shared libraries" ON)
+option(BUILD_SHARED_LIBS "Build Viskores with shared libraries" ON)
 set(Viskores_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
 # This flag can be used to prevent Viskores from exporting its warning flags in its
 # build interface. This is useful when building Viskores as a thirdparty library
 # and the warnings are too strict for the parent project.
-viskores_option(Viskores_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are useful while developing Viskores" ON)
+option(Viskores_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are useful while developing Viskores" ON)
 
 # By default Viskores would install its README.md and LICENSE.md.
 # Some application might need not to install those, hence this option.
-viskores_option(Viskores_NO_INSTALL_README_LICENSE "disable the installation of README and LICENSE files" OFF)
+option(Viskores_NO_INSTALL_README_LICENSE "disable the installation of README and LICENSE files" OFF)
 
 # In Python wheels, having SONAME suffixes just ends up duplicating files.
 # Allow VTK to turn off these symlinks for its wheel distribution.
-viskores_option(Viskores_SKIP_LIBRARY_VERSIONS "Skip versioning Viskores libraries" OFF)
+option(Viskores_SKIP_LIBRARY_VERSIONS "Skip versioning Viskores libraries" OFF)
 
 # During development, running unit tests with the default values can be too lengthy.
 # Allow for the developer to skip the majority of the default values and control them
 # through ctest's command-line. Doesn't affect CI unless enabled.
-viskores_option(Viskores_OVERRIDE_CTEST_TIMEOUT "Disable default ctest timeout" OFF)
+option(Viskores_OVERRIDE_CTEST_TIMEOUT "Disable default ctest timeout" OFF)
 
 # Viskores_ENABLE_GPU_MPI makes Viskores to use DIY routines that enables GPU aware
 # MPI. By default, this option is disabled. Also, this option is hidden unless
@@ -519,7 +510,7 @@ if(NOT Viskores_INSTALL_ONLY_LIBRARIES)
     )
 endif()
 
-viskores_option(Viskores_ENABLE_CPACK "Enable CPack packaging of Viskores" ON)
+option(Viskores_ENABLE_CPACK "Enable CPack packaging of Viskores" ON)
 if (Viskores_ENABLE_CPACK)
   # Enable CPack packaging
   set(CPACK_PACKAGE_DESCRIPTION_FILE ${Viskores_SOURCE_DIR}/README.md)

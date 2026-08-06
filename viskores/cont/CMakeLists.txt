@@ -232,20 +232,20 @@ set(device_sources
 viskores_get_kit_name(kit_name kit_dir)
 
 # Some custom types included with Viskores
-viskores_option(Viskores_USE_DEFAULT_TYPES_FOR_VTK
+option(Viskores_USE_DEFAULT_TYPES_FOR_VTK
   "Compile Viskores algorithms for use with types from VTK."
   OFF
   )
 if (Viskores_USE_DEFAULT_TYPES_FOR_VTK)
   set(Viskores_DEFAULT_TYPES_HEADER "internal/DefaultTypesVTK.h.in")
-  viskores_option(Viskores_ADD_XGC_TO_DEFAULT_TYPES_VTK "Add XGC types to default VTK types." OFF)
+  option(Viskores_ADD_XGC_TO_DEFAULT_TYPES_VTK "Add XGC types to default VTK types." OFF)
   mark_as_advanced(Viskores_ADD_XGC_TO_DEFAULT_TYPES_VTK)
   if (Viskores_ADD_XGC_TO_DEFAULT_TYPES_VTK)
     set(VISKORES_ADD_XGC_DEFAULT_TYPES TRUE)
   endif()
 endif()
 
-viskores_option(Viskores_USE_DEFAULT_TYPES_FOR_ASCENT
+option(Viskores_USE_DEFAULT_TYPES_FOR_ASCENT
   "Compile Viskores algorithms for use with types from Ascent."
   OFF
   )
@@ -263,7 +263,7 @@ if (Viskores_USE_DEFAULT_TYPES_FOR_ASCENT)
   endif()
 endif()
 
-viskores_option(Viskores_USE_DEFAULT_TYPES_FOR_VISTLE
+option(Viskores_USE_DEFAULT_TYPES_FOR_VISTLE
   "Compile Viskores algorithms for use with types from Vistle."
   OFF
   )
