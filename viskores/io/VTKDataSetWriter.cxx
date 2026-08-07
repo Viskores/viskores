@@ -21,6 +21,7 @@
 #include <viskores/CellShape.h>
 
 #include <viskores/cont/CellSetExplicit.h>
+#include <viskores/cont/CellSetExtrude.h>
 #include <viskores/cont/CellSetSingleType.h>
 #include <viskores/cont/CellSetStructured.h>
 #include <viskores/cont/ErrorBadType.h>
@@ -38,6 +39,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -70,7 +72,7 @@ void CallForBaseType(Functor&& functor,
                      const viskores::cont::UnknownArrayHandle& array,
                      Args&&... args)
 {
-  bool success = true;
+  bool success = false;
   viskores::ListForEach(CallForBaseTypeFunctor{},
                         viskores::TypeListScalarAll{},
                         success,
@@ -219,15 +221,182 @@ void WritePoints(std::ostream& out,
 }
 
 template <class CellSetType>
-void WriteExplicitCellsAscii(std::ostream& out, const CellSetType& cellSet)
+viskores::Id ValidateExplicitCells(const CellSetType& cellSet)
 {
   viskores::Id nCells = cellSet.GetNumberOfCells();
+  // Legacy VTK stores CELLS and CELL_TYPES payloads as signed 32-bit integers.
+  const viskores::Id minLegacyValue =
+    static_cast<viskores::Id>(std::numeric_limits<viskores::Int32>::min());
+  const viskores::Id maxLegacyValue =
+    static_cast<viskores::Id>(std::numeric_limits<viskores::Int32>::max());
+
+  auto validateLegacyValue = [&](viskores::Id value, const char* description)
+  {
+    if ((value < minLegacyValue) || (value > maxLegacyValue))
+    {
+      std::ostringstream message;
+      message << "Legacy VTK files require 32-bit cell data. " << description << " value " << value
+              << " is out of range.";
+      throw viskores::cont::ErrorBadValue(message.str());
+    }
+  };
+
+  validateLegacyValue(nCells, "Cell count");
 
   viskores::Id conn_length = 0;
   for (viskores::Id i = 0; i < nCells; ++i)
   {
-    conn_length += 1 + cellSet.GetNumberOfPointsInCell(i);
+    viskores::Id nids = cellSet.GetNumberOfPointsInCell(i);
+    validateLegacyValue(nids, "Number of points in a cell");
+    conn_length += 1 + nids;
+    validateLegacyValue(conn_length, "Connectivity length");
+
+    viskores::cont::ArrayHandle<viskores::Id> ids;
+    cellSet.GetIndices(i, ids);
+    auto idPortal = ids.ReadPortal();
+    for (viskores::Id j = 0; j < nids; ++j)
+    {
+      validateLegacyValue(idPortal.Get(j), "Point index");
+    }
+
+    validateLegacyValue(static_cast<viskores::Id>(cellSet.GetCellShape(i)), "Cell shape");
   }
+
+  return conn_length;
+}
+
+std::string SanitizeFieldName(std::string name)
+{
+  for (auto& c : name)
+  {
+    if (std::isspace(static_cast<unsigned char>(c)) != 0)
+    {
+      c = '_';
+    }
+  }
+  return name;
+}
+
+void WriteScalarField(std::ostream& out,
+                      const viskores::cont::Field& field,
+                      viskores::io::FileType fileType)
+{
+  const int ncomps = field.GetData().GetNumberOfComponentsFlat();
+  out << "SCALARS " << SanitizeFieldName(field.GetName()) << " "
+      << GetFieldTypeName(field.GetData()) << " " << ncomps << '\n';
+  out << "LOOKUP_TABLE default" << '\n';
+  OutputArrayData(field.GetData(), out, fileType);
+}
+
+void WriteFieldArray(std::ostream& out,
+                     const viskores::cont::Field& field,
+                     viskores::io::FileType fileType)
+{
+  out << SanitizeFieldName(field.GetName()) << " " << field.GetData().GetNumberOfComponentsFlat()
+      << " " << field.GetNumberOfValues() << " " << GetFieldTypeName(field.GetData()) << '\n';
+  OutputArrayData(field.GetData(), out, fileType);
+}
+
+bool MatchesAssociation(const viskores::cont::Field& field,
+                        viskores::cont::Field::Association association)
+{
+  switch (association)
+  {
+    case viskores::cont::Field::Association::Points:
+      return field.IsPointField();
+    case viskores::cont::Field::Association::Cells:
+      return field.IsCellField();
+    default:
+      return false;
+  }
+}
+
+const char* AttributeHeaderTag(viskores::cont::Field::Association association)
+{
+  switch (association)
+  {
+    case viskores::cont::Field::Association::Points:
+      return "POINT_DATA";
+    case viskores::cont::Field::Association::Cells:
+      return "CELL_DATA";
+    default:
+      return "";
+  }
+}
+
+viskores::Id AttributeCount(const viskores::cont::DataSet& dataSet,
+                            viskores::cont::Field::Association association)
+{
+  switch (association)
+  {
+    case viskores::cont::Field::Association::Points:
+      return dataSet.GetNumberOfPoints();
+    case viskores::cont::Field::Association::Cells:
+      return dataSet.GetNumberOfCells();
+    default:
+      return 0;
+  }
+}
+
+void ValidateDataSetForWriting(const viskores::cont::DataSet& dataSet)
+{
+  // Fail fast on inconsistent datasets so we do not silently emit malformed legacy files.
+  const auto coordinateSystem = dataSet.GetCoordinateSystem();
+  const auto coordinates = coordinateSystem.GetData();
+  if (coordinates.GetNumberOfComponentsFlat() != 3)
+  {
+    std::ostringstream message;
+    message << "Legacy VTK files require 3-component coordinates. Coordinate system `"
+            << coordinateSystem.GetName() << "` has " << coordinates.GetNumberOfComponentsFlat()
+            << " components.";
+    throw viskores::cont::ErrorBadValue(message.str());
+  }
+
+  const viskores::Id numPoints = dataSet.GetNumberOfPoints();
+  if (coordinates.GetNumberOfValues() != numPoints)
+  {
+    std::ostringstream message;
+    message << "Coordinate system `" << coordinateSystem.GetName() << "` has "
+            << coordinates.GetNumberOfValues() << " points, but the cell set references "
+            << numPoints << " points.";
+    throw viskores::cont::ErrorBadValue(message.str());
+  }
+  (void)GetFieldTypeName(coordinates);
+
+  const viskores::Id numCells = dataSet.GetNumberOfCells();
+  for (viskores::Id f = 0; f < dataSet.GetNumberOfFields(); ++f)
+  {
+    const viskores::cont::Field field = dataSet.GetField(f);
+    if (field.IsPointField())
+    {
+      if (field.GetNumberOfValues() != numPoints)
+      {
+        std::ostringstream message;
+        message << "Point field `" << field.GetName() << "` has " << field.GetNumberOfValues()
+                << " values, but the data set has " << numPoints << " points.";
+        throw viskores::cont::ErrorBadValue(message.str());
+      }
+      (void)GetFieldTypeName(field.GetData());
+    }
+    else if (field.IsCellField())
+    {
+      if (field.GetNumberOfValues() != numCells)
+      {
+        std::ostringstream message;
+        message << "Cell field `" << field.GetName() << "` has " << field.GetNumberOfValues()
+                << " values, but the data set has " << numCells << " cells.";
+        throw viskores::cont::ErrorBadValue(message.str());
+      }
+      (void)GetFieldTypeName(field.GetData());
+    }
+  }
+}
+
+template <class CellSetType>
+void WriteExplicitCellsAscii(std::ostream& out, const CellSetType& cellSet)
+{
+  viskores::Id nCells = cellSet.GetNumberOfCells();
+  viskores::Id conn_length = ValidateExplicitCells(cellSet);
 
   out << "CELLS " << nCells << " " << conn_length << '\n';
 
@@ -238,7 +407,7 @@ void WriteExplicitCellsAscii(std::ostream& out, const CellSetType& cellSet)
     cellSet.GetIndices(i, ids);
     out << nids;
     auto IdPortal = ids.ReadPortal();
-    for (int j = 0; j < nids; ++j)
+    for (viskores::Id j = 0; j < nids; ++j)
     {
       out << " " << IdPortal.Get(j);
     }
@@ -257,12 +426,7 @@ template <class CellSetType>
 void WriteExplicitCellsBinary(std::ostream& out, const CellSetType& cellSet)
 {
   viskores::Id nCells = cellSet.GetNumberOfCells();
-
-  viskores::Id conn_length = 0;
-  for (viskores::Id i = 0; i < nCells; ++i)
-  {
-    conn_length += 1 + cellSet.GetNumberOfPointsInCell(i);
-  }
+  viskores::Id conn_length = ValidateExplicitCells(cellSet);
 
   out << "CELLS " << nCells << " " << conn_length << '\n';
 
@@ -275,7 +439,7 @@ void WriteExplicitCellsBinary(std::ostream& out, const CellSetType& cellSet)
     cellSet.GetIndices(i, ids);
     buffer.push_back(static_cast<viskores::Int32>(nids));
     auto IdPortal = ids.ReadPortal();
-    for (int j = 0; j < nids; ++j)
+    for (viskores::Id j = 0; j < nids; ++j)
     {
       buffer.push_back(static_cast<viskores::Int32>(IdPortal.Get(j)));
     }
@@ -320,89 +484,59 @@ void WriteExplicitCells(std::ostream& out,
   }
 }
 
-void WritePointFields(std::ostream& out,
-                      const viskores::cont::DataSet& dataSet,
-                      viskores::io::FileType fileType)
+void WriteFields(std::ostream& out,
+                 const viskores::cont::DataSet& dataSet,
+                 viskores::cont::Field::Association association,
+                 viskores::io::FileType fileType)
 {
-  bool wrote_header = false;
+  std::vector<viskores::cont::Field> fieldArrays;
+  std::vector<viskores::cont::Field> scalarArrays;
+
   for (viskores::Id f = 0; f < dataSet.GetNumberOfFields(); f++)
   {
     const viskores::cont::Field field = dataSet.GetField(f);
-
-    if (field.GetAssociation() != viskores::cont::Field::Association::Points)
+    if (!MatchesAssociation(field, association))
     {
       continue;
     }
 
-    if (field.GetName() == dataSet.GetCoordinateSystemName())
+    if ((association == viskores::cont::Field::Association::Points) &&
+        (field.GetName() == dataSet.GetCoordinateSystemName()))
     {
       // Do not write out the first coordinate system as a field.
       continue;
     }
 
-    viskores::Id npoints = field.GetNumberOfValues();
-    int ncomps = field.GetData().GetNumberOfComponentsFlat();
-
-    if (!wrote_header)
+    if (field.GetData().GetNumberOfComponentsFlat() > 4)
     {
-      out << "POINT_DATA " << npoints << '\n';
-      wrote_header = true;
+      fieldArrays.push_back(field);
     }
-
-    std::string typeName = GetFieldTypeName(field.GetData());
-    std::string name = field.GetName();
-    for (auto& c : name)
+    else
     {
-      if (std::isspace(c))
-      {
-        c = '_';
-      }
+      scalarArrays.push_back(field);
     }
-    out << "SCALARS " << name << " " << typeName << " " << ncomps << '\n';
-    out << "LOOKUP_TABLE default" << '\n';
-
-    OutputArrayData(field.GetData(), out, fileType);
   }
-}
 
-void WriteCellFields(std::ostream& out,
-                     const viskores::cont::DataSet& dataSet,
-                     viskores::io::FileType fileType)
-{
-  bool wrote_header = false;
-  for (viskores::Id f = 0; f < dataSet.GetNumberOfFields(); f++)
+  if (scalarArrays.empty() && fieldArrays.empty())
   {
-    const viskores::cont::Field field = dataSet.GetField(f);
-    if (!field.IsCellField())
+    return;
+  }
+
+  out << AttributeHeaderTag(association) << " " << AttributeCount(dataSet, association) << '\n';
+
+  for (const auto& field : scalarArrays)
+  {
+    WriteScalarField(out, field, fileType);
+  }
+
+  if (!fieldArrays.empty())
+  {
+    // Legacy SCALARS is limited to 1-4 components; larger tuples must be written as FIELD data.
+    out << "FIELD FieldData " << fieldArrays.size() << '\n';
+    for (const auto& field : fieldArrays)
     {
-      continue;
+      WriteFieldArray(out, field, fileType);
     }
-
-
-    viskores::Id ncells = field.GetNumberOfValues();
-    int ncomps = field.GetData().GetNumberOfComponentsFlat();
-
-    if (!wrote_header)
-    {
-      out << "CELL_DATA " << ncells << '\n';
-      wrote_header = true;
-    }
-
-    std::string typeName = GetFieldTypeName(field.GetData());
-
-    std::string name = field.GetName();
-    for (auto& c : name)
-    {
-      if (std::isspace(c))
-      {
-        c = '_';
-      }
-    }
-
-    out << "SCALARS " << name << " " << typeName << " " << ncomps << '\n';
-    out << "LOOKUP_TABLE default" << '\n';
-
-    OutputArrayData(field.GetData(), out, fileType);
   }
 }
 
@@ -518,6 +652,22 @@ void Write(std::ostream& out,
            const viskores::cont::DataSet& dataSet,
            viskores::io::FileType fileType)
 {
+  ValidateDataSetForWriting(dataSet);
+
+  viskores::cont::UnknownCellSet cellSet = dataSet.GetCellSet();
+  if (cellSet.IsType<viskores::cont::CellSetExplicit<>>())
+  {
+    ValidateExplicitCells(cellSet.AsCellSet<viskores::cont::CellSetExplicit<>>());
+  }
+  else if (cellSet.IsType<viskores::cont::CellSetSingleType<>>())
+  {
+    ValidateExplicitCells(cellSet.AsCellSet<viskores::cont::CellSetSingleType<>>());
+  }
+  else if (cellSet.IsType<viskores::cont::CellSetExtrude>())
+  {
+    ValidateExplicitCells(cellSet.AsCellSet<viskores::cont::CellSetExtrude>());
+  }
+
   // The Paraview parser cannot handle scientific notation:
   out << std::fixed;
   // This causes a big problem for the dataset writer.
@@ -541,7 +691,6 @@ void Write(std::ostream& out,
       break;
   }
 
-  viskores::cont::UnknownCellSet cellSet = dataSet.GetCellSet();
   if (cellSet.IsType<viskores::cont::CellSetExplicit<>>())
   {
     WriteDataSetAsUnstructured(
@@ -578,8 +727,8 @@ void Write(std::ostream& out,
     throw viskores::cont::ErrorBadType("Could not determine type to write out.");
   }
 
-  WritePointFields(out, dataSet, fileType);
-  WriteCellFields(out, dataSet, fileType);
+  WriteFields(out, dataSet, viskores::cont::Field::Association::Points, fileType);
+  WriteFields(out, dataSet, viskores::cont::Field::Association::Cells, fileType);
 }
 
 } // anonymous namespace
@@ -608,13 +757,19 @@ void VTKDataSetWriter::WriteDataSet(const viskores::cont::DataSet& dataSet) cons
   }
   try
   {
-    std::ofstream fileStream(this->FileName.c_str(), std::fstream::trunc | std::fstream::binary);
+    std::ofstream fileStream;
+    // Report open/write/flush/close failures instead of silently returning a partial file.
+    fileStream.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+    fileStream.open(this->FileName.c_str(),
+                    std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
     Write(fileStream, dataSet, this->GetFileType());
+    fileStream.flush();
     fileStream.close();
   }
-  catch (std::ofstream::failure& error)
+  catch (const std::ios_base::failure& error)
   {
-    throw viskores::io::ErrorIO(error.what());
+    throw viskores::io::ErrorIO("Failed to write VTK file `" + this->FileName +
+                                "`: " + std::string(error.what()));
   }
 }
 
