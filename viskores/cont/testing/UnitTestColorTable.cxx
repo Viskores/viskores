@@ -114,7 +114,7 @@ void TestLoadPresets()
 
   //verify that we can get the presets
   std::set<std::string> names = viskores::cont::ColorTable::GetPresets();
-  VISKORES_TEST_ASSERT(names.size() == 18, "incorrect number of names in preset set");
+  VISKORES_TEST_ASSERT(names.size() == 19, "incorrect number of names in preset set");
 
   VISKORES_TEST_ASSERT(names.count("Inferno") == 1, "names should contain inferno");
   VISKORES_TEST_ASSERT(names.count("Black-Body Radiation") == 1,
@@ -133,6 +133,7 @@ void TestLoadPresets()
   }
 
   auto presetEnum = { viskores::cont::ColorTable::Preset::Default,
+                      viskores::cont::ColorTable::Preset::Fast,
                       viskores::cont::ColorTable::Preset::CoolToWarm,
                       viskores::cont::ColorTable::Preset::CoolToWarmExtended,
                       viskores::cont::ColorTable::Preset::Viridis,

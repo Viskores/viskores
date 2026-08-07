@@ -618,6 +618,8 @@ of all available predefined color tables is provided below.
 * |Viridis| ``Viridis``
   Matplotlib Virdis, which is designed to have perceptual uniformity, accessibility to color blind viewers, and good conversion to black and white.
   This is the default color map.
+* |Fast| ``Fast``
+  A color table designed to be perceptually even, to work well on shaded 3D surfaces, make subtle changes visible, and to generally perform well across many uses.
 * |Cool-to-Warm| ``Cool to Warm``
   A color table designed to be perceptually even, to work well on shaded 3D surfaces, and to generally perform well across many uses.
 * |Cool-to-Warm-Extended| ``Cool to Warm Extended``

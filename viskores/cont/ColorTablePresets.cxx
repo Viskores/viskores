@@ -160,6 +160,22 @@ VISKORES_CONT void BuildColorTablePresetsVector(std::vector<ColorTablePreset>& p
 {
   // clang-format off
   presets = std::vector<ColorTablePreset>{
+    { viskores::cont::ColorTable::Preset::Fast,
+      "Fast",
+      viskores::ColorSpace::Lab,
+      { 0, 1, 0 },
+      {
+        0.00,  14.0/255.0,  14.0/255.0, 120.0/255.0,
+        0.17,  62.0/255.0, 117.0/255.0, 207.0/255.0,
+        0.30,  91.0/255.0, 190.0/255.0, 243.0/255.0,
+        0.43, 175.0/255.0, 237.0/255.0, 234.0/255.0,
+        0.50, 229.0/255.0, 241.0/255.0, 196.0/255.0,
+        0.59, 244.0/255.0, 213.0/255.0, 130.0/255.0,
+        0.71, 237.0/255.0, 158.0/255.0,  80.0/255.0,
+        0.85, 204.0/255.0,  90.0/255.0,  41.0/255.0,
+        1.00, 150.0/255.0,  20.0/255.0,  30.0/255.0
+      }
+    },
     { viskores::cont::ColorTable::Preset::CoolToWarm,
       "Cool to Warm",
       viskores::ColorSpace::Diverging,
