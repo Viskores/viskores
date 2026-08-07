@@ -18,6 +18,8 @@
 
 #include <viskores/rendering/CanvasRayTracer.h>
 
+#include <viskores/cont/Algorithm.h>
+#include <viskores/cont/ArrayHandleConstant.h>
 #include <viskores/cont/TryExecute.h>
 #include <viskores/rendering/Canvas.h>
 #include <viskores/rendering/Color.h>
@@ -45,9 +47,15 @@ public:
   {
   }
 
-  using ControlSignature =
-    void(FieldIn, WholeArrayInOut, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayInOut);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
+  using ControlSignature = void(FieldIn,
+                                WholeArrayInOut,
+                                FieldIn,
+                                FieldIn,
+                                FieldIn,
+                                WholeArrayInOut,
+                                WholeArrayInOut,
+                                WholeArrayInOut);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
   template <typename Precision,
             typename ColorPortalType,
             typename DepthBufferPortalType,
@@ -58,10 +66,13 @@ public:
                                 const viskores::Vec<Precision, 3>& origin,
                                 const viskores::Vec<Precision, 3>& dir,
                                 DepthBufferPortalType& depthBuffer,
+                                DepthBufferPortalType& distancesToCamera,
                                 ColorBufferPortalType& colorBuffer,
                                 const viskores::Id& index) const
   {
     viskores::Float32 depth = viskores::NegativeInfinity32();
+    viskores::Float32 distanceToCamera = viskores::Infinity32();
+
     const bool hasProjectedDepth = (inDepth >= Precision{ 0 });
     if (hasProjectedDepth)
     {
@@ -90,6 +101,8 @@ public:
       }
     }
 
+    distanceToCamera = static_cast<viskores::Float32>(inDepth);
+
     viskores::Vec4f_32 color;
     color[0] = static_cast<viskores::Float32>(colorBufferIn.Get(index * 4 + 0));
     color[1] = static_cast<viskores::Float32>(colorBufferIn.Get(index * 4 + 1));
@@ -111,13 +124,22 @@ public:
     {
       color[i] = viskores::Min(1.f, viskores::Max(color[i], 0.f));
     }
+
     // The existing depth should already been feed into the ray mapper
     // so no color contribution will exist past the existing depth.
-
-    if (this->WriteDepth && hasProjectedDepth && (depth <= currentDepth))
+    if (this->WriteDepth && hasProjectedDepth)
     {
-      depthBuffer.Set(pixelIndex, depth);
+      if (depth <= currentDepth)
+      {
+        depthBuffer.Set(pixelIndex, depth);
+      }
+
+      if (distanceToCamera <= distancesToCamera.Get(pixelIndex))
+      {
+        distancesToCamera.Set(pixelIndex, distanceToCamera);
+      }
     }
+
     colorBuffer.Set(pixelIndex, color);
   }
 }; //class SurfaceConverter
@@ -140,11 +162,13 @@ VISKORES_CONT void WriteToCanvas(const viskores::rendering::raytracing::Ray<Prec
             rays.Origin,
             rays.Dir,
             canvas->GetDepthBuffer(),
+            canvas->GetDistancesToCamera(),
             canvas->GetColorBuffer());
 
   //Force the transfer so the vectors contain data from device
   canvas->GetColorBuffer().WritePortal().Get(0);
   canvas->GetDepthBuffer().WritePortal().Get(0);
+  canvas->GetDistancesToCamera().WritePortal().Get(0);
 }
 
 } // namespace internal

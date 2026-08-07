@@ -45,14 +45,16 @@ namespace internal
 
 struct ClearBuffers : public viskores::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldOut, FieldOut);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(FieldOut, FieldOut, FieldOut);
+  using ExecutionSignature = void(_1, _2, _3);
 
   VISKORES_CONT
   ClearBuffers() {}
 
   VISKORES_EXEC
-  void operator()(viskores::Vec4f_32& color, viskores::Float32& depth) const
+  void operator()(viskores::Vec4f_32& color,
+                  viskores::Float32& depth,
+                  viskores::Float32& distanceToCamera) const
   {
     color[0] = 0.f;
     color[1] = 0.f;
@@ -61,6 +63,7 @@ struct ClearBuffers : public viskores::worklet::WorkletMapField
     // The depth is set to slightly larger than 1.0f, ensuring this color value always fails a
     // depth check
     depth = VISKORES_DEFAULT_CANVAS_DEPTH;
+    distanceToCamera = viskores::Infinity32();
   }
 }; // struct ClearBuffers
 
@@ -233,6 +236,7 @@ struct Canvas::CanvasInternals
   viskores::rendering::Color ForegroundColor;
   ColorBufferType ColorBuffer;
   DepthBufferType DepthBuffer;
+  DepthBufferType DistancesToCamera;
   viskores::rendering::BitmapFont Font;
   FontTextureType FontTexture;
   viskores::Matrix<viskores::Float32, 4, 4> ModelView;
@@ -285,6 +289,16 @@ Canvas::DepthBufferType& Canvas::GetDepthBuffer()
   return Internals->DepthBuffer;
 }
 
+const Canvas::DepthBufferType& Canvas::GetDistancesToCamera() const
+{
+  return Internals->DistancesToCamera;
+}
+
+Canvas::DepthBufferType& Canvas::GetDistancesToCamera()
+{
+  return Internals->DistancesToCamera;
+}
+
 viskores::cont::DataSet Canvas::GetDataSet(const std::string& colorFieldName,
                                            const std::string& depthFieldName) const
 {
@@ -334,7 +348,7 @@ void Canvas::Clear()
 {
   internal::ClearBuffers worklet;
   viskores::worklet::DispatcherMapField<internal::ClearBuffers> dispatcher(worklet);
-  dispatcher.Invoke(this->GetColorBuffer(), this->GetDepthBuffer());
+  dispatcher.Invoke(this->GetColorBuffer(), this->GetDepthBuffer(), this->GetDistancesToCamera());
 }
 
 void Canvas::BlendBackground()
@@ -357,6 +371,10 @@ void Canvas::ResizeBuffers(viskores::Id width, viskores::Id height)
   if (Internals->DepthBuffer.GetNumberOfValues() != numPixels)
   {
     Internals->DepthBuffer.Allocate(numPixels);
+  }
+  if (Internals->DistancesToCamera.GetNumberOfValues() != numPixels)
+  {
+    Internals->DistancesToCamera.Allocate(numPixels);
   }
 
   Internals->Width = width;
