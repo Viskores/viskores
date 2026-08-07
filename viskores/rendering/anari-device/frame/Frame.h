@@ -68,7 +68,7 @@ private:
   struct FrameData
   {
     int frameID{ 0 };
-    uint2 size;
+    anari::math::uint2 size;
   } m_frameData;
 
   anari::DataType m_colorType{ ANARI_UNKNOWN };

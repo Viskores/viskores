@@ -82,7 +82,8 @@ void Sampler::commitParameters()
 {
   mat4 outTransform = this->getParam("outTransform", mat4(linalg::identity));
   this->m_outTransform = toViskoresMatrix(outTransform);
-  float4 outOffset = this->getParam("outOffset", float4(0.f, 0.f, 0.f, 0.f));
+  anari::math::float4 outOffset =
+    this->getParam("outOffset", anari::math::float4(0.f, 0.f, 0.f, 0.f));
   this->m_outOffset = { outOffset[0], outOffset[1], outOffset[2], outOffset[3] };
 }
 

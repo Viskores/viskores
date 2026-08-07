@@ -154,7 +154,8 @@ void Image1DSampler::commitParameters()
 
   mat4 inTransform = this->getParam("inTransform", mat4(linalg::identity));
   this->m_inTransform = toViskoresMatrix(inTransform);
-  float4 inOffset = this->getParam("inOffset", float4(0.f, 0.f, 0.f, 0.f));
+  anari::math::float4 inOffset =
+    this->getParam("inOffset", anari::math::float4(0.f, 0.f, 0.f, 0.f));
   this->m_inOffset = { inOffset[0], inOffset[1], inOffset[2], inOffset[3] };
 
   this->m_colorArray = this->getParamObject<Array1D>("image");
