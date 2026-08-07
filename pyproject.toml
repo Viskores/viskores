@@ -1,0 +1,47 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+[build-system]
+requires = [
+  "scikit-build-core>=1.0.0",
+  "nanobind>=2.0.0",
+  "numpy>=1.20.0",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "viskores"
+dynamic = ["version"]
+description = "Python bindings for Viskores"
+readme = "python_bindings/README.md"
+requires-python = ">=3.8"
+dependencies = [
+  "numpy>=1.20.0",
+  "tbb; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64')",
+]
+
+[[tool.dynamic-metadata]]
+provider = "scikit_build_core.metadata.regex"
+field = "version"
+input = "version.txt"
+regex = '''^(?P<value>\d+\.\d+\.\d+)\s*$'''
+
+[tool.scikit-build]
+cmake.args = [
+  "-DViskores_ENABLE_PYTHON_BINDINGS=ON",
+  "-DViskores_ENABLE_TESTING=OFF",
+]
+wheel.packages = ["python_bindings/viskores"]
+
+[[tool.scikit-build.overrides]]
+if.platform-system = "^(linux|win32)"
+if.platform-machine = "^(x86_64|AMD64)$"
+build.requires = ["tbb-devel"]
+cmake.define.Viskores_ENABLE_TBB = "ON"
