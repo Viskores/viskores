@@ -13,11 +13,13 @@ on:
 
 permissions:
   contents: read
-  statuses: write
 
 jobs:
   generate_statuses:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
     steps:
       - uses: actions/checkout@v4
       - uses: Kitware/cdash-status@release
