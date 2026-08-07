@@ -90,6 +90,14 @@ public:
   VISKORES_CONT
   DepthBufferType& GetDepthBuffer();
 
+  /// @brief Get the distances to the camera for each pixel.
+  VISKORES_CONT
+  const DepthBufferType& GetDistancesToCamera() const;
+
+  /// @copydoc GetDistancesToCamera
+  VISKORES_CONT
+  DepthBufferType& GetDistancesToCamera();
+
   /// \brief Gets the image in this `Canvas` as a `viskores::cont::DataSet`.
   ///
   /// The returned `DataSet` will be a uniform structured 2D grid. The color and depth
