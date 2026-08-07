@@ -24,6 +24,7 @@
 #include <viskores/exec/CellEdge.h>
 
 #include <viskores/worklet/ScatterCounting.h>
+#include <viskores/worklet/WorkletMapField.h>
 #include <viskores/worklet/WorkletMapTopology.h>
 
 #include <viskores/filter/Filter.h>
@@ -74,23 +75,25 @@ struct CountEdgesWorklet : viskores::worklet::WorkletVisitCellsWithPoints
 ////
 //// BEGIN-EXAMPLE GenerateMeshConstantShapeGenIndices
 ////
-class EdgeIndicesWorklet : public viskores::worklet::WorkletVisitCellsWithPoints
+class EdgeIndicesWorklet : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(CellSetIn cellSet, FieldOut connectivityOut);
-  using ExecutionSignature = void(CellShape, PointIndices, _2, VisitIndex);
-  using InputDomain = _1;
+  using ControlSignature = void(WholeCellSetIn<> cellSet,
+                                FieldIn inputCellIds,
+                                FieldIn edgeIndices,
+                                FieldOut connectivityOut);
+  using ExecutionSignature = void(_1, _2, _3, _4);
+  using InputDomain = _2;
 
-  using ScatterType = viskores::worklet::ScatterCounting;
-
-  template<typename CellShapeTag, typename PointIndexVecType>
-  VISKORES_EXEC void operator()(CellShapeTag cellShape,
-                                const PointIndexVecType& globalPointIndicesForCell,
-                                viskores::Id2& connectivityOut,
-                                viskores::IdComponent edgeIndex) const
+  template<typename CellSetType>
+  VISKORES_EXEC void operator()(const CellSetType& cellSet,
+                                viskores::Id inputCellId,
+                                viskores::IdComponent edgeIndex,
+                                viskores::Id2& connectivityOut) const
   {
-    viskores::IdComponent numPointsInCell =
-      globalPointIndicesForCell.GetNumberOfComponents();
+    auto cellShape = cellSet.GetCellShape(inputCellId);
+    viskores::IdComponent numPointsInCell = cellSet.GetNumberOfIndices(inputCellId);
+    auto globalPointIndicesForCell = cellSet.GetIndices(inputCellId);
 
     viskores::ErrorCode status;
     viskores::IdComponent pointInCellIndex0;
@@ -101,12 +104,22 @@ public:
       this->RaiseError(viskores::ErrorString(status));
       return;
     }
+    if ((pointInCellIndex0 < 0) || (pointInCellIndex0 >= numPointsInCell))
+    {
+      this->RaiseError("Invalid point index for edge.");
+      return;
+    }
     viskores::IdComponent pointInCellIndex1;
     status = viskores::exec::CellEdgeLocalIndex(
       numPointsInCell, 1, edgeIndex, cellShape, pointInCellIndex1);
     if (status != viskores::ErrorCode::Success)
     {
       this->RaiseError(viskores::ErrorString(status));
+      return;
+    }
+    if ((pointInCellIndex1 < 0) || (pointInCellIndex1 >= numPointsInCell))
+    {
+      this->RaiseError("Invalid point index for edge.");
       return;
     }
 
@@ -189,13 +202,17 @@ inline VISKORES_CONT viskores::cont::DataSet ExtractEdges::DoExecute(
   // Build the scatter object (for non 1-to-1 mapping of input to output)
   viskores::worklet::ScatterCounting scatter(edgeCounts);
   //// LABEL GetOutputToInputMap
-  auto outputToInputCellMap = scatter.GetOutputToInputMap(inCellSet.GetNumberOfCells());
+  viskores::worklet::ScatterCounting::OutputToInputMapType outputToInputCellMap =
+    scatter.GetOutputToInputMap(inCellSet.GetNumberOfCells());
+  viskores::worklet::ScatterCounting::VisitArrayType outputToInputEdgeMap =
+    scatter.GetVisitArray(inCellSet.GetNumberOfCells());
 
   viskores::cont::ArrayHandle<viskores::Id> connectivityArray;
   //// LABEL InvokeEdgeIndices
   this->Invoke(viskores::worklet::EdgeIndicesWorklet{},
-               scatter,
                inCellSet,
+               outputToInputCellMap,
+               outputToInputEdgeMap,
                viskores::cont::make_ArrayHandleGroupVec<2>(connectivityArray));
 
   viskores::cont::CellSetSingleType<> outCellSet;
