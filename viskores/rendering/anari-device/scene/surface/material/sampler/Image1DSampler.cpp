@@ -193,7 +193,9 @@ void Image1DSampler::finalize()
 
 bool Image1DSampler::getColors(const viskores::cont::DataSet& data,
                                viskores::cont::Field& field,
-                               viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const
+                               viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+                               Mat4f_32& inFieldTransform,
+                               viskores::Vec4f_32& inFieldOffset) const
 {
   if (!data.HasField(this->inAttribute()))
   {
@@ -221,6 +223,8 @@ bool Image1DSampler::getColors(const viskores::cont::DataSet& data,
 
   field = viskores::cont::Field{ attribField.GetName(), attribField.GetAssociation(), attribArray };
   colorMap = this->m_colorMap;
+  inFieldTransform = this->m_inTransform;
+  inFieldOffset = this->m_inOffset;
   return true;
 }
 

@@ -44,7 +44,29 @@ void Surface::finalize()
   }
 
   this->m_dataSet = this->m_geometry->getDataSet();
-  this->m_material->getColors(this->m_dataSet, this->m_field, this->m_colorMap);
+
+  Mat4f_32 inFieldTransform;
+  viskores::Vec4f_32 inFieldOffset;
+  this->m_material->getColors(
+    this->m_dataSet, this->m_field, this->m_colorMap, inFieldTransform, inFieldOffset);
+
+  bool inverseValid;
+  Mat4f_32 inverseTransform = viskores::MatrixInverse(inFieldTransform, inverseValid);
+
+  if (inverseValid)
+  {
+    auto transformRange = [&](viskores::Float32 x)
+    {
+      auto transformed = viskores::MatrixMultiply(inverseTransform, { x, 0, 0, 1 }) - inFieldOffset;
+      return transformed[0] / transformed[3];
+    };
+    this->m_fieldRange = { transformRange(0), transformRange(1) };
+  }
+  else
+  {
+    reportMessage(ANARI_SEVERITY_WARNING, "inTransform for sampler is not invertible");
+    this->m_fieldRange = { 0, 1 };
+  }
 }
 
 const Geometry* Surface::geometry() const
@@ -60,7 +82,7 @@ const Material* Surface::material() const
 void Surface::render(viskores::rendering::Canvas& canvas,
                      const viskores::rendering::Camera& camera) const
 {
-  this->m_geometry->render(canvas, camera, this->m_field, this->m_colorMap);
+  this->m_geometry->render(canvas, camera, this->m_field, this->m_colorMap, this->m_fieldRange);
 }
 
 viskores::Bounds Surface::bounds() const
