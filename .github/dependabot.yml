@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: pip
+    directory: /Utilities/CI
+    schedule:
+      interval: daily
+
+  - package-ecosystem: pip
+    directory: /docs/users-guide
+    schedule:
+      interval: daily
