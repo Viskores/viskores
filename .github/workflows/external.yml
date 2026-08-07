@@ -19,7 +19,12 @@ jobs:
   generate_statuses:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: Kitware/cdash-status@release
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: Kitware/cdash-status@697751fc655b300a9e16e285f2e2ee981f59e45a # release
         with:
           project: Viskores
