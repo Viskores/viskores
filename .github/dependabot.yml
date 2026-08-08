@@ -12,13 +12,25 @@ updates:
     directory: /
     schedule:
       interval: daily
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   - package-ecosystem: pip
     directory: /Utilities/CI
     schedule:
       interval: daily
+    groups:
+      pip-utilities-ci:
+        patterns:
+          - "*"
 
   - package-ecosystem: pip
     directory: /docs/users-guide
     schedule:
       interval: daily
+    groups:
+      pip-docs-users-guide:
+        patterns:
+          - "*"
