@@ -945,9 +945,11 @@ VISKORES_CONT void Camera::UpdateDimensions(Ray<Precision>& rays,
   }
 
   // resize rays and buffers
-  if (rays.NumRays != SubsetWidth * SubsetHeight)
+  viskores::Id subsetSize =
+    static_cast<viskores::Id>(SubsetWidth) * static_cast<viskores::Id>(SubsetHeight);
+  if (rays.NumRays != subsetSize)
   {
-    RayOperations::Resize(rays, this->SubsetHeight * this->SubsetWidth);
+    RayOperations::Resize(rays, subsetSize);
   }
 }
 

@@ -124,7 +124,8 @@ public:
   VISKORES_EXEC
   viskores::Id GetNumberOfElements() const
   {
-    return this->NumberOfPointsPerPlane * this->NumberOfPlanes;
+    return static_cast<viskores::Id>(this->NumberOfPointsPerPlane) *
+      static_cast<viskores::Id>(this->NumberOfPlanes);
   }
 
   VISKORES_EXEC

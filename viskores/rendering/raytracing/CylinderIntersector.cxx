@@ -180,6 +180,7 @@ public:
                               const vec3& q,
                               float r) const
   {
+    using ComponentType = typename vec3::ComponentType;
     float t = 0;
     vec3 d = q - p;
     vec3 m = ray_start - p;
@@ -225,7 +226,7 @@ public:
       else
         t = 0;
 
-      return vec3(1, t * nlen, 0);
+      return vec3(1, static_cast<ComponentType>(t) * nlen, 0);
     }
     viskores::Float32 b = ddotd * mdotn - ndotd * mdotd;
     viskores::Float32 discr = b * b - a * c;
@@ -249,8 +250,9 @@ public:
       }
       t = (ddotd - mdotd) / ndotd;
 
-      return vec3(
-        k + ddotd - 2 * mdotd + t * (2 * (mdotn - ndotd) + t * ndotn) <= 0.0f, t * nlen, 0);
+      return vec3(k + ddotd - 2 * mdotd + t * (2 * (mdotn - ndotd) + t * ndotn) <= 0.0f,
+                  static_cast<ComponentType>(t) * nlen,
+                  0);
     }
     else if (u < 0.0f)
     {
@@ -260,9 +262,9 @@ public:
       }
       t = -mdotd / ndotd;
 
-      return vec3(k + 2 * t * (mdotn + t * ndotn) <= 0.0f, t * nlen, 0);
+      return vec3(k + 2 * t * (mdotn + t * ndotn) <= 0.0f, static_cast<ComponentType>(t) * nlen, 0);
     }
-    return vec3(1, t * nlen, 0);
+    return vec3(1, static_cast<ComponentType>(t) * nlen, 0);
   }
 
   template <typename Precision>

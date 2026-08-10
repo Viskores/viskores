@@ -38,7 +38,8 @@ public:
     : RadiusDiscrete(viskores::IdComponent(_radius / (_spacing[0] - 1e-10)),
                      viskores::IdComponent(_radius / (_spacing[1] - 1e-10)),
                      viskores::IdComponent(_radius / (_spacing[2] - 1e-10)))
-    , SpacingProduct(_spacing[0] * _spacing[1])
+    , SpacingProduct(static_cast<viskores::Float64>(_spacing[0]) *
+                     static_cast<viskores::Float64>(_spacing[1]))
     , p(_p)
     , q(_q)
   {

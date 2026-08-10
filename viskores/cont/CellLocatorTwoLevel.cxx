@@ -333,7 +333,8 @@ struct DimensionsToCount
 {
   VISKORES_EXEC viskores::Id operator()(const DimVec3& dim) const
   {
-    return dim[0] * dim[1] * dim[2];
+    return static_cast<viskores::Id>(dim[0]) * static_cast<viskores::Id>(dim[1]) *
+      static_cast<viskores::Id>(dim[2]);
   }
 };
 
@@ -401,8 +402,9 @@ VISKORES_CONT void CellLocatorTwoLevel::Build()
   binIds.ReleaseResources();
 
   // 6: Compute level-2 dimensions
-  viskores::Id numberOfBins =
-    this->TopLevel.Dimensions[0] * this->TopLevel.Dimensions[1] * this->TopLevel.Dimensions[2];
+  viskores::Id numberOfBins = static_cast<viskores::Id>(this->TopLevel.Dimensions[0]) *
+    static_cast<viskores::Id>(this->TopLevel.Dimensions[1]) *
+    static_cast<viskores::Id>(this->TopLevel.Dimensions[2]);
   viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant(DimVec3(0), numberOfBins),
                             this->LeafDimensions);
   GenerateBinsL1 generateL1(this->TopLevel.BinSize, this->DensityL2);

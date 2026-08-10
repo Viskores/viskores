@@ -512,7 +512,7 @@ struct ArrayExtractComponentImpl<viskores::cont::StorageTagRuntimeVec>
     return viskores::cont::ArrayHandleStride<typename viskores::VecTraits<T>::BaseComponentType>(
       dest.GetBasicArray(),
       dest.GetNumberOfValues() / numComponents,
-      dest.GetStride() * numComponents,
+      static_cast<viskores::Id>(dest.GetStride()) * numComponents,
       dest.GetOffset() + (dest.GetStride() * (componentIndex / NUM_SUB_COMPONENTS)),
       dest.GetModulo(),
       dest.GetDivisor());
