@@ -47,7 +47,7 @@ requests==2.34.2
     # via sphinx
 snowballstemmer==3.1.1
     # via sphinx
-sphinx==7.2.6
+sphinx==7.3.7
     # via
     #   -r requirements.in
     #   breathe
