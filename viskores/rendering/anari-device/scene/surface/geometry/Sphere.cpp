@@ -115,7 +115,8 @@ void Sphere::SetupIndexBased()
 void Sphere::render(viskores::rendering::Canvas& canvas,
                     const viskores::rendering::Camera& camera,
                     const viskores::cont::Field& field,
-                    const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const
+                    const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+                    const viskores::Range& fieldRange) const
 {
   viskores::rendering::raytracing::RayTracer tracer;
   viskores::rendering::raytracing::SphereExtractor sphereExtractor;
@@ -124,7 +125,6 @@ void Sphere::render(viskores::rendering::Canvas& canvas,
   viskores::cont::CoordinateSystem coords = data.GetCoordinateSystem();
 
   viskores::Bounds shapeBounds;
-  viskores::Range scalarRange = field.GetRange().ReadPortal().Get(0);
 
   if (this->m_dataSet.HasField("radius"))
   {
@@ -168,7 +168,7 @@ void Sphere::render(viskores::rendering::Canvas& canvas,
   viskores::rendering::raytracing::RayOperations::MapCanvasToRays(
     rays, camera.CreateRaytracingCamera(width, height), canvasRT->GetDepthBuffer());
 
-  tracer.SetField(field, scalarRange);
+  tracer.SetField(field, fieldRange);
   tracer.GetCamera() = rayCamera;
   tracer.SetColorMap(colorMap);
   tracer.Render(rays);

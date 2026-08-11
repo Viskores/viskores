@@ -130,7 +130,8 @@ bool UnknownGeometry::isValid() const
 void UnknownGeometry::render(viskores::rendering::Canvas&,
                              const viskores::rendering::Camera&,
                              const viskores::cont::Field&,
-                             const viskores::cont::ArrayHandle<viskores::Vec4f_32>&) const
+                             const viskores::cont::ArrayHandle<viskores::Vec4f_32>&,
+                             const viskores::Range&) const
 {
   // invalid
 }
