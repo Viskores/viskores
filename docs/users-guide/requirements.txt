@@ -16,7 +16,7 @@ alabaster==0.7.16
     # via sphinx
 babel==2.18.0
     # via sphinx
-breathe==4.35.0
+breathe==4.36.0
     # via -r requirements.in
 certifi==2026.7.22
     # via requests
@@ -26,7 +26,6 @@ distro==1.9.0
     # via sphinxcontrib-packages
 docutils==0.18.1
     # via
-    #   breathe
     #   sphinx
     #   sphinx-rtd-theme
 idna==3.18
@@ -47,7 +46,7 @@ requests==2.34.2
     # via sphinx
 snowballstemmer==3.1.1
     # via sphinx
-sphinx==7.3.7
+sphinx==7.2.6
     # via
     #   -r requirements.in
     #   breathe
