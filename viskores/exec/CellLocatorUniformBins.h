@@ -432,7 +432,12 @@ private:
     {
       VISKORES_RETURN_ON_ERROR(viskores::exec::WorldCoordinatesToParametricCoordinates(
         cellPoints, point, cellShape, pCoords));
-      inside = viskores::exec::CellInside(pCoords, cellShape);
+      // A vertex has no interior, so CellInside always returns false for it. The
+      // world-space bounds check above is the containment test for a vertex cell.
+      if (cellShape.Id == viskores::CELL_SHAPE_VERTEX)
+        inside = true;
+      else
+        inside = viskores::exec::CellInside(pCoords, cellShape);
     }
     else
     {
