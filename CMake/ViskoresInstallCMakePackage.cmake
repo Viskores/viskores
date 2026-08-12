@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 if (NOT (DEFINED Viskores_BUILD_CMAKE_BASE_DIR AND
          DEFINED Viskores_INSTALL_CONFIG_DIR AND

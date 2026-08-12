@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 # Configure version file. (Other configuration in internal/Configure.h)
 viskores_get_kit_name(kit_name kit_dir)
