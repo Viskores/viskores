@@ -41,6 +41,7 @@ build:
     - cmake -B build -S . -DViskores_ENABLE_DOCUMENTATION=ON -DViskores_ENABLE_USERS_GUIDE=ON -DViskores_USERS_GUIDE_INCLUDE_TODOS=OFF
     - cmake --build build --target ViskoresDoxygenDocs
     - cp -f ./build/docs/users-guide/ViskoresUsersGuideHTML.cache/conf.py docs/users-guide/conf.py
+    - python docs/users-guide/patch_breathe.py
 
 sphinx:
   configuration: docs/users-guide/conf.py
