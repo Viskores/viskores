@@ -89,7 +89,7 @@ ubuntu2204_clang11_cuda122:
     CC: "clang-11"
     CXX: "clang++-11"
     CUDAHOSTCXX: "clang++-11"
-    VISKORES_SETTINGS: "cuda+ampere+tbb+examples+shared+ccache"
+    VISKORES_SETTINGS: "cuda+ampere+tbb+examples+shared+python+ccache"
     CTEST_EXCLUSIONS: "UnitTestTimer"
 
 #ubuntu2204_gcc10_cuda122:

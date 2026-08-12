@@ -44,7 +44,7 @@ ubuntu2404_gcc14:
   variables:
     CC: "gcc-14"
     CXX: "g++-14"
-    VISKORES_SETTINGS: "ccache+openmp+shared+examples+vtk_types"
+    VISKORES_SETTINGS: "ccache+openmp+shared+examples+vtk_types+python"
     # Restrict OpenMP number of threads since multiple test stages
     # execute on the same hardware concurrently
     OMP_NUM_THREADS: 3
@@ -80,3 +80,4 @@ ubuntu2404_gcc14_cuda130:
     expire_in: 24 hours
     paths:
       - viskores-install.tar.gz
+
