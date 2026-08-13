@@ -11,28 +11,16 @@ set(headers
   NumPyToArrayHandle.h
 )
 
-set(sources
-  ArrayHandleToNumPy.cxx
-  NumPyToArrayHandle.cxx
-)
+viskores_declare_headers(${headers})
 
-# Build as a static library so the object files are linked directly into the
-# Python extension module.  This ensures viskores_interop_python and the
-# extension share exactly one copy of the nanobind runtime (whatever variant
-# nanobind_add_module picks, e.g. nanobind-static-abi3 for stable-ABI builds).
-viskores_library(
-  NAME viskores_interop_python
-  STATIC
-  SOURCES ${sources}
-  HEADERS ${headers}
-)
-
-target_compile_definitions(viskores_interop_python PRIVATE PY_SSIZE_T_CLEAN)
-
-# Provide nanobind and Python headers at compile time.  The nanobind runtime
-# itself is supplied by the consumer (the extension module).
-target_include_directories(viskores_interop_python
-  PRIVATE ${NB_DIR}/include
-  PRIVATE ${Python_INCLUDE_DIRS}
-)
-nanobind_compile_options(viskores_interop_python)
+# Header-only: every consumer of this library is itself a nanobind extension
+# module, since the entry points take and return nb::object/nb::handle.
+# nanobind types are only interoperable across extension modules that share
+# an identical ABI tag (nanobind version, stable-ABI setting, compiler), so a
+# compiled (static/shared/object) library here would tie every consumer to
+# the exact nanobind build used for Viskores itself. Building header-only
+# lets each consumer compile these entry points against its own nanobind and
+# Python headers, which it already provides via nanobind_add_module().
+add_library(viskores_interop_python INTERFACE)
+target_link_libraries(viskores_interop_python INTERFACE viskores_cont)
+viskores_install_targets(TARGETS viskores_interop_python)
