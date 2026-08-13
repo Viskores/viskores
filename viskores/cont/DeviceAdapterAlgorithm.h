@@ -335,27 +335,22 @@ struct DeviceAdapterAlgorithm
   VISKORES_CONT static T ScanExclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
                                        viskores::cont::ArrayHandle<T, COut>& output,
                                        BinaryFunctor binaryFunctor,
-                                       const T& initialValue)
+                                       const T& initialValue);
 
-    /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
-    ///
-    /// Computes a segmented exclusive prefix sum (or any user binary operation)
-    /// on the \c keys and \c values ArrayHandle(s). Each segmented exclusive
-    /// prefix sum is run on consecutive equal keys with the binary operation
-    /// applied to all values inside that range. Once finished the result is
-    /// stored in \c values_output ArrayHandle.
-    ///
-    template <typename T,
-              typename U,
-              typename KIn,
-              typename VIn,
-              typename VOut,
-              class BinaryFunctor>
-    VISKORES_CONT static void ScanExclusiveByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                                 const viskores::cont::ArrayHandle<U, VIn>& values,
-                                                 viskores::cont::ArrayHandle<U, VOut>& output,
-                                                 const U& initialValue,
-                                                 BinaryFunctor binaryFunctor);
+  /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
+  ///
+  /// Computes a segmented exclusive prefix sum (or any user binary operation)
+  /// on the \c keys and \c values ArrayHandle(s). Each segmented exclusive
+  /// prefix sum is run on consecutive equal keys with the binary operation
+  /// applied to all values inside that range. Once finished the result is
+  /// stored in \c values_output ArrayHandle.
+  ///
+  template <typename T, typename U, typename KIn, typename VIn, typename VOut, class BinaryFunctor>
+  VISKORES_CONT static void ScanExclusiveByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
+                                               const viskores::cont::ArrayHandle<U, VIn>& values,
+                                               viskores::cont::ArrayHandle<U, VOut>& output,
+                                               const U& initialValue,
+                                               BinaryFunctor binaryFunctor);
 
   /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
   ///
@@ -429,10 +424,10 @@ struct DeviceAdapterAlgorithm
   /// Calls the \c functor on several threads. This is the function used in the
   /// control environment to spawn activity in the execution environment. \c
   /// functor is a function-like object that can be invoked with the calling
-  /// specification <tt>functor(viskores::Id index)</tt>. It also has a method called
+  /// specification `functor(viskores::Id index)`. It also has a method called
   /// from the control environment to establish the error reporting buffer with
-  /// the calling specification <tt>functor.SetErrorMessageBuffer(const
-  /// viskores::exec::internal::ErrorMessageBuffer &errorMessage)</tt>. This object
+  /// the calling specification `functor.SetErrorMessageBuffer(const
+  /// viskores::exec::internal::ErrorMessageBuffer &errorMessage)`. This object
   /// can be stored in the functor's state such that if RaiseError is called on
   /// it in the execution environment, an ErrorExecution will be thrown from
   /// Schedule.
@@ -449,11 +444,11 @@ struct DeviceAdapterAlgorithm
   /// Calls the \c functor on several threads. This is the function used in the
   /// control environment to spawn activity in the execution environment. \c
   /// functor is a function-like object that can be invoked with the calling
-  /// specification <tt>functor(viskores::Id3 index)</tt> or <tt>functor(viskores::Id
-  /// index)</tt>. It also has a method called from the control environment to
+  /// specification `functor(viskores::Id3 index)` or `functor(viskores::Id
+  /// index)`. It also has a method called from the control environment to
   /// establish the error reporting buffer with the calling specification
-  /// <tt>functor.SetErrorMessageBuffer(const
-  /// viskores::exec::internal::ErrorMessageBuffer &errorMessage)</tt>. This object
+  /// `functor.SetErrorMessageBuffer(const
+  /// viskores::exec::internal::ErrorMessageBuffer &errorMessage)`. This object
   /// can be stored in the functor's state such that if RaiseError is called on
   /// it in the execution environment, an ErrorExecution will be thrown from
   /// Schedule.
@@ -463,8 +458,8 @@ struct DeviceAdapterAlgorithm
   /// whether to schedule on 1D or 3D indices, so the functor should have an
   /// operator() overload for each index type. If 3D indices are used, there is
   /// one invocation for every i, j, k value between [0, 0, 0] and \c rangeMax.
-  /// If 1D indices are used, this Schedule behaves as if <tt>Schedule(functor,
-  /// rangeMax[0]*rangeMax[1]*rangeMax[2])</tt> were called.
+  /// If 1D indices are used, this Schedule behaves as if `Schedule(functor,
+  /// rangeMax[0]*rangeMax[1]*rangeMax[2])` were called.
   ///
   template <class Functor, class IndiceType>
   VISKORES_CONT static void Schedule(Functor functor, viskores::Id3 rangeMax);
@@ -507,13 +502,13 @@ struct DeviceAdapterAlgorithm
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
   VISKORES_CONT static void SortByKey(viskores::cont::ArrayHandle<T, StorageT>& keys,
                                       viskores::cont::ArrayHandle<U, StorageU>& values,
-                                      BinaryCompare binary_compare)
+                                      BinaryCompare binary_compare);
 
-    /// \brief Completes any asynchronous operations running on the device.
-    ///
-    /// Waits for any asynchronous operations running on the device to complete.
-    ///
-    VISKORES_CONT static void Synchronize();
+  /// \brief Completes any asynchronous operations running on the device.
+  ///
+  /// Waits for any asynchronous operations running on the device to complete.
+  ///
+  VISKORES_CONT static void Synchronize();
 
   /// \brief Apply a given binary operation function element-wise to input arrays.
   ///
