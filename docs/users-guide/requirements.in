@@ -18,7 +18,7 @@
 # root directory of this repository.
 
 breathe==4.36.0
-Sphinx==7.3.7
+Sphinx==9.1.0
 sphinx-rtd-theme==3.1.0
 sphinxcontrib-moderncmakedomain==3.29.0
 sphinxcontrib-packages==1.2.1
