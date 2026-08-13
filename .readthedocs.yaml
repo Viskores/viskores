@@ -17,7 +17,7 @@ build:
   - cmake
   - make
   tools:
-    python: '3.10'
+    python: '3.13'
   jobs:
     post_install:
     - git submodule init
