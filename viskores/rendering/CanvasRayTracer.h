@@ -31,6 +31,8 @@ public:
 
   viskores::rendering::Canvas* NewCopy() const override;
 
+  void Clear() override;
+
   void WriteToCanvas(const viskores::rendering::raytracing::Ray<viskores::Float32>& rays,
                      const viskores::cont::ArrayHandle<viskores::Float32>& colors,
                      const viskores::rendering::Camera& camera,
@@ -40,6 +42,21 @@ public:
                      const viskores::cont::ArrayHandle<viskores::Float64>& colors,
                      const viskores::rendering::Camera& camera,
                      bool writeDepth = true);
+
+  /// @brief Get the distances to the camera for each pixel.
+  VISKORES_CONT
+  const DepthBufferType& GetDistancesToCamera() const;
+
+  /// @copydoc GetDistancesToCamera
+  VISKORES_CONT
+  DepthBufferType& GetDistancesToCamera();
+
+  /// @brief Change the size of the image.
+  VISKORES_CONT
+  void ResizeBuffers(viskores::Id width, viskores::Id height) override;
+
+private:
+  DepthBufferType DistancesToCamera;
 }; // class CanvasRayTracer
 }
 } // namespace viskores::rendering

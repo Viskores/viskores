@@ -99,7 +99,7 @@ public:
 
   /// @brief Change the size of the image.
   VISKORES_CONT
-  void ResizeBuffers(viskores::Id width, viskores::Id height);
+  virtual void ResizeBuffers(viskores::Id width, viskores::Id height);
 
   /// @brief Specify the background color.
   VISKORES_CONT
