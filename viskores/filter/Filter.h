@@ -391,6 +391,9 @@ public:
 protected:
   viskores::cont::Invoker Invoke;
 
+  VISKORES_CONT
+  virtual viskores::Id DetermineNumberOfThreads(const viskores::cont::PartitionedDataSet& input);
+
   /// @brief Create the output data set for `DoExecute`.
   ///
   /// This form of `CreateResult` will create an output data set with the same cell
@@ -853,9 +856,6 @@ private:
     template <typename T>
     using type = viskores::Vec<T, VecSize>;
   };
-
-  VISKORES_CONT
-  virtual viskores::Id DetermineNumberOfThreads(const viskores::cont::PartitionedDataSet& input);
 
   void ResizeIfNeeded(size_t index_st);
 

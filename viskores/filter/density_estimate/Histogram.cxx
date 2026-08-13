@@ -19,6 +19,8 @@
 
 #include <viskores/thirdparty/diy/diy.h>
 
+#include <type_traits>
+
 namespace viskores
 {
 namespace filter
@@ -206,7 +208,10 @@ VISKORES_CONT viskores::cont::DataSet Histogram::DoExecute(const viskores::cont:
                 delta,
                 binArray);
 
-    this->BinDelta = static_cast<viskores::Float64>(delta);
+    if (!this->InExecutePartitions)
+    {
+      this->BinDelta = static_cast<viskores::Float64>(delta);
+    }
   };
 
   fieldArray.CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldScalar,
@@ -238,13 +243,30 @@ VISKORES_CONT void Histogram::PreExecute(const viskores::cont::PartitionedDataSe
   }
   else
   {
+    const viskores::Id numberOfThreads =
+      this->GetRunMultiThreadedFilter() ? this->DetermineNumberOfThreads(input) : viskores::Id{ 1 };
     auto handle = viskores::cont::FieldRangeGlobalCompute(
-      input, this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+      input, this->GetActiveFieldName(), this->GetActiveFieldAssociation(), numberOfThreads);
     if (handle.GetNumberOfValues() != 1)
     {
       throw viskores::cont::ErrorFilterExecution("expecting scalar field.");
     }
     this->ComputedRange = handle.ReadPortal().Get(0);
+  }
+
+  if (input.GetNumberOfPartitions() > 0)
+  {
+    const auto& fieldArray = this->GetFieldFromDataSet(input.GetPartition(0)).GetData();
+    auto setBinDelta = [&](const auto& concrete)
+    {
+      using T = typename std::decay_t<decltype(concrete)>::ValueType;
+      const T fieldRange =
+        static_cast<T>(this->ComputedRange.Max) - static_cast<T>(this->ComputedRange.Min);
+      const T delta = fieldRange / static_cast<T>(this->NumberOfBins);
+      this->BinDelta = static_cast<viskores::Float64>(delta);
+    };
+    // Dispatch on an empty instance to resolve the float fallback type without copying values.
+    this->CastAndCallScalarField(fieldArray.NewInstance(), setBinDelta);
   }
   this->InExecutePartitions = true;
 }
