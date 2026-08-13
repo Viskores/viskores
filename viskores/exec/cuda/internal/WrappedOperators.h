@@ -209,13 +209,10 @@ struct WrappedBinaryPredicate
 //
 //
 #if THRUST_VERSION >= 300300
-namespace cuda
-{
 template <typename T, typename F>
-inline constexpr bool
+inline constexpr bool ::cuda::
   is_commutative_v<::viskores::exec::cuda::internal::WrappedBinaryOperator<T, F>, T> =
     ::cuda::std::is_arithmetic<T>::value;
-}
 #else // THRUST_VERSION < 300300
 VISKORES_THRUST_NAMESPACE_BEGIN
 namespace detail
