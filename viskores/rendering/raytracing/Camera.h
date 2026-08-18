@@ -29,6 +29,7 @@ public:
     , Position(0.0f, 0.0f, 1.0f)
     , ViewUp(0.0f, 1.0f, 0.0f)
     , FieldOfView(60.0f)
+    , AspectRatio(0.0f)
     , XPan(0.0f)
     , YPan(0.0f)
     , Zoom(1.0f)
@@ -41,12 +42,14 @@ public:
     viskores::Id width,
     viskores::Id height,
     viskores::Float32 nearPlane,
-    viskores::Float32 farPlane) const;
+    viskores::Float32 farPlane,
+    viskores::Float32 aspect = 0.f) const;
 
   viskores::Vec3f_32 LookAt;
   viskores::Vec3f_32 Position;
   viskores::Vec3f_32 ViewUp;
   viskores::Float32 FieldOfView;
+  viskores::Float32 AspectRatio;
   viskores::Float32 XPan;
   viskores::Float32 YPan;
   viskores::Float32 Zoom;

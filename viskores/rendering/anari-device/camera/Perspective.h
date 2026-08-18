@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include "Camera.h"
 
 namespace viskores_device
@@ -25,7 +27,7 @@ struct Perspective : public Camera
 
 private:
   viskores::Float32 m_fovy;
-  viskores::Float32 m_aspect;
+  std::optional<viskores::Float32> m_aspect;
   viskores::Float32 m_near;
   viskores::Float32 m_far;
 };

@@ -23,7 +23,14 @@ void Perspective::commitParameters()
   Camera::commitParameters();
 
   this->m_fovy = this->getParam("fovy", viskores::Pi_3f());
-  this->m_aspect = this->getParam("aspect", viskores::Float32(1));
+  if (hasParam("aspect", ANARI_FLOAT32))
+  {
+    m_aspect = this->getParam<viskores::Float32>("aspect", 1.f);
+  }
+  else
+  {
+    m_aspect.reset();
+  }
   this->m_near = this->getParam("near", viskores::Float32(-1));
   this->m_far = this->getParam("far", viskores::Float32(-1));
 }
@@ -45,6 +52,11 @@ viskores::rendering::Camera Perspective::camera(const viskores::Bounds& bounds) 
   camera.SetViewUp(this->m_up);
   camera.SetFieldOfView(anari::degrees(this->m_fovy));
 
+  if (this->m_aspect.has_value())
+  {
+    camera.SetAspectRatio(this->m_aspect.value());
+  }
+
   camera.SetClippingRange((this->m_near > 0) ? this->m_near : (0.01f * length),
                           (this->m_far > 0) ? this->m_far : (1000.f * length));
 
@@ -52,8 +64,6 @@ viskores::rendering::Camera Perspective::camera(const viskores::Bounds& bounds) 
                      imageRegionToViewport(this->m_imageRegion[2]),
                      imageRegionToViewport(this->m_imageRegion[1]),
                      imageRegionToViewport(this->m_imageRegion[3]));
-
-  // TODO: The aspect parameter is ignored. This is handled elsewhere
 
   return camera;
 }

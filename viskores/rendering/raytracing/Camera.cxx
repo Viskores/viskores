@@ -48,6 +48,7 @@ public:
   PixelData(viskores::Int32 width,
             viskores::Int32 height,
             viskores::Float32 fovY,
+            viskores::Float32 aspect,
             viskores::Vec3f_32 look,
             viskores::Vec3f_32 up,
             viskores::Float32 _zoom,
@@ -65,7 +66,7 @@ public:
     , BoundingBox(boundingBox)
   {
     viskores::Float32 thy = tanf((fovY * viskores::Pi_180f()) * .5f);
-    viskores::Float32 thx = (thy * width) / height;
+    viskores::Float32 thx = (aspect > 0.f) ? thy * aspect : (thy * width) / height;
     viskores::Vec3f_32 ru = viskores::Cross(look, up);
     viskores::Normalize(ru);
 
@@ -164,6 +165,7 @@ public:
   PerspectiveRayGenJitter(viskores::Int32 width,
                           viskores::Int32 height,
                           viskores::Float32 fovY,
+                          viskores::Float32 aspect,
                           viskores::Vec3f_32 look,
                           viskores::Vec3f_32 up,
                           viskores::Float32 _zoom,
@@ -172,7 +174,7 @@ public:
     , h(height)
   {
     viskores::Float32 thy = tanf((fovY * 3.1415926f / 180.f) * .5f);
-    viskores::Float32 thx = (thy * width) / height;
+    viskores::Float32 thx = (aspect > 0.f) ? thy * aspect : (thy * width) / height;
     viskores::Vec3f_32 ru = viskores::Cross(up, look);
     viskores::Normalize(ru);
 
@@ -338,6 +340,7 @@ public:
   PerspectiveRayGen(viskores::Int32 width,
                     viskores::Int32 height,
                     viskores::Float32 fovY,
+                    viskores::Float32 aspect,
                     viskores::Vec3f_32 look,
                     viskores::Vec3f_32 up,
                     viskores::Float32 panx,
@@ -363,7 +366,7 @@ public:
     , SubsetWidth(subsetWidth)
   {
     viskores::Float32 thy = tanf((fovY * viskores::Pi_180f()) * .5f);
-    viskores::Float32 thx = (thy * width) / height;
+    viskores::Float32 thx = (aspect > 0.f) ? thy * aspect : (thy * width) / height;
 
     viskores::Vec3f_32 ru = viskores::Cross(look, up);
     viskores::Normalize(ru);
@@ -442,17 +445,19 @@ viskores::Matrix<viskores::Float32, 4, 4> Camera3DStruct::CreateProjectionMatrix
   viskores::Id width,
   viskores::Id height,
   viskores::Float32 nearPlane,
-  viskores::Float32 farPlane) const
+  viskores::Float32 farPlane,
+  viskores::Float32 aspect) const
 {
   viskores::Matrix<viskores::Float32, 4, 4> matrix;
   viskores::MatrixIdentity(matrix);
 
-  viskores::Float32 AspectRatio = viskores::Float32(width) / viskores::Float32(height);
+  viskores::Float32 aspectRatio =
+    (aspect > 0.f) ? aspect : (viskores::Float32(width) / viskores::Float32(height));
   viskores::Float32 fovRad = this->FieldOfView * viskores::Pi_180f();
   fovRad = viskores::Tan(fovRad * 0.5f);
   viskores::Float32 size = nearPlane * fovRad;
-  viskores::Float32 left = -size * AspectRatio;
-  viskores::Float32 right = size * AspectRatio;
+  viskores::Float32 left = -size * aspectRatio;
+  viskores::Float32 right = size * aspectRatio;
   viskores::Float32 bottom = -size;
   viskores::Float32 top = size;
 
@@ -722,6 +727,7 @@ void Camera::GetPixelData(const viskores::cont::CoordinateSystem& coords,
   viskores::worklet::DispatcherMapField<PixelData>(PixelData(this->Width,
                                                              this->Height,
                                                              this->Camera3D.FieldOfView,
+                                                             this->Camera3D.AspectRatio,
                                                              this->LookDirection,
                                                              this->Camera3D.ViewUp,
                                                              this->Camera3D.Zoom,
@@ -804,6 +810,7 @@ VISKORES_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const viskores::
     invoke(PerspectiveRayGen{ this->Width,
                               this->Height,
                               this->Camera3D.FieldOfView,
+                              this->Camera3D.AspectRatio,
                               this->LookDirection,
                               this->Camera3D.ViewUp,
                               this->Camera3D.XPan,
@@ -1004,7 +1011,7 @@ void Camera::UpdateViewProjectionMatrix() const
   else
   {
     projection = this->Camera3D.CreateProjectionMatrix(
-      this->Width, this->Height, this->NearPlane, this->FarPlane);
+      this->Width, this->Height, this->NearPlane, this->FarPlane, this->Camera3D.AspectRatio);
     modelview = this->Camera3D.CreateViewMatrix();
   }
   this->ViewProjectionMat = viskores::MatrixMultiply(projection, modelview);
@@ -1040,7 +1047,10 @@ void Camera::CreateDebugRayImp(viskores::Vec2i_32 pixel, Ray<Precision>& rays)
 
 
   viskores::Float32 thy = tanf((this->Camera3D.FieldOfView * viskores::Pi_180f()) * .5f);
-  viskores::Float32 thx = (thy * this->Width) / this->Height;
+  viskores::Float32 thx = (this->Camera3D.AspectRatio > 0.f)
+    ? thy * this->Camera3D.AspectRatio
+    : thy * (thy * this->Width) / this->Height;
+
   viskores::Vec3f_32 ru = viskores::Cross(this->LookDirection, this->Camera3D.ViewUp);
   viskores::Normalize(ru);
 
