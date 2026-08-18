@@ -44,14 +44,14 @@ viskores::rendering::Camera Perspective::camera(const viskores::Bounds& bounds) 
   camera.SetLookAt(this->m_position + (length * this->m_direction));
   camera.SetViewUp(this->m_up);
   camera.SetFieldOfView(anari::degrees(this->m_fovy));
+
   camera.SetClippingRange((this->m_near > 0) ? this->m_near : (0.01f * length),
                           (this->m_far > 0) ? this->m_far : (1000.f * length));
-#if 0
-  camera.SetViewport(this->m_imageRegion[0],
-                     this->m_imageRegion[2],
-                     this->m_imageRegion[1],
-                     this->m_imageRegion[3]);
-#endif
+
+  camera.SetViewport(imageRegionToViewport(this->m_imageRegion[0]),
+                     imageRegionToViewport(this->m_imageRegion[2]),
+                     imageRegionToViewport(this->m_imageRegion[1]),
+                     imageRegionToViewport(this->m_imageRegion[3]));
 
   // TODO: The aspect parameter is ignored. This is handled elsewhere
 

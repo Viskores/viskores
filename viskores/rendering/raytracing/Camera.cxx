@@ -324,6 +324,10 @@ public:
   viskores::Int32 h;
   viskores::Float32 panX;
   viskores::Float32 panY;
+  viskores::Float32 ViewportLeft;
+  viskores::Float32 ViewportRight;
+  viskores::Float32 ViewportBottom;
+  viskores::Float32 ViewportTop;
   viskores::Int32 Minx;
   viskores::Int32 Miny;
   viskores::Int32 SubsetWidth;
@@ -339,6 +343,10 @@ public:
                     viskores::Float32 panx,
                     viskores::Float32 pany,
                     viskores::Float32 _zoom,
+                    viskores::Float32 viewportLeft,
+                    viskores::Float32 viewportRight,
+                    viskores::Float32 viewportBottom,
+                    viskores::Float32 viewportTop,
                     viskores::Int32 subsetWidth,
                     viskores::Int32 minx,
                     viskores::Int32 miny)
@@ -346,6 +354,10 @@ public:
     , h(height)
     , panX(panx)
     , panY(pany)
+    , ViewportLeft(viewportLeft)
+    , ViewportRight(viewportRight)
+    , ViewportBottom(viewportBottom)
+    , ViewportTop(viewportTop)
     , Minx(minx)
     , Miny(miny)
     , SubsetWidth(subsetWidth)
@@ -396,8 +408,15 @@ public:
     pixelIndex = static_cast<viskores::Id>(j * w + i);
 
     viskores::Vec<Precision, 3> ray_dir = nlook +
-      delta_x * ((2.f * Precision(i) - panX * Precision(w) - Precision(w)) / 2.0f) +
-      delta_y * ((2.f * Precision(j) - panY * Precision(h) - Precision(h)) / 2.0f);
+      delta_x *
+        (((Precision(ViewportRight) - Precision(ViewportLeft)) * Precision(i) +
+          (Precision(ViewportLeft) - Precision(panX)) * Precision(w)) /
+         2.0f) +
+      delta_y *
+        (((Precision(ViewportTop) - Precision(ViewportBottom)) * Precision(j) +
+          (Precision(ViewportBottom) - Precision(panY)) * Precision(h)) /
+         2.0f);
+
     // avoid some numerical issues
     for (viskores::Int32 d = 0; d < 3; ++d)
     {
@@ -660,6 +679,12 @@ viskores::Vec3f_32 Camera::GetPosition() const
   return this->Camera3D.Position;
 }
 
+VISKORES_CONT bool Camera::HasFullViewport() const
+{
+  return (this->ViewportLeft == -1.0f) && (this->ViewportRight == 1.0f) &&
+    (this->ViewportBottom == -1.0f) && (this->ViewportTop == 1.0f);
+}
+
 VISKORES_CONT viskores::Matrix<viskores::Float32, 4, 4>& Camera::GetViewProjectionMatrix() const
 {
   this->UpdateViewProjectionMatrix();
@@ -772,6 +797,9 @@ VISKORES_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const viskores::
   }
   else
   {
+    viskores::Float32 vl, vr, vb, vt;
+    this->GetViewport(vl, vr, vb, vt);
+
     //Create the ray direction
     invoke(PerspectiveRayGen{ this->Width,
                               this->Height,
@@ -781,6 +809,10 @@ VISKORES_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const viskores::
                               this->Camera3D.XPan,
                               this->Camera3D.YPan,
                               this->Camera3D.Zoom,
+                              vl,
+                              vr,
+                              vb,
+                              vt,
                               this->SubsetWidth,
                               this->SubsetMinX,
                               this->SubsetMinY },
@@ -910,7 +942,10 @@ VISKORES_CONT void Camera::UpdateDimensions(Ray<Precision>& rays,
   bool imageSubsetModeOn = boundingBox.IsNonEmpty();
 
   //Find the pixel footprint
-  if (imageSubsetModeOn && !this->IsOrthogonalProjection)
+  bool usePixelFootprint =
+    imageSubsetModeOn && !this->IsOrthogonalProjection && this->HasFullViewport();
+
+  if (usePixelFootprint)
   {
     // Note:
     // Use clipping range provided, the subsetting does take into consideration

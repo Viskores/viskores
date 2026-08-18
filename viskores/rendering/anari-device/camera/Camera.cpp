@@ -56,6 +56,11 @@ void Camera::finalize()
   // no-op
 }
 
+viskores::Float32 Camera::imageRegionToViewport(viskores::Float32 value) const
+{
+  return 2.f * value - 1.f;
+}
+
 UnknownCamera::UnknownCamera(ViskoresDeviceGlobalState* s)
   : Camera(s){};
 
