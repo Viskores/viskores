@@ -131,7 +131,8 @@ ScalarRenderer::Result ScalarRenderer::Render(const viskores::rendering::Camera&
   std::vector<ArrayF32> res;
   std::vector<std::string> names;
   const size_t numBuffers = rays.Buffers.size();
-  viskores::Id expandSize = Internals->Width * Internals->Height;
+  viskores::Id expandSize =
+    static_cast<viskores::Id>(Internals->Width) * static_cast<viskores::Id>(Internals->Height);
 
   for (size_t i = 0; i < numBuffers; ++i)
   {

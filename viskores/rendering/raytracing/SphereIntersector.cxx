@@ -168,7 +168,7 @@ public:
       if (dot1 >= 0)
       {
         Precision d = viskores::dot(l, l) - dot1 * dot1;
-        Precision r2 = radius * radius;
+        Precision r2 = static_cast<Precision>(radius) * static_cast<Precision>(radius);
         if (d <= r2)
         {
           Precision tch = viskores::Sqrt(r2 - d);

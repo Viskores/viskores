@@ -2299,7 +2299,8 @@ public:
       {
         if (orgID.Get(orgPos1 + originalInd) == lowest)
         {
-          totalVolForColor -= orgVF.Get(orgPos1 + originalInd) * orgVols.Get(cellID);
+          totalVolForColor -= static_cast<viskores::Float64>(orgVF.Get(orgPos1 + originalInd)) *
+            static_cast<viskores::Float64>(orgVols.Get(cellID));
           originalInd++;
         }
       }
