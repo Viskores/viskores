@@ -7,3 +7,4 @@ Core Development
 
    try-execute.rst
    implementing-device-adapters.rst
+   function-interface.rst
