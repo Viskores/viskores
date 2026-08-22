@@ -25,8 +25,8 @@ namespace arg
 
 /// \brief \c Transport tag for execution objects.
 ///
-/// \c TransportTagExecObject is a tag used with the \c Transport class to
-/// transport objects that work directly in the execution environment.
+/// Calls `PrepareForInput` on the provided `viskores::cont::ExecutionObjectBase`
+/// object. The returned execution object is what PrepareForInput provides.
 ///
 struct TransportTagExecObject
 {

@@ -21,9 +21,11 @@ namespace arg
 
 /// @brief Aspect tag to use for getting the work index.
 ///
-/// The `AspectTagInputIndex` aspect tag causes the \c Fetch class to ignore
+/// The `AspectTagInputIndex` aspect tag causes the `Fetch` class to ignore
 /// whatever data is in the associated execution object and return the index
 /// of the input element.
+/// The input index is often the same as the work index, but may be different
+/// if a scatter or mask is being used.
 ///
 struct AspectTagInputIndex
 {

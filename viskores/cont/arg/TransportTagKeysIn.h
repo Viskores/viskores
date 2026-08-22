@@ -20,10 +20,10 @@ namespace arg
 
 /// \brief \c Transport tag for keys in a reduce by key.
 ///
-/// \c TransportTagKeysIn is a tag used with the \c Transport class to
-/// transport viskores::worklet::Keys objects for the input domain of a
-/// reduce by keys worklet.
-///
+/// Loads data from a `viskores::worklet::Keys` object. This transport is
+/// intended for the input domain of a `viskores::worklet::WorkletReduceByKey`.
+/// The returned execution object is of type
+/// `viskores::exec::internal::ReduceByKeyLookup`.
 struct TransportTagKeysIn
 {
 };

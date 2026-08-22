@@ -19,12 +19,12 @@ namespace exec
 namespace arg
 {
 
-/// \brief \c Fetch tag for getting array values with direct indexing.
+/// @brief `Fetch` tag for getting array values with direct indexing.
 ///
-/// \c FetchTagArrayDirectIn is a tag used with the \c Fetch class to retrieve
+/// `FetchTagArrayDirectIn` is a tag used with the `Fetch` class to retrieve
 /// values from an array portal. The fetch uses direct indexing, so the thread
-/// index given to \c Load is used as the index into the array.
-///
+/// index given to `Load()` is used as the index into the array.
+/// This fetch supports only the `viskores::exec::arg::AspectTagDefault` aspect.
 struct FetchTagArrayDirectIn
 {
 };

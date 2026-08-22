@@ -23,7 +23,8 @@ namespace arg
 /// \brief Aspect tag to use for getting the value count.
 ///
 /// The \c AspectTagValueCount aspect tag causes the \c Fetch class to obtain
-/// the number of values that map to the key.
+/// the number of values that map to the key of the current instance.
+/// This aspect is designed for use with reduce-by-key maps.
 ///
 struct AspectTagValueCount
 {

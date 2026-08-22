@@ -19,21 +19,22 @@ namespace exec
 namespace arg
 {
 
-/// \brief \c Fetch tag for in-place modifying array values with direct indexing.
+/// @brief `Fetch` tag for in-place modifying array values with direct indexing.
 ///
-/// \c FetchTagArrayDirectInOut is a tag used with the \c Fetch class to do
+/// `FetchTagArrayDirectInOut` is a tag used with the `Fetch` class to do
 /// in-place modification of values in an array portal. The fetch uses direct
-/// indexing, so the thread index given to \c Store is used as the index into
-/// the array.
+/// indexing, so the thread index given to `Load()` and `Store()` is used as
+/// the index into the array.
+/// This fetch supports only the `viskores::exec::arg::AspectTagDefault` aspect.
 ///
-/// When using \c FetchTagArrayDirectInOut with a worklet invocation with a
+/// When using `FetchTagArrayDirectInOut` with a worklet invocation with a
 /// scatter, it is a bit undefined how the in/out array should be indexed.
 /// Should it be the size of the input arrays and written back there, or
-/// should it be the size of the output arrays and pre-filled with the output.
+/// should it be the size of the output arrays and pre-filled with the output?
 /// The implementation indexes based on the output because it is safer. The
 /// output will have a unique index for each worklet instance, so you don't
 /// have to worry about writes stomping on each other (which they would
-/// inevitably do if index as input).
+/// inevitably do if indexed as input).
 ///
 struct FetchTagArrayDirectInOut
 {

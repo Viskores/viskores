@@ -25,9 +25,10 @@ namespace arg
 
 /// \brief \c Transport tag for output arrays.
 ///
-/// \c TransportTagArrayOut is a tag used with the \c Transport class to
-/// transport \c ArrayHandle objects for output data.
-///
+/// Allocates data on the specified device for an `viskores::cont::ArrayHandle`
+/// using the array handle’s `viskores::cont::ArrayHandle::PrepareForOutput()`
+/// method. The array is allocated to the size of the output domain. The returned
+/// execution object is an array portal.
 struct TransportTagArrayOut
 {
 };

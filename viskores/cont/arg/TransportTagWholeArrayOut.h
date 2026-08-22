@@ -25,14 +25,16 @@ namespace arg
 
 /// \brief \c Transport tag for in-place arrays with random access.
 ///
-/// \c TransportTagWholeArrayOut is a tag used with the \c Transport class to
-/// transport \c ArrayHandle objects for output data. The array needs to be
-/// allocated before passed as an argument to Invoke.
+/// Readies data from an `viskores::cont::ArrayHandle` on the specified device
+/// using the array handle’s `viskores::cont::ArrayHandle::PrepareForOutput()`
+/// method. This transport is designed for random-access whole arrays, so unlike
+/// `viskores::cont::arg::TransportTagArrayOut`, the array size can be
+/// unassociated with the input domain. Thus, the array must be preallocated and
+/// its size is not changed. The returned execution object is an array portal.
 ///
 /// The worklet will have random access to the array through a portal
 /// interface, but care should be taken to not write a value in one instance
 /// that will be overridden by another entry.
-///
 struct TransportTagWholeArrayOut
 {
 };

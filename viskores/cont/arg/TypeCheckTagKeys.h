@@ -18,7 +18,7 @@ namespace cont
 namespace arg
 {
 
-/// Check for a Keys object.
+/// Check for a `viskores::worklet::Keys` object.
 ///
 struct TypeCheckTagKeys
 {

@@ -25,8 +25,7 @@ namespace arg
 {
 
 /// The ExecObject type check passes for any object that inherits from \c
-/// ExecutionObjectBase. This is supposed to signify that the object can be
-/// used in the execution environment although there is no way to verify that.
+/// ExecutionObjectBase and follows the conventions of that class.
 ///
 struct TypeCheckTagExecObject
 {

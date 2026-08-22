@@ -25,14 +25,16 @@ namespace arg
 
 /// \brief \c Transport tag for in-place arrays with random access.
 ///
-/// \c TransportTagWholeArrayInOut is a tag used with the \c Transport class to
-/// transport \c ArrayHandle objects for data that is both input and output
-/// (that is, in place modification of array data).
+/// Loads data from an `viskores::cont::ArrayHandle` onto the specified device
+/// using the array handle’s `viskores::cont::ArrayHandle::PrepareForInPlace()`
+/// method. This transport is designed for random-access whole arrays, so unlike
+/// `viskores::cont::arg::TransportTagArrayInOut`, the array size can be
+/// unassociated with the input domain. The returned execution object is an array
+/// portal.
 ///
 /// The worklet will have random access to the array through a portal
 /// interface, but care should be taken to not write a value in one instance
 /// that will be read by or overridden by another entry.
-///
 struct TransportTagWholeArrayInOut
 {
 };

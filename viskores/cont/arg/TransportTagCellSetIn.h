@@ -24,9 +24,9 @@ namespace arg
 
 /// \brief \c Transport tag for input arrays.
 ///
-/// \c TransportTagCellSetIn is a tag used with the \c Transport class to
-/// transport topology objects for input data.
-///
+/// Loads data from a `viskores::cont::CellSet` object. `TransportTagCellSetIn`
+/// is a templated class with two parameters: the "visit" topology and the
+/// "incident" topology. The returned execution object is a connectivity object.
 template <typename VisitTopology, typename IncidentTopology>
 struct TransportTagCellSetIn
 {

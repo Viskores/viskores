@@ -22,7 +22,7 @@ namespace arg
 /// \brief Aspect tag to use for getting the cell shape.
 ///
 /// The \c AspectTagCellShape aspect tag causes the \c Fetch class to
-/// obtain the type of element (e.g. cell cell) from the topology object.
+/// obtain the type of element (e.g. cell shape) from the topology object.
 ///
 struct AspectTagCellShape
 {

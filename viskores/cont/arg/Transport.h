@@ -9,6 +9,8 @@
 #ifndef viskores_cont_arg_Transport_h
 #define viskores_cont_arg_Transport_h
 
+#include <viskores/Types.h>
+
 namespace viskores
 {
 namespace cont
@@ -48,19 +50,30 @@ struct Transport
 
   /// \brief Send data to the execution environment.
   ///
-  /// All \c Transport specializations are expected to have a constant
+  /// All `Transport` specializations are expected to have a constant
   /// parenthesis operator that takes the data in the control environment and
-  /// returns an object that is accessible in the execution environment. The
-  /// second argument of the operator is a reference to the input domain
-  /// argument. This might be useful for checking the sizes of input data. The
-  /// third argument is the size of the output domain, which can be used, for
-  /// example, to allocate data for an output array. The transport might ignore
-  /// either or both of the second two arguments.
+  /// returns an object that is accessible in the execution environment.
   ///
+  /// @param object The control-side object that must be transferred to the
+  ///   device indicated by the `DeviceAdapterTag` template parameter of this
+  ///   struct.
+  /// @param inputDomain A reference to the input domain argument. This might
+  ///   have state necessary to establish the execution-side object. For some
+  ///   transports, this object can be ignored.
+  /// @param inputRange The size of the input domain. This can be used for
+  ///   checking the size of the data to ensure it has values for each input.
+  /// @param outputRange The size of the output domain. This can be used for
+  ///   checking the size of the data to ensure it has has a place for each
+  ///   output.
+  /// @param token A reference to a token object that is used to generate
+  ///   execution-side objects. The token ensures that the execution object
+  ///   remains valid while it is still being used.
   template <typename InputDomainType>
-  VISKORES_CONT ExecObjectType
-  operator()(const ContObjectType contData,
-             const InputDomainType& inputDomain viskores::Id outputSize) const;
+  VISKORES_CONT ExecObjectType operator()(ContObjectType& object,
+                                          const InputDomainType& inputDomain,
+                                          viskores::Id inputRange,
+                                          viskores::Id outputRange,
+                                          viskores::cont::Token& token) const;
 };
 #else  // VISKORES_DOXYGEN_ONLY
   ;
