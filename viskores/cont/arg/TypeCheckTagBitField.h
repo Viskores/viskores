@@ -22,6 +22,7 @@ namespace cont
 namespace arg
 {
 
+/// The Array type check passes for `viskores::cont::BitField`.
 struct TypeCheckTagBitField
 {
 };

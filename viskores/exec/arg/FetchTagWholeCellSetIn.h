@@ -21,9 +21,11 @@ namespace exec
 namespace arg
 {
 
-/// \brief \c Fetch tag for whole cell sets.
+/// @brief `Fetch` tag for whole cell sets.
 ///
-///
+/// This fetch supports only the `viskores::exec::arg::AspectTagDefault` aspect.
+/// Its `Load()` method returns the execution object in the associated parameter,
+/// and its `Store()` method does nothing.
 struct FetchTagWholeCellSetIn
 {
 };

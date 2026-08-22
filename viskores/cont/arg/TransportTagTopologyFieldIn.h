@@ -26,11 +26,9 @@ namespace arg
 
 /// \brief \c Transport tag for input arrays in topology maps.
 ///
-/// \c TransportTagTopologyFieldIn is a tag used with the \c Transport class to
-/// transport \c ArrayHandle objects for input data. The transport is templated
-/// on a topology element tag and expects a cell set input domain to check the
-/// size of the input array.
-///
+/// Similar to viskores::cont::arg::TransportTagArrayIn, except that the size is
+/// checked against the topology of a cell set for the input domain. The
+/// input-domain object is assumed to be a viskores::cont::CellSet.
 template <typename TopologyElementTag>
 struct TransportTagTopologyFieldIn
 {

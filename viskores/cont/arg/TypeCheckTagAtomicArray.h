@@ -27,7 +27,9 @@ namespace arg
 /// that is valid for atomic access. There are many restrictions on the
 /// type of data that can be used for an atomic array.
 ///
-struct TypeCheckTagAtomicArray;
+struct TypeCheckTagAtomicArray
+{
+};
 
 template <typename ArrayType>
 struct TypeCheck<TypeCheckTagAtomicArray, ArrayType>

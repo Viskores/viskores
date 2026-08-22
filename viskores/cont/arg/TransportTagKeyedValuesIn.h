@@ -20,10 +20,11 @@ namespace arg
 
 /// \brief \c Transport tag for input values in a reduce by key.
 ///
-/// \c TransportTagKeyedValuesIn is a tag used with the \c Transport class to
-/// transport \c ArrayHandle objects for input values. The values are
-/// rearranged and grouped based on the keys they are associated with.
-///
+
+/// `TransportTagKeyedValuesIn` is a tag used with the `Transport` class to
+/// transport `ArrayHandle` objects for input values. The values are rearranged
+/// and grouped based on the keys they are associated with, which come from the
+/// input domain, which is expected to be a `viskores::worklet::Keys` object.
 struct TransportTagKeyedValuesIn
 {
 };

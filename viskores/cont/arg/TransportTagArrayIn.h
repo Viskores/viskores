@@ -25,9 +25,10 @@ namespace arg
 
 /// \brief \c Transport tag for input arrays.
 ///
-/// \c TransportTagArrayIn is a tag used with the \c Transport class to
-/// transport \c ArrayHandle objects for input data.
-///
+/// Loads data from an `viskores::cont::ArrayHandle` onto the specified device
+/// using the array handle’s `viskores::cont::ArrayHandle::PrepareForInput()`
+/// method. The size of the array must be the same as the input domain. The
+/// returned execution object is an array portal.
 struct TransportTagArrayIn
 {
 };

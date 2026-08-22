@@ -22,9 +22,15 @@ namespace arg
 /// \brief \c Fetch tag for getting topology information.
 ///
 /// \c FetchTagCellSetIn is a tag used with the \c Fetch class to retrieve
-/// values from a topology object.  This default parameter returns
-/// the basis topology type, i.e. cell type in a \c WorkletCellMap.
-///
+/// values from a topology object.
+/// Loads data from a cell set. This fetch is used with worklet topology maps to
+/// pull topology information from a cell set. When used with
+/// `viskores::exec::arg::AspectTagDefault`, its `Load()` method simply returns
+/// the cell shape of the given input cells, and its `Store()` method does
+/// nothing. This tag is typically used with the input-domain object, and aspects
+/// such as `viskores::exec::arg::AspectTagIncidentElementCount` and
+/// `viskores::exec::arg::AspectTagIncidentElementIndices` are used to get more
+/// detailed information.
 struct FetchTagCellSetIn
 {
 };

@@ -21,13 +21,16 @@ namespace exec
 namespace arg
 {
 
-/// \brief \c Fetch tag for execution objects.
+/// @brief `Fetch` tag for execution objects.
 ///
-/// \c FetchTagExecObject is a tag used with the \c Fetch class to retrieve
-/// execution objects. For safety, execution objects are read-only. \c
-/// FetchTagExecObject is almost always used in conjunction with \c
-/// TransportTagExecObject and vice versa.
+/// `FetchTagExecObject` is a tag used with the `Fetch` class to retrieve
+/// execution objects. For safety, execution objects are read-only.
+/// `FetchTagExecObject` is almost always used in conjunction with
+/// `TransportTagExecObject` and vice versa.
 ///
+/// This fetch supports only the `viskores::exec::arg::AspectTagDefault` aspect.
+/// Its `Load()` method returns the execution object in the associated parameter,
+/// and its `Store()` method does nothing.
 struct FetchTagExecObject
 {
 };

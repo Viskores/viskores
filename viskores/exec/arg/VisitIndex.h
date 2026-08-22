@@ -24,6 +24,7 @@ namespace arg
 /// The `AspectTagVisitIndex` aspect tag causes the `Fetch` class to ignore
 /// whatever data is in the associated execution object and return the visit
 /// index.
+/// Together, the input index and visit index are unique.
 ///
 struct AspectTagVisitIndex
 {

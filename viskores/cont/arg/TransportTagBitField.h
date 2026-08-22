@@ -20,12 +20,22 @@ namespace cont
 namespace arg
 {
 
+/// Loads data from a `viskores::cont::BitField`. The worklet receives a bit
+/// portal, so the size of the field does not have to match the input domain.
 struct TransportTagBitFieldIn
 {
 };
+
+/// Readies a `viskores::cont::BitField` for writing from a worklet. The worklet
+/// receives a bit portal, so the array must be preallocated and its size does
+/// not have to match the output domain.
 struct TransportTagBitFieldOut
 {
 };
+
+/// Readies a `viskores::cont::BitField` for reading and writing from a worklet.
+/// The worklet receives a bit portal, so its size does not have to match the
+/// output domain.
 struct TransportTagBitFieldInOut
 {
 };

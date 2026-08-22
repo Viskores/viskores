@@ -77,7 +77,7 @@ static void WriteSVG(const std::string& filename,
 }
 
 ////
-//// BEGIN-EXAMPLE TypeCheckImpl.h
+//// BEGIN-EXAMPLE TypeCheckImpl
 ////
 namespace viskores
 {
@@ -106,11 +106,11 @@ struct TypeCheck<TypeCheckTag2DCoordinates, viskores::cont::ArrayHandle<T, Stora
 } // namespace cont
 } // namespace viskores
 ////
-//// END-EXAMPLE TypeCheckImpl.h
+//// END-EXAMPLE TypeCheckImpl
 ////
 
 ////
-//// BEGIN-EXAMPLE TransportImpl.h
+//// BEGIN-EXAMPLE TransportImpl
 ////
 namespace viskores
 {
@@ -157,11 +157,11 @@ struct Transport<viskores::cont::arg::TransportTag2DLineSegmentsIn,
 } // namespace cont
 } // namespace viskores
 ////
-//// END-EXAMPLE TransportImpl.h
+//// END-EXAMPLE TransportImpl
 ////
 
 ////
-//// BEGIN-EXAMPLE FetchImplBasic.h
+//// BEGIN-EXAMPLE FetchImplBasic
 ////
 namespace viskores
 {
@@ -202,11 +202,11 @@ struct Fetch<viskores::exec::arg::FetchTag2DLineSegmentsIn,
 } // namespace exec
 } // namespace viskores
 ////
-//// END-EXAMPLE FetchImplBasic.h
+//// END-EXAMPLE FetchImplBasic
 ////
 
 ////
-//// BEGIN-EXAMPLE AspectImpl.h
+//// BEGIN-EXAMPLE AspectImpl
 ////
 namespace viskores
 {
@@ -277,7 +277,7 @@ struct Fetch<viskores::exec::arg::FetchTag2DLineSegmentsIn,
 } // namespace exec
 } // namespace viskores
 ////
-//// END-EXAMPLE AspectImpl.h
+//// END-EXAMPLE AspectImpl
 ////
 
 struct VecLineSegments : viskores::worklet::WorkletMapField
@@ -371,7 +371,7 @@ void TryVecLineSegments()
 }
 
 ////
-//// BEGIN-EXAMPLE TransportImpl2.h
+//// BEGIN-EXAMPLE TransportImpl2
 ////
 namespace viskores
 {
@@ -416,11 +416,11 @@ struct Transport<viskores::cont::arg::TransportTag2DLineSegmentsOut<NumOutputPer
 } // namespace cont
 } // namespace viskores
 ////
-//// END-EXAMPLE TransportImpl2.h
+//// END-EXAMPLE TransportImpl2
 ////
 
 ////
-//// BEGIN-EXAMPLE ThreadIndicesLineFractal.h
+//// BEGIN-EXAMPLE ThreadIndicesLineFractal
 ////
 namespace viskores
 {
@@ -464,11 +464,11 @@ private:
 } // namespace exec
 } // namespace viskores
 ////
-//// END-EXAMPLE ThreadIndicesLineFractal.h
+//// END-EXAMPLE ThreadIndicesLineFractal
 ////
 
 ////
-//// BEGIN-EXAMPLE LineFractalTransform.h
+//// BEGIN-EXAMPLE LineFractalTransform
 ////
 namespace viskores
 {
@@ -511,11 +511,11 @@ private:
 } // namespace exec
 } // namespace viskores
 ////
-//// END-EXAMPLE LineFractalTransform.h
+//// END-EXAMPLE LineFractalTransform
 ////
 
 ////
-//// BEGIN-EXAMPLE InputDomainFetch.h
+//// BEGIN-EXAMPLE InputDomainFetch
 ////
 namespace viskores
 {
@@ -556,11 +556,11 @@ struct Fetch<FetchTag,
 } // namespace exec
 } // namespace viskores
 ////
-//// END-EXAMPLE InputDomainFetch.h
+//// END-EXAMPLE InputDomainFetch
 ////
 
 ////
-//// BEGIN-EXAMPLE WorkletLineFractal.h
+//// BEGIN-EXAMPLE WorkletLineFractal
 ////
 namespace viskores
 {
@@ -683,11 +683,11 @@ public:
 } // namespace worklet
 } // namespace viskores
 ////
-//// END-EXAMPLE WorkletLineFractal.h
+//// END-EXAMPLE WorkletLineFractal
 ////
 
 ////
-//// BEGIN-EXAMPLE DispatcherLineFractal.h
+//// BEGIN-EXAMPLE DispatcherLineFractal
 ////
 namespace viskores
 {
@@ -797,7 +797,7 @@ public:
 } // namespace worklet
 } // namespace viskores
 ////
-//// END-EXAMPLE DispatcherLineFractal.h
+//// END-EXAMPLE DispatcherLineFractal
 ////
 
 ////
