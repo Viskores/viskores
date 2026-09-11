@@ -59,6 +59,16 @@ void ScalarRenderer::SetDefaultValue(viskores::Float32 value)
   Internals->DefaultValue = value;
 }
 
+void ScalarRenderer::SetLightPosition(const viskores::Vec3f_32& lightPosition)
+{
+  this->Internals->Tracer.SetLightPosition(lightPosition);
+}
+
+viskores::Vec3f_32 ScalarRenderer::GetLightPosition() const
+{
+  return this->Internals->Tracer.GetLightPosition();
+}
+
 void ScalarRenderer::SetHeight(viskores::Int32 height)
 {
   if (height < 1)

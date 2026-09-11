@@ -62,6 +62,7 @@ void MapperGlyphVector::RenderCellsImpl(
 
   viskores::rendering::raytracing::RayTracer tracer;
   tracer.Clear();
+  tracer.SetLightPosition(this->GetLightPosition());
 
   logger->OpenLogEntry("mapper_glyph_vector");
   viskores::cont::Timer tot_timer;
