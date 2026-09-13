@@ -9,3 +9,4 @@ Core Development
    implementing-device-adapters.rst
    function-interface.rst
    worklet-arguments.rst
+   new-worklet-types.rst

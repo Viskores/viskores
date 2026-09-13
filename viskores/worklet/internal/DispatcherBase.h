@@ -486,6 +486,16 @@ struct PlaceholderValidator
 /// Base class for all dispatcher classes. Every worklet type should have its
 /// own dispatcher.
 ///
+/// Subclasses must provide the 3 template parameters to `DispatcherBase`
+///
+/// @tparam DerivedClass The dispatcher class that is subclassing
+///   ``DispatcherBase``. All template arguments must be given.
+/// @tparam WorkletType The type of the worklet being dispatched (which by
+///   convention is the first argument of the dispatcher's template).
+/// @tparam BaseWorkletType The expected superclass of the worklet, which is
+///   associated with the dispatcher implementation. ``DispatcherBase`` checks
+///   that the worklet has the appropriate superclass and provides a compile
+///   error if there is a mismatch.
 template <typename DerivedClass, typename WorkletType, typename BaseWorkletType>
 class DispatcherBase
 {
@@ -593,20 +603,20 @@ private:
   }
 
 public:
-  ///@{
   /// Setting the device ID will force the execute to happen on a particular device. If no device
   /// is specified (or the device ID is set to any), then a device will automatically be chosen
   /// based on the runtime device tracker.
-  ///
   VISKORES_CONT
   void SetDevice(viskores::cont::DeviceAdapterId device) { this->Device = device; }
 
+  /// @copydoc SetDevice
   VISKORES_CONT viskores::cont::DeviceAdapterId GetDevice() const { return this->Device; }
-  ///@}
 
   using ScatterType = typename WorkletType::ScatterType;
   using MaskType = typename WorkletType::MaskType;
 
+  /// Schedules the worklet to run on a device.
+  /// This method is usually called from `viskores::cont::Invoker`.
   template <typename... Args>
   VISKORES_CONT void Invoke(Args&&... args) const
   {
@@ -675,6 +685,10 @@ protected:
 
   friend struct internal::detail::DispatcherBaseTryExecuteFunctor;
 
+  /// Called by a subclass' `DoInvoke` method to launch the worklet on a device.
+  /// The `Invoke` method calls `DoInvoke` of the subclass. The `DoInvoke` modifies
+  /// the parameters of the `Invocation` object and then calls this method to complete
+  /// the process.
   template <typename Invocation>
   VISKORES_CONT void BasicInvoke(Invocation& invocation, viskores::Id numInstances) const
   {
@@ -690,12 +704,14 @@ protected:
     }
   }
 
+  /// A form of `BasicInvoke` for 2D scheduling domains.
   template <typename Invocation>
   VISKORES_CONT void BasicInvoke(Invocation& invocation, viskores::Id2 dimensions) const
   {
     this->BasicInvoke(invocation, viskores::Id3(dimensions[0], dimensions[1], 1));
   }
 
+  /// A form of `BasicInvoke` for 3D scheduling domains.
   template <typename Invocation>
   VISKORES_CONT void BasicInvoke(Invocation& invocation, viskores::Id3 dimensions) const
   {

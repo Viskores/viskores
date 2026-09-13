@@ -16,9 +16,8 @@ management.
 Defining new worklet argument types can allow you to define new data structures
 in |Viskores|.
 New worklet arguments are also usually critical components for making new
-worklet types, as described in the later chapter on creating new worklet types.
-
-.. todo:: Reference this later chapter when it actually exists.
+worklet types, as described in
+:chapref:`new-worklet-types:New Worklet Types`.
 
 The management of data in worklet arguments is handled by three classes that
 provide type checking, transportation, and fetching, respectively.
@@ -339,10 +338,8 @@ pertinent to the associated worklet's execution.
 For example, a thread indices object associated with a topology map has methods
 to get the shape identifier and incident-from indices of the current input
 object.
-Thread indices objects are discussed in more detail in the later section on
-thread indices.
-
-.. todo:: Add reference to section once is is created.
+Thread indices objects are discussed in more detail in
+:secref:`new-worklet-types:Thread Indices` the later section on thread indices.
 
 .. index::
    single: aspect
