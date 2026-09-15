@@ -9,8 +9,6 @@
 #include <viskores/cont/tbb/DeviceAdapterTBB.h>
 #include <viskores/cont/testing/TestingRuntimeDeviceConfiguration.h>
 
-namespace internal = viskores::cont::internal;
-
 namespace viskores
 {
 namespace cont
@@ -39,13 +37,13 @@ TestingRuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagTBB>::TestRunt
   viskores::Id setNumThreads;
   viskores::Id setMaxThreads;
   VISKORES_TEST_ASSERT(config.GetThreads(setNumThreads) ==
-                         internal::RuntimeDeviceConfigReturnCode::SUCCESS,
+                         viskores::cont::internal::RuntimeDeviceConfigReturnCode::SUCCESS,
                        "Failed to get num threads");
   VISKORES_TEST_ASSERT(setNumThreads == numThreads,
                        "RTC's numThreads != numThreads tbb direct! " +
                          std::to_string(setNumThreads) + " != " + std::to_string(numThreads));
   VISKORES_TEST_ASSERT(config.GetMaxThreads(setMaxThreads) ==
-                         internal::RuntimeDeviceConfigReturnCode::SUCCESS,
+                         viskores::cont::internal::RuntimeDeviceConfigReturnCode::SUCCESS,
                        "Failed to get max threads");
   VISKORES_TEST_ASSERT(setMaxThreads == maxThreads,
                        "RTC's maxThreads != maxThreads tbb direct! " +

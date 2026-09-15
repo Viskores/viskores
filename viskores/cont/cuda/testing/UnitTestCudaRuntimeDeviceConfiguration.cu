@@ -10,8 +10,6 @@
 #include <viskores/cont/cuda/DeviceAdapterCuda.h>
 #include <viskores/cont/testing/TestingRuntimeDeviceConfiguration.h>
 
-namespace internal = viskores::cont::internal;
-
 namespace viskores
 {
 namespace cont
@@ -32,20 +30,22 @@ TestingRuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagCuda>::TestRun
     RuntimeDeviceInformation{}.GetRuntimeConfiguration(DeviceAdapterTagCuda(), deviceOptions);
   viskores::Id setDevice;
   VISKORES_TEST_ASSERT(config.GetDeviceInstance(setDevice) ==
-                         internal::RuntimeDeviceConfigReturnCode::SUCCESS,
+                         viskores::cont::internal::RuntimeDeviceConfigReturnCode::SUCCESS,
                        "Failed to get device instance");
   VISKORES_TEST_ASSERT(setDevice == selectedDevice,
                        "RTC's setDevice != selectedDevice cuda direct! " +
                          std::to_string(setDevice) + " != " + std::to_string(selectedDevice));
   viskores::Id maxDevices;
   VISKORES_TEST_ASSERT(config.GetMaxDevices(maxDevices) ==
-                         internal::RuntimeDeviceConfigReturnCode::SUCCESS,
+                         viskores::cont::internal::RuntimeDeviceConfigReturnCode::SUCCESS,
                        "Failed to get max devices");
   VISKORES_TEST_ASSERT(maxDevices == numDevices,
                        "RTC's maxDevices != numDevices cuda direct! " + std::to_string(maxDevices) +
                          " != " + std::to_string(numDevices));
   std::vector<cudaDeviceProp> cudaProps;
-  dynamic_cast<internal::RuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagCuda>&>(config)
+  dynamic_cast<
+    viskores::cont::internal::RuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagCuda>&>(
+    config)
     .GetCudaDeviceProp(cudaProps);
   VISKORES_TEST_ASSERT(maxDevices == static_cast<viskores::Id>(cudaProps.size()),
                        "CudaProp's size != maxDevices! " + std::to_string(cudaProps.size()) +
