@@ -73,11 +73,11 @@ struct BlendBackground : public viskores::worklet::WorkletMapField
     if (color[3] >= 1.f)
       return;
 
-    viskores::Float32 alpha = BackgroundColor[3] * (1.f - color[3]);
+    viskores::Float32 alpha = 1.f - color[3];
     color[0] = color[0] + BackgroundColor[0] * alpha;
     color[1] = color[1] + BackgroundColor[1] * alpha;
     color[2] = color[2] + BackgroundColor[2] * alpha;
-    color[3] = alpha + color[3];
+    color[3] = color[3] + BackgroundColor[3] * alpha;
   }
 }; // struct BlendBackground
 
