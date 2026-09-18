@@ -204,6 +204,8 @@ void DoRenderTest(viskores::rendering::Canvas& canvas,
       break;
   }
   viskores::rendering::View& view = *viewPointer;
+  view.GetMapper().SetLightPosition(view.GetCamera().GetPosition() +
+                                    viskores::Vec3f_32(2, 2, 2) * view.GetCamera().GetViewUp());
 
   view.AddTextAnnotation(std::unique_ptr<viskores::rendering::TextAnnotationScreen>(
     new viskores::rendering::TextAnnotationScreen(options.Title,

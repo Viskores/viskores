@@ -178,13 +178,11 @@ public:
   VISKORES_CONT void run(Ray<Precision>& rays,
                          viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
                          const viskores::rendering::raytracing::Camera& camera,
+                         const viskores::Vec3f_32& lightPosition,
                          bool shade)
   {
     if (shade)
     {
-      // TODO: support light positions
-      viskores::Vec3f_32 scale(2, 2, 2);
-      viskores::Vec3f_32 lightPosition = camera.GetPosition() + scale * camera.GetUp();
       viskores::worklet::DispatcherMapField<Shade>(
         Shade(lightPosition, camera.GetPosition(), camera.GetLookAt()))
         .Invoke(rays.HitIdx,
@@ -206,6 +204,8 @@ public:
 
 RayTracer::RayTracer()
   : NumberOfShapes(0)
+  , LightPosition(0.f, 0.f, 0.f)
+  , LightPositionSet(false)
   , Shade(true)
 {
 }
@@ -218,6 +218,20 @@ RayTracer::~RayTracer()
 Camera& RayTracer::GetCamera()
 {
   return camera;
+}
+
+void RayTracer::SetLightPosition(const viskores::Vec3f_32& lightPosition)
+{
+  this->LightPosition = lightPosition;
+  this->LightPositionSet = true;
+}
+
+viskores::Vec3f_32 RayTracer::GetLightPosition() const
+{
+  if (this->LightPositionSet)
+    return this->LightPosition;
+
+  return this->camera.GetPosition();
 }
 
 
@@ -299,7 +313,7 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
 
       // Calculate the color at the intersection  point
       detail::SurfaceColor surfaceColor;
-      surfaceColor.run(rays, ColorMap, camera, this->Shade);
+      surfaceColor.run(rays, ColorMap, camera, this->GetLightPosition(), this->Shade);
 
       time = timer.GetElapsedTime();
       logger->AddLogData("shade", time);

@@ -128,15 +128,13 @@ public:
 
   VISKORES_CONT void run(Ray<Precision>& rays,
                          const viskores::rendering::raytracing::Camera& camera,
+                         const viskores::Vec3f_32& lightPosition,
                          const Precision missScalar,
                          viskores::cont::ArrayHandle<Precision> shadings,
                          bool shade)
   {
     if (shade)
     {
-      // TODO: support light positions
-      viskores::Vec3f_32 scale(2, 2, 2);
-      viskores::Vec3f_32 lightPosition = camera.GetPosition() + scale * camera.GetUp();
       viskores::worklet::DispatcherMapField<Shade>(
         Shade(lightPosition, camera.GetPosition(), camera.GetLookAt(), missScalar))
         .Invoke(rays.HitIdx, rays.Normal, rays.Intersection, shadings);
@@ -214,6 +212,12 @@ public:
 }; //class WriteDepthBuffer
 } // namespace detail
 
+ScalarRenderer::ScalarRenderer()
+  : LightPosition(0.f, 0.f, 0.f)
+  , LightPositionSet(false)
+{
+}
+
 void ScalarRenderer::SetShapeIntersector(std::unique_ptr<ShapeIntersector>&& intersector)
 {
   Intersector = std::move(intersector);
@@ -227,6 +231,20 @@ void ScalarRenderer::AddField(const viskores::cont::Field& scalarField)
     throw viskores::cont::ErrorBadValue("ScalarRenderer(AddField): field must be a scalar");
   }
   Fields.push_back(scalarField);
+}
+
+void ScalarRenderer::SetLightPosition(const viskores::Vec3f_32& lightPosition)
+{
+  this->LightPosition = lightPosition;
+  this->LightPositionSet = true;
+}
+
+viskores::Vec3f_32 ScalarRenderer::GetLightPosition() const
+{
+  if (this->LightPositionSet)
+    return this->LightPosition;
+
+  return this->CurrentCamera.GetPosition();
 }
 
 void ScalarRenderer::Render(Ray<viskores::Float32>& rays,
@@ -248,6 +266,8 @@ void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays,
                                     Precision missScalar,
                                     viskores::rendering::raytracing::Camera& cam)
 {
+  this->CurrentCamera = cam;
+
   using Timer = viskores::cont::Timer;
 
   Logger* logger = Logger::GetInstance();
@@ -288,7 +308,7 @@ void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays,
   const viskores::Int32 numChannels = 1;
   ChannelBuffer<Precision> buffer(numChannels, rays.NumRays);
   detail::SurfaceShade<Precision> surfaceShade;
-  surfaceShade.run(rays, cam, missScalar, buffer.Buffer, true);
+  surfaceShade.run(rays, cam, this->GetLightPosition(), missScalar, buffer.Buffer, true);
   buffer.SetName("shading");
   rays.Buffers.push_back(buffer);
 

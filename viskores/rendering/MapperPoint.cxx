@@ -227,6 +227,7 @@ void MapperPoint::RenderCellsImpl(const viskores::cont::UnknownCellSet& cellset,
   this->Internals->Tracer.SetField(scalarField, scalarRange);
   this->Internals->Tracer.GetCamera() = this->Internals->RayCamera;
   this->Internals->Tracer.SetColorMap(this->ColorMap);
+  this->Internals->Tracer.SetLightPosition(this->GetLightPosition());
   this->Internals->Tracer.Render(this->Internals->Rays);
 
   timer.Start();

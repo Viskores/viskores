@@ -32,6 +32,8 @@ protected:
   viskores::Id NumberOfShapes;
   viskores::cont::ArrayHandle<viskores::Vec4f_32> ColorMap;
   viskores::Range ScalarRange;
+  viskores::Vec3f_32 LightPosition;
+  bool LightPositionSet;
   bool Shade;
 
   template <typename Precision>
@@ -45,6 +47,12 @@ public:
 
   VISKORES_CONT
   Camera& GetCamera();
+
+  VISKORES_CONT
+  void SetLightPosition(const viskores::Vec3f_32& lightPosition);
+
+  VISKORES_CONT
+  viskores::Vec3f_32 GetLightPosition() const;
 
   VISKORES_CONT
   void AddShapeIntersector(std::shared_ptr<ShapeIntersector> intersector);

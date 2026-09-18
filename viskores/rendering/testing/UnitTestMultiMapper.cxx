@@ -47,6 +47,7 @@ void MultiMapperRender(const viskores::cont::DataSet& ds1,
   camera.Azimuth(45.0f);
   camera.Elevation(45.0f);
 
+  mapper1.SetLightPosition(camera.GetPosition() + viskores::Vec3f_32(2, 2, 2) * camera.GetViewUp());
   mapper1.SetCanvas(&canvas);
   mapper1.SetActiveColorTable(colorTable1);
   mapper1.SetCompositeBackground(false);

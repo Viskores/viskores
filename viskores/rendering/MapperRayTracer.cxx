@@ -126,6 +126,7 @@ void MapperRayTracer::RenderCellsImpl(const viskores::cont::UnknownCellSet& cell
 
   this->Internals->Tracer.SetColorMap(this->ColorMap);
   this->Internals->Tracer.SetShadingOn(this->Internals->Shade);
+  this->Internals->Tracer.SetLightPosition(this->GetLightPosition());
   this->Internals->Tracer.Render(this->Internals->Rays);
 
   timer.Start();
