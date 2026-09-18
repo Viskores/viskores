@@ -19,96 +19,112 @@
 #include <viskores/rendering/raytracing/Ray.h>
 #include <viskores/rendering/raytracing/RayOperations.h>
 #include <viskores/rendering/raytracing/VolumeRendererStructured.h>
+#include <viskores/worklet/WorkletMapField.h>
 
 namespace
 {
 
-template <typename ComponentType>
-void FillColorTable(viskores::cont::ColorTable& table,
-                    const viskores::cont::UnknownArrayHandle& array)
+struct ResizeArrayWorklet : viskores::worklet::WorkletMapField
 {
-  viskores::Id numValues = array.GetNumberOfValues();
-
-  std::array<viskores::cont::ArrayHandleStride<ComponentType>, 3> colorChannels;
-  colorChannels[0] = array.ExtractComponent<ComponentType>(0);
-  if (array.GetNumberOfComponentsFlat() > 1)
+  ResizeArrayWorklet(viskores::Id inputSize, viskores::Id outputSize)
+    : IndexScale(static_cast<viskores::Float32>(inputSize - 1) /
+                 static_cast<viskores::Float32>(outputSize - 1))
   {
-    colorChannels[1] = array.ExtractComponent<ComponentType>(1);
-  }
-  else
-  {
-    colorChannels[1] = viskores::cont::ArrayExtractComponent(
-      viskores::cont::ArrayHandleConstant<ComponentType>(0, numValues), 0);
-  }
-  if (array.GetNumberOfComponentsFlat() > 2)
-  {
-    colorChannels[2] = array.ExtractComponent<ComponentType>(2);
-  }
-  else
-  {
-    colorChannels[2] = viskores::cont::ArrayExtractComponent(
-      viskores::cont::ArrayHandleConstant<ComponentType>(0, numValues), 0);
   }
 
-  bool hasOpacity;
-  viskores::cont::ArrayHandleStride<ComponentType> alphaChannel;
-  if (array.GetNumberOfComponentsFlat() > 3)
+  using ControlSignature = void(WholeArrayIn inputArray, FieldOut outputArray);
+  using ExecutionSignature = void(OutputIndex, _1, _2);
+  using InputDomain = _2;
+
+  template <typename InputPortalType, typename T>
+  VISKORES_EXEC void operator()(viskores::Id outputIndex,
+                                const InputPortalType& inputPortal,
+                                T& outputValue) const
   {
-    alphaChannel = array.ExtractComponent<ComponentType>(3);
-    hasOpacity = true;
-  }
-  else
-  {
-    hasOpacity = false;
+    viskores::Float32 scaledIndex = outputIndex * this->IndexScale;
+    viskores::Id inputIndex = static_cast<viskores::Id>(viskores::Floor(scaledIndex));
+    T leftValue = inputPortal.Get(inputIndex);
+    T rightValue =
+      inputPortal.Get(viskores::Min(inputIndex + 1, inputPortal.GetNumberOfValues() - 1));
+    viskores::Float32 interp = scaledIndex - inputIndex;
+    outputValue = viskores::Lerp(leftValue, rightValue, interp);
   }
 
-  std::array<typename viskores::cont::ArrayHandleStride<ComponentType>::ReadPortalType, 3>
-    colorPortals;
-  std::transform(colorChannels.begin(),
-                 colorChannels.end(),
-                 colorPortals.begin(),
-                 [](auto array) { return array.ReadPortal(); });
-  typename viskores::cont::ArrayHandleStride<ComponentType>::ReadPortalType alphaPortal;
-  if (hasOpacity)
+  viskores::Float32 IndexScale;
+};
+
+template <typename T>
+void ResizeArray(viskores::cont::ArrayHandle<T>& array, viskores::Id newSize)
+{
+  viskores::Id oldSize = array.GetNumberOfValues();
+
+  if (oldSize == newSize)
   {
-    alphaPortal = alphaChannel.ReadPortal();
+    return;
   }
-  if (numValues > 1)
+
+  if (oldSize == 1)
   {
-    viskores::Float64 scale = 1.0 / (numValues - 1);
-    for (viskores::Id index = 0; index < numValues; ++index)
-    {
-      std::array<viskores::Float32, 3> color;
-      std::transform(colorPortals.begin(),
-                     colorPortals.end(),
-                     color.begin(),
-                     [index](auto portal)
-                     { return static_cast<viskores::Float32>(portal.Get(index)); });
-      table.AddPoint(index * scale, { color[0], color[1], color[2] });
-      if (hasOpacity)
-      {
-        table.AddPointAlpha(index * scale, static_cast<viskores::Float32>(alphaPortal.Get(index)));
-      }
-    }
+    T value = array.ReadPortal().Get(0);
+    array.AllocateAndFill(newSize, value);
+    return;
   }
-  else
-  {
-    // Special case: only one color given in array.
-    std::array<viskores::Float32, 3> color;
-    std::transform(colorPortals.begin(),
-                   colorPortals.end(),
-                   color.begin(),
-                   [](auto portal) { return static_cast<viskores::Float32>(portal.Get(0)); });
-    table.AddPoint(0, { color[0], color[1], color[2] });
-    table.AddPoint(1, { color[0], color[1], color[2] });
-    if (hasOpacity)
-    {
-      viskores::Float32 alpha = static_cast<viskores::Float32>(alphaPortal.Get(0));
-      table.AddPointAlpha(0, alpha);
-      table.AddPointAlpha(1, alpha);
-    }
-  }
+
+  viskores::cont::ArrayHandle<T> resizedArray;
+  resizedArray.Allocate(newSize);
+
+  viskores::cont::Invoker invoke;
+  invoke(ResizeArrayWorklet(array.GetNumberOfValues(), newSize), array, resizedArray);
+  array = resizedArray;
 }
+
+struct AdjustAlphaWorklet : viskores::worklet::WorkletMapField
+{
+  AdjustAlphaWorklet(viskores::Float32 sampleDistance, viskores::Float32 unitDistance)
+    : m_alphaSampleDistance(sampleDistance / unitDistance)
+  {
+  }
+
+  using ControlSignature = void(FieldIn opacities, FieldInOut colors);
+  VISKORES_EXEC void operator()(viskores::Float32 opacityParameter, viskores::Vec4f_32& color) const
+  {
+    // Multiply the opacity from the color parameter to the opacity from the opacity parameter.
+    // Typically only one is set, in which case the other is set to 1.0. Setting both is weird,
+    // but this is a rational response.
+    viskores::Float32 opacity = opacityParameter * color[3];
+
+    // The opacity given is based on the unit distance. We need to scale that
+    // to be the opacity for the sampling distance of the ray caster. This
+    // scaling is nonlinear.
+    //
+    // Opacity (α) scales exponentially with respect to the distance the ray
+    // travels through the material (d).
+    //
+    // α = 1 - exp(-τ·d)
+    //
+    // where τ is the "transparency coefficient" based on the absorption of the
+    // material, which is independent of the distance. Flipping this relationship,
+    // we get
+    //
+    // τ = -(1/d)·ln(1-α).
+    //
+    // We are given a unit distance, d_u, and an opacity based on that
+    // sampling distance, α_u. That means τ = -(1/d_u)·ln(1-α_u). Returning to
+    // the first equation defining α and substituting this τ and the ray caster's
+    // sample distance, d_s, we get the following opacity for the sample
+    // distance.
+    //
+    // α_s = 1 - (1 - α_u)^(d_s/d_u)
+    opacity =
+      opacity >= 1.f ? 1.f : 1.f - viskores::Pow(1.f - opacity, this->m_alphaSampleDistance);
+
+    // Store the opacity back in the color, which will be used for the transfer
+    // function lookup.
+    color[3] = opacity;
+  }
+
+  const viskores::Float32 m_alphaSampleDistance;
+};
 
 } // namespace
 
@@ -169,121 +185,40 @@ void TransferFunction1D::finalize()
     this->m_unitDistance = 1e-6f;
   }
 
-  // Reset and fill color table
-  viskores::cont::ColorTable colorTable{ viskores::ColorSpace::RGB };
-  bool colorsHaveAlpha = false;
   if (this->m_colorArray)
   {
     // Convert to Viskores colors
-    viskores::cont::UnknownArrayHandle viskoresColors =
-      ANARIColorsToViskoresColors(this->m_colorArray->dataAsViskoresArray());
-    if (viskoresColors.GetNumberOfComponentsFlat() > 3)
-    {
-      colorsHaveAlpha = true;
-    }
-
-    // Copy colors into ColorTable
-    // NOTE: I am not at all convinced that this is a good idea. If we are
-    // getting an array, that probably means that the client has already sampled
-    // the colors to the desired level, and we should just use that array.
-    // Instead, we are building piecewise linear segments and then resampling
-    // again.
-    if (viskoresColors.IsBaseComponentType<viskores::Float32>())
-    {
-      FillColorTable<viskores::Float32>(colorTable, viskoresColors);
-    }
-    else if (viskoresColors.IsBaseComponentType<viskores::Float64>())
-    {
-      FillColorTable<viskores::Float64>(colorTable, viskoresColors);
-    }
-    else
-    {
-      reportMessage(ANARI_SEVERITY_ERROR, "Unexpected type for color table data.");
-    }
+    this->m_colorMap = ANARIColorsToViskoresColors(*this->m_colorArray);
   }
   else
   {
-    colorTable.AddPoint(0, { m_color[0], m_color[1], m_color[2] });
-    colorTable.AddPoint(1, { m_color[0], m_color[1], m_color[2] });
+    this->m_colorMap.AllocateAndFill(1, this->m_color);
   }
 
-  if (m_opacityArray)
+  viskores::cont::Invoker invoke;
+  if (this->m_opacityArray)
   {
-    if (colorsHaveAlpha)
+    viskores::cont::ArrayHandle<viskores::Float32> alphaMap;
+    this->m_opacityArray->dataAsViskoresArray().AsArrayHandle(alphaMap);
+
+    if (alphaMap.GetNumberOfValues() < this->m_colorMap.GetNumberOfValues())
     {
-      reportMessage(ANARI_SEVERITY_WARNING, "Alpha given in both color and opacity parameters.");
-    }
-    if (m_opacityArray->size() > 1)
-    {
-      viskores::Float64 scale = 1.0 / (m_opacityArray->size() - 1);
-      for (size_t index = 0; index < m_opacityArray->size(); ++index)
-      {
-        float opacity = *m_opacityArray->valueAt<float>(index);
-        colorTable.AddPointAlpha(index * scale, opacity);
-      }
+      ResizeArray(alphaMap, this->m_colorMap.GetNumberOfValues());
     }
     else
     {
-      float opacity = *m_opacityArray->valueAt<float>(1);
-      colorTable.AddPointAlpha(0, opacity);
-      colorTable.AddPointAlpha(1, opacity);
+      ResizeArray(this->m_colorMap, alphaMap.GetNumberOfValues());
     }
+
+    invoke(
+      AdjustAlphaWorklet(this->m_sampleDistance, this->m_unitDistance), alphaMap, this->m_colorMap);
   }
-  else if (!colorsHaveAlpha)
+  else
   {
-    colorTable.AddPointAlpha(0, this->m_alpha);
-    colorTable.AddPointAlpha(1, this->m_alpha);
-  }
-
-  colorTable.RescaleToRange(this->m_valueRange);
-
-  // Now that we have the color table, build a simple map array that the render caster
-  // can use to convert fields to colors.
-  constexpr viskores::Float32 conversionToFloatSpace = (1.0f / 255.0f);
-
-  viskores::cont::ArrayHandle<viskores::Vec4ui_8> temp;
-
-  {
-    viskores::cont::ScopedRuntimeDeviceTracker tracker(viskores::cont::DeviceAdapterTagSerial{});
-    colorTable.Sample(1024, temp);
-  }
-
-  this->m_colorMap.Allocate(1024);
-  auto portal = this->m_colorMap.WritePortal();
-  auto colorPortal = temp.ReadPortal();
-  const viskores::Float32 alphaSampleDistance = this->m_sampleDistance / this->m_unitDistance;
-  for (viskores::Id i = 0; i < 1024; ++i)
-  {
-    auto color = colorPortal.Get(i);
-    viskores::Float32 opacity = color[3] * conversionToFloatSpace;
-    // The opacity given is based on the unit distance. We need to scale that
-    // to be the opacity for the sampling distance of the ray caster. This
-    // scaling is nonlinear.
-    //
-    // Opacity (α) scales exponentially with respect to the distance the ray
-    // travels through the material (d).
-    //
-    // α = 1 - exp(-τ·d)
-    //
-    // where τ is the "transparency coefficient" based on the absorption of the
-    // material, which is independent of the distance. Flipping this relationship,
-    // we get
-    //
-    // τ = -(1/d)·ln(1-α).
-    //
-    // We are given a unit distance, d_u, and an opacity based on that
-    // sampling distance, α_u. That means τ = -(1/d_u)·ln(1-α_u). Returning to
-    // the first equation defining α and substituting this τ and the ray caster's
-    // sample distance, d_s, we get the following opacity for the sample
-    // distance.
-    //
-    // α_s = 1 - (1 - α_u)^(d_s/d_u)
-    opacity = opacity >= 1.f ? 1.f : 1.f - viskores::Pow(1.f - opacity, alphaSampleDistance);
-    viskores::Vec4f_32 t(color[0] * conversionToFloatSpace,
-                         color[1] * conversionToFloatSpace,
-                         color[2] * conversionToFloatSpace,
-                         opacity);
-    portal.Set(i, t);
+    invoke(
+      AdjustAlphaWorklet(this->m_sampleDistance, this->m_unitDistance),
+      viskores::cont::make_ArrayHandleConstant(this->m_alpha, this->m_colorMap.GetNumberOfValues()),
+      this->m_colorMap);
   }
 }
 

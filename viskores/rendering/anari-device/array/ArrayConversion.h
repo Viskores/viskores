@@ -10,7 +10,9 @@
 
 #pragma once
 
-#include "helium/array/Array.h"
+#include "array/Array1D.h"
+#include "array/Array2D.h"
+#include "array/Array3D.h"
 // Viskores
 #include <viskores/cont/UnknownArrayHandle.h>
 
@@ -24,15 +26,20 @@ namespace viskores_device
 /// so if the contents of the array is modified on one side, it can invalidate the other.
 viskores::cont::UnknownArrayHandle ANARIArrayToViskoresArray(const helium::Array* anariArray);
 
+///@{
 /// @brief Convert an array of colors.
 ///
 /// Given an array of values that are to represent colors, this function will look to see
 /// if the array is represented by integer (fixed-point) values. In this case,
 /// ANARI treats these values as color channels with the range of [0, MAX_VALUE]. Viskores
 /// assumes colors are represented by floating point values in the range [0, 1]. This routine
-/// will check for those cases and convert the values if necessary. If no conversion is
-/// necessary, the same array will be returned.
-viskores::cont::UnknownArrayHandle ANARIColorsToViskoresColors(
-  const viskores::cont::UnknownArrayHandle& anariColors);
+/// will check for those cases and convert the values if necessary.
+viskores::cont::ArrayHandle<viskores::Vec4f_32> ANARIColorsToViskoresColors(
+  const Array1D& anariColors);
+viskores::cont::ArrayHandle<viskores::Vec4f_32> ANARIColorsToViskoresColors(
+  const Array2D& anariColors);
+viskores::cont::ArrayHandle<viskores::Vec4f_32> ANARIColorsToViskoresColors(
+  const Array3D& anariColors);
+///@}
 
 } // viskores_device

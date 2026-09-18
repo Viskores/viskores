@@ -11,6 +11,11 @@
 #include "ArrayConversion.h"
 #include "anari/frontend/type_utility.h"
 // Viskores
+#include <viskores/TypeList.h>
+#include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/ArrayExtractComponent.h>
+#include <viskores/cont/ArrayHandleConstant.h>
+#include <viskores/cont/ArrayHandleRuntimeVec.h>
 #include <viskores/cont/Invoker.h>
 #include <viskores/worklet/WorkletMapField.h>
 // C++
@@ -101,15 +106,159 @@ struct ConvertColorValues : viskores::worklet::WorkletMapField
 };
 
 template <typename T>
-inline void FixColorsForType(viskores::cont::UnknownArrayHandle& colorArray)
+void ChannelsToFloat(const viskores::cont::UnknownArrayHandle& originalChannels,
+                     viskores::cont::ArrayHandleRuntimeVec<viskores::Float32>& floatChannels,
+                     viskores::TypeTraitsIntegerTag)
 {
-  using ArrayType = viskores::cont::ArrayHandle<viskores::Vec<T, 4>>;
-  if (colorArray.CanConvert<ArrayType>())
+  floatChannels = viskores::cont::ArrayHandleRuntimeVec<viskores::Float32>(
+    originalChannels.GetNumberOfComponentsFlat());
+  viskores::cont::Invoker invoke;
+  invoke(ConvertColorValues{}, originalChannels.ExtractArrayFromComponents<T>(), floatChannels);
+}
+
+template <typename T>
+void ChannelsToFloat(const viskores::cont::UnknownArrayHandle& originalChannels,
+                     viskores::cont::ArrayHandleRuntimeVec<viskores::Float32>& floatChannels,
+                     viskores::TypeTraitsRealTag)
+{
+  floatChannels = viskores::cont::ArrayHandleRuntimeVec<viskores::Float32>(
+    originalChannels.GetNumberOfComponentsFlat());
+  viskores::cont::ArrayCopyShallowIfPossible(originalChannels, floatChannels);
+}
+
+template <typename T>
+void ChannelsToFloat(const viskores::cont::UnknownArrayHandle& originalChannels,
+                     viskores::cont::ArrayHandleRuntimeVec<viskores::Float32>& floatChannels,
+                     bool& converted)
+{
+  if (!converted && originalChannels.IsBaseComponentType<T>())
   {
-    viskores::cont::ArrayHandle<viskores::Vec4f> retypedArray;
+    ChannelsToFloat<T>(
+      originalChannels, floatChannels, typename viskores::TypeTraits<T>::NumericTag{});
+    converted = true;
+  }
+}
+
+viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> ChannelsToFloat(
+  const viskores::cont::UnknownArrayHandle& originalChannels)
+{
+  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> floatChannels;
+  bool converted = false;
+  viskores::ListForEach(
+    [&](auto type) { ChannelsToFloat<decltype(type)>(originalChannels, floatChannels, converted); },
+    viskores::TypeListScalarAll{});
+  if (!converted)
+  {
+    throw viskores::cont::ErrorBadType("Could not identify type for color array.");
+  }
+  return floatChannels;
+}
+
+struct GammaCorrection : viskores::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldInOut);
+
+  template <typename ChannelType>
+  VISKORES_EXEC void operator()(ChannelType& channels) const
+  {
+    // Only adjust RGB channels, not alpha.
+    // We may need to unpremultiply the color channels before linearizing the channels, but
+    // I am not handling that right now.
+    viskores::IdComponent numComponents = viskores::Min(channels.GetNumberOfComponents(), 3);
+    for (viskores::IdComponent i = 0; i < numComponents; ++i)
+    {
+      channels[i] = viskores::Pow(channels[i], 2.2f);
+    }
+  }
+};
+
+viskores::cont::ArrayHandle<viskores::Vec4f_32> ExpandColorChannels(
+  const viskores::cont::ArrayHandleRuntimeVec<viskores::Float32>& inputChannels)
+{
+  viskores::cont::ArrayHandleConstant<viskores::Float32> ones(1.0f,
+                                                              inputChannels.GetNumberOfValues());
+  viskores::cont::ArrayHandleRecombineVec<viskores::Float32> combinedChannels;
+
+  // The ANARI specification of color (as of version 1.1,
+  // https://registry.khronos.org/ANARI/specs/1.1/ANARI-1.1.html#color) is
+  // remarkably unclear on how to interpret the channels of the color. It is
+  // well implied that 3 channels specify RGB and 4 channels specify RGBA. We
+  // interpret 1 channel as a grayscale/luminance and 2 channels as grayscale +
+  // opacity. In these later two cases, all three RGB channels in the output are
+  // set to the value in the input. Note that this is different than the Helide
+  // reference implementation, but that implementation makes little sense. It
+  // just sets the respective R and G channels of the output.
+  viskores::IdComponent numComponents = inputChannels.GetNumberOfComponentsFlat();
+  if ((numComponents < 1) || (numComponents > 4))
+  {
+    throw viskores::cont::ErrorBadType("Colors have invalid number of components: " +
+                                       std::to_string(numComponents));
+  }
+  if (numComponents == 4)
+  {
+    // Special case: Colors already in expected RGBA.
+    return inputChannels.AsArrayHandleBasic<viskores::cont::ArrayHandle<viskores::Vec4f_32>>();
+  }
+  if (numComponents <= 2)
+  {
+    // First component is luminance.
+    combinedChannels.AppendComponentArray(viskores::cont::ArrayExtractComponent(inputChannels, 0));
+    combinedChannels.AppendComponentArray(viskores::cont::ArrayExtractComponent(inputChannels, 0));
+    combinedChannels.AppendComponentArray(viskores::cont::ArrayExtractComponent(inputChannels, 0));
+  }
+  else
+  {
+    // First 3 components are RGB
+    combinedChannels.AppendComponentArray(viskores::cont::ArrayExtractComponent(inputChannels, 0));
+    combinedChannels.AppendComponentArray(viskores::cont::ArrayExtractComponent(inputChannels, 1));
+    combinedChannels.AppendComponentArray(viskores::cont::ArrayExtractComponent(inputChannels, 2));
+  }
+
+  if (numComponents == 2)
+  {
+    combinedChannels.AppendComponentArray(viskores::cont::ArrayExtractComponent(inputChannels, 1));
+  }
+  else
+  {
+    combinedChannels.AppendComponentArray(viskores::cont::ArrayExtractComponent(ones, 0));
+  }
+
+  viskores::cont::ArrayHandle<viskores::Vec4f_32> outputChannels;
+  viskores::cont::ArrayCopy(combinedChannels, outputChannels);
+  return outputChannels;
+}
+
+viskores::cont::ArrayHandle<viskores::Vec4f_32> ANARIColorsToViskoresColorsImpl(
+  const viskores::cont::UnknownArrayHandle& anariColors,
+  ANARIDataType anariType)
+{
+  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> floatChannels =
+    ChannelsToFloat(anariColors);
+
+  if ((anariType == ANARI_UFIXED8_R_SRGB) || (anariType == ANARI_UFIXED8_RA_SRGB) ||
+      (anariType == ANARI_UFIXED8_RGB_SRGB) || (anariType == ANARI_UFIXED8_RGBA_SRGB))
+  {
     viskores::cont::Invoker invoke;
-    invoke(ConvertColorValues{}, colorArray.AsArrayHandle<ArrayType>(), retypedArray);
-    colorArray = retypedArray;
+    invoke(GammaCorrection{}, floatChannels);
+  }
+
+  return ExpandColorChannels(floatChannels);
+}
+
+template <typename ArrayType>
+viskores::cont::ArrayHandle<viskores::Vec4f_32> ANARIColorsToViskoresColorsImpl(
+  const ArrayType& anariColors)
+{
+  try
+  {
+    return ANARIColorsToViskoresColorsImpl(anariColors.dataAsViskoresArray(),
+                                           anariColors.elementType());
+  }
+  catch (viskores::cont::Error error)
+  {
+    anariColors.reportMessage(
+      ANARI_SEVERITY_ERROR, "Failed to read color array: %s", error.GetMessage());
+    return viskores::cont::make_ArrayHandle({ viskores::Vec4f_32{ 1.0f, 0.8f, 0.0f, 1.0f } });
   }
 }
 
@@ -127,15 +276,22 @@ viskores::cont::UnknownArrayHandle ANARIArrayToViskoresArray(const helium::Array
     anariArray->elementType(), memory, numValues);
 }
 
-viskores::cont::UnknownArrayHandle ANARIColorsToViskoresColors(
-  const viskores::cont::UnknownArrayHandle& anariColors)
+viskores::cont::ArrayHandle<viskores::Vec4f_32> ANARIColorsToViskoresColors(
+  const Array1D& anariColors)
 {
-  viskores::cont::UnknownArrayHandle viskoresColors = anariColors;
-  FixColorsForType<viskores::UInt8>(viskoresColors);
-  FixColorsForType<viskores::UInt16>(viskoresColors);
-  FixColorsForType<viskores::UInt32>(viskoresColors);
-  FixColorsForType<viskores::UInt64>(viskoresColors);
-  return viskoresColors;
+  return ANARIColorsToViskoresColorsImpl(anariColors);
+}
+
+viskores::cont::ArrayHandle<viskores::Vec4f_32> ANARIColorsToViskoresColors(
+  const Array2D& anariColors)
+{
+  return ANARIColorsToViskoresColorsImpl(anariColors);
+}
+
+viskores::cont::ArrayHandle<viskores::Vec4f_32> ANARIColorsToViskoresColors(
+  const Array3D& anariColors)
+{
+  return ANARIColorsToViskoresColorsImpl(anariColors);
 }
 
 } // namespace viskores_device
