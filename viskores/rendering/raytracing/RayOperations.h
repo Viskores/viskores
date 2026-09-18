@@ -221,7 +221,7 @@ public:
     rays.Dir =
       viskores::cont::make_ArrayHandleCompositeVector(emptyHandle, emptyHandle, emptyHandle);
 
-    const viskores::Int32 numFloatArrays = 18;
+    const viskores::Int32 numFloatArrays = 19;
     viskores::cont::ArrayHandle<T>* floatArrayPointers[numFloatArrays];
     floatArrayPointers[0] = &rays.OriginX;
     floatArrayPointers[1] = &rays.OriginY;
@@ -233,15 +233,16 @@ public:
     floatArrayPointers[7] = &rays.MinDistance;
     floatArrayPointers[8] = &rays.MaxDistance;
 
-    floatArrayPointers[9] = &rays.Scalar;
-    floatArrayPointers[10] = &rays.IntersectionX;
-    floatArrayPointers[11] = &rays.IntersectionY;
-    floatArrayPointers[12] = &rays.IntersectionZ;
-    floatArrayPointers[13] = &rays.U;
-    floatArrayPointers[14] = &rays.V;
-    floatArrayPointers[15] = &rays.NormalX;
-    floatArrayPointers[16] = &rays.NormalY;
-    floatArrayPointers[17] = &rays.NormalZ;
+    floatArrayPointers[9] = &rays.TextureR;
+    floatArrayPointers[10] = &rays.TextureS;
+    floatArrayPointers[11] = &rays.IntersectionX;
+    floatArrayPointers[12] = &rays.IntersectionY;
+    floatArrayPointers[13] = &rays.IntersectionZ;
+    floatArrayPointers[14] = &rays.U;
+    floatArrayPointers[15] = &rays.V;
+    floatArrayPointers[16] = &rays.NormalX;
+    floatArrayPointers[17] = &rays.NormalY;
+    floatArrayPointers[18] = &rays.NormalZ;
 
     const int breakPoint = rays.IntersectionDataEnabled ? -1 : 9;
     for (int i = 0; i < numFloatArrays; ++i)
@@ -302,7 +303,8 @@ public:
 
       rays.U.Allocate(rays.NumRays);
       rays.V.Allocate(rays.NumRays);
-      rays.Scalar.Allocate(rays.NumRays);
+      rays.TextureR.Allocate(rays.NumRays);
+      rays.TextureS.Allocate(rays.NumRays);
 
       rays.NormalX.Allocate(rays.NumRays);
       rays.NormalY.Allocate(rays.NumRays);

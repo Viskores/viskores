@@ -12,6 +12,7 @@
 #include <viskores/rendering/raytracing/BVHTraverser.h>
 #include <viskores/rendering/raytracing/QuadIntersector.h>
 #include <viskores/rendering/raytracing/RayOperations.h>
+#include <viskores/rendering/raytracing/Texture.h>
 #include <viskores/worklet/DispatcherMapTopology.h>
 
 namespace viskores
@@ -358,38 +359,25 @@ template <typename Precision>
 class GetLerpedScalar : public viskores::worklet::WorkletMapField
 {
 private:
-  Precision MinScalar;
-  Precision InvDeltaScalar;
-  bool Normalize;
+  TextureCoordinateTransform<Precision> Transform;
 
 public:
-  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
+  using ControlSignature =
+    void(FieldIn, FieldIn, FieldIn, FieldOut, FieldOut, WholeArrayIn, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
 
   VISKORES_CONT
-  GetLerpedScalar(const viskores::Float32& minScalar, const viskores::Float32& maxScalar)
-    : MinScalar(minScalar)
+  explicit GetLerpedScalar(const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
+    : Transform(textureRanges)
   {
-    Normalize = true;
-    if (minScalar >= maxScalar)
-    {
-      // support the scalar renderer
-      Normalize = false;
-      this->InvDeltaScalar = Precision(0.f);
-    }
-    else
-    {
-      //Make sure the we don't divide by zero on
-      //something like an iso-surface
-      this->InvDeltaScalar = 1.f / (maxScalar - MinScalar);
-    }
   }
-  template <typename ScalarPortalType, typename IndicesPortalType>
+  template <typename TexturePortalType, typename IndicesPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
                                 const Precision& u,
                                 const Precision& v,
-                                Precision& scalar,
-                                const ScalarPortalType& scalars,
+                                Precision& textureR,
+                                Precision& textureS,
+                                const TexturePortalType& texture,
                                 const IndicesPortalType& indicesPortal) const
   {
     if (hitIndex < 0)
@@ -397,19 +385,16 @@ public:
 
     viskores::Vec<viskores::Id, 5> pointId = indicesPortal.Get(hitIndex);
 
-    Precision aScalar = Precision(scalars.Get(pointId[1]));
-    Precision bScalar = Precision(scalars.Get(pointId[2]));
-    Precision cScalar = Precision(scalars.Get(pointId[3]));
-    Precision dScalar = Precision(scalars.Get(pointId[4]));
+    const auto a = MakeTextureCoordinates<Precision>(texture.Get(pointId[1]));
+    const auto b = MakeTextureCoordinates<Precision>(texture.Get(pointId[2]));
+    const auto c = MakeTextureCoordinates<Precision>(texture.Get(pointId[3]));
+    const auto d = MakeTextureCoordinates<Precision>(texture.Get(pointId[4]));
 
     Precision uP = 1.0f - u;
     Precision vP = 1.0f - v;
-    scalar = uP * vP * aScalar + u * vP * bScalar + u * v * cScalar + uP * v * dScalar;
-
-    if (Normalize)
-    {
-      scalar = (scalar - MinScalar) * this->InvDeltaScalar;
-    }
+    const auto coordinates = this->Transform(uP * vP * a + u * vP * b + u * v * c + uP * v * d);
+    textureR = coordinates[0];
+    textureS = coordinates[1];
   }
 }; //class GetLerpedScalar
 
@@ -417,37 +402,23 @@ template <typename Precision>
 class GetNodalScalar : public viskores::worklet::WorkletMapField
 {
 private:
-  Precision MinScalar;
-  Precision InvDeltaScalar;
-  bool Normalize;
+  TextureCoordinateTransform<Precision> Transform;
 
 public:
-  using ControlSignature = void(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
-  using ExecutionSignature = void(_1, _2, _3, _4);
+  using ControlSignature = void(FieldIn, FieldOut, FieldOut, WholeArrayIn, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
   VISKORES_CONT
-  GetNodalScalar(const viskores::Float32& minScalar, const viskores::Float32& maxScalar)
-    : MinScalar(minScalar)
+  explicit GetNodalScalar(const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
+    : Transform(textureRanges)
   {
-    Normalize = true;
-    if (minScalar >= maxScalar)
-    {
-      // support the scalar renderer
-      Normalize = false;
-      this->InvDeltaScalar = Precision(0.f);
-    }
-    else
-    {
-      //Make sure the we don't divide by zero on
-      //something like an iso-surface
-      this->InvDeltaScalar = 1.f / (maxScalar - MinScalar);
-    }
   }
 
-  template <typename ScalarPortalType, typename IndicesPortalType>
+  template <typename TexturePortalType, typename IndicesPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
-                                Precision& scalar,
-                                const ScalarPortalType& scalars,
+                                Precision& textureR,
+                                Precision& textureS,
+                                const TexturePortalType& texture,
                                 const IndicesPortalType& indicesPortal) const
   {
     if (hitIndex < 0)
@@ -455,11 +426,10 @@ public:
 
     viskores::Vec<viskores::Id, 5> pointId = indicesPortal.Get(hitIndex);
 
-    scalar = Precision(scalars.Get(pointId[0]));
-    if (Normalize)
-    {
-      scalar = (scalar - MinScalar) * this->InvDeltaScalar;
-    }
+    const auto coordinates =
+      this->Transform(MakeTextureCoordinates<Precision>(texture.Get(pointId[0])));
+    textureR = coordinates[0];
+    textureS = coordinates[1];
   }
 }; //class GetNodalScalar
 
@@ -496,14 +466,15 @@ void QuadIntersector::IntersectRaysImp(Ray<Precision>& rays, bool viskoresNotUse
 }
 
 template <typename Precision>
-void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
-                                          const viskores::cont::Field scalarField,
-                                          const viskores::Range& scalarRange)
+void QuadIntersector::IntersectionDataImp(
+  Ray<Precision>& rays,
+  const viskores::cont::Field textureField,
+  const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
 {
   ShapeIntersector::IntersectionPoint(rays);
 
   // TODO: if this is nodes of a mesh, support points
-  const bool isSupportedField = scalarField.IsCellField() || scalarField.IsPointField();
+  const bool isSupportedField = textureField.IsCellField() || textureField.IsPointField();
   if (!isSupportedField)
   {
     throw viskores::cont::ErrorBadValue("Field not associated with a cell set");
@@ -512,42 +483,44 @@ void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
   viskores::worklet::DispatcherMapField<detail::CalculateNormals>(detail::CalculateNormals())
     .Invoke(rays.HitIdx, rays.Dir, rays.NormalX, rays.NormalY, rays.NormalZ, CoordsHandle, QuadIds);
 
-  if (scalarField.IsPointField())
+  if (textureField.IsPointField())
   {
     viskores::worklet::DispatcherMapField<detail::GetLerpedScalar<Precision>>(
-      detail::GetLerpedScalar<Precision>(viskores::Float32(scalarRange.Min),
-                                         viskores::Float32(scalarRange.Max)))
+      detail::GetLerpedScalar<Precision>(textureRanges))
       .Invoke(rays.HitIdx,
               rays.U,
               rays.V,
-              rays.Scalar,
-              viskores::rendering::raytracing::GetScalarFieldArray(scalarField),
+              rays.TextureR,
+              rays.TextureS,
+              viskores::rendering::raytracing::GetTextureFieldArray(textureField),
               QuadIds);
   }
   else
   {
     viskores::worklet::DispatcherMapField<detail::GetNodalScalar<Precision>>(
-      detail::GetNodalScalar<Precision>(viskores::Float32(scalarRange.Min),
-                                        viskores::Float32(scalarRange.Max)))
+      detail::GetNodalScalar<Precision>(textureRanges))
       .Invoke(rays.HitIdx,
-              rays.Scalar,
-              viskores::rendering::raytracing::GetScalarFieldArray(scalarField),
+              rays.TextureR,
+              rays.TextureS,
+              viskores::rendering::raytracing::GetTextureFieldArray(textureField),
               QuadIds);
   }
 }
 
-void QuadIntersector::IntersectionData(Ray<viskores::Float32>& rays,
-                                       const viskores::cont::Field scalarField,
-                                       const viskores::Range& scalarRange)
+void QuadIntersector::IntersectionData(
+  Ray<viskores::Float32>& rays,
+  const viskores::cont::Field textureField,
+  const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
 {
-  IntersectionDataImp(rays, scalarField, scalarRange);
+  IntersectionDataImp(rays, textureField, textureRanges);
 }
 
-void QuadIntersector::IntersectionData(Ray<viskores::Float64>& rays,
-                                       const viskores::cont::Field scalarField,
-                                       const viskores::Range& scalarRange)
+void QuadIntersector::IntersectionData(
+  Ray<viskores::Float64>& rays,
+  const viskores::cont::Field textureField,
+  const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
 {
-  IntersectionDataImp(rays, scalarField, scalarRange);
+  IntersectionDataImp(rays, textureField, textureRanges);
 }
 
 void QuadIntersector::SetData(const viskores::cont::CoordinateSystem& coords,
