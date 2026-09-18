@@ -18,6 +18,7 @@
 #include <viskores/rendering/raytracing/Camera.h>
 #include <viskores/rendering/raytracing/Logger.h>
 #include <viskores/rendering/raytracing/RayTracingTypeDefs.h>
+#include <viskores/rendering/raytracing/Texture.h>
 #include <viskores/worklet/DispatcherMapField.h>
 #include <viskores/worklet/WorkletMapField.h>
 
@@ -44,15 +45,18 @@ public:
     viskores::Float32 SpecularExponent;
     viskores::Vec3f_32 CameraPosition;
     viskores::Vec3f_32 LookAt;
+    viskores::IdComponent2 ColorMapSize;
 
   public:
     VISKORES_CONT
     Shade(const viskores::Vec3f_32& lightPosition,
           const viskores::Vec3f_32& cameraPosition,
-          const viskores::Vec3f_32& lookAt)
+          const viskores::Vec3f_32& lookAt,
+          const viskores::IdComponent2& colorMapSize)
       : LightPosition(lightPosition)
       , CameraPosition(cameraPosition)
       , LookAt(lookAt)
+      , ColorMapSize(colorMapSize)
     {
       //Set up some default lighting parameters for now
       LightAbmient[0] = .5f;
@@ -68,12 +72,13 @@ public:
     }
 
     using ControlSignature =
-      void(FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
-    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
+      void(FieldIn, FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
 
     template <typename ColorPortalType, typename Precision, typename ColorMapPortalType>
     VISKORES_EXEC void operator()(const viskores::Id& hitIdx,
-                                  const Precision& scalar,
+                                  const Precision& textureR,
+                                  const Precision& textureS,
                                   const viskores::Vec<Precision, 3>& normal,
                                   const viskores::Vec<Precision, 3>& intersection,
                                   ColorPortalType& colors,
@@ -110,12 +115,11 @@ public:
       Precision cosPhi = viskores::dot(reflect, viewDir);
       Precision specularConstant =
         viskores::Pow(viskores::Max(cosPhi, zero), static_cast<Precision>(SpecularExponent));
-      viskores::Int32 colorMapSize = static_cast<viskores::Int32>(colorMap.GetNumberOfValues());
-      viskores::Int32 colorIdx = viskores::Int32(scalar * Precision(colorMapSize - 1));
-
-      // clamp color index
-      colorIdx = viskores::Max(0, colorIdx);
-      colorIdx = viskores::Min(colorMapSize - 1, colorIdx);
+      viskores::Id colorX = viskores::Id(textureR * Precision(this->ColorMapSize[0] - 1));
+      viskores::Id colorY = viskores::Id(textureS * Precision(this->ColorMapSize[1] - 1));
+      colorX = viskores::Clamp(colorX, 0, viskores::Id(this->ColorMapSize[0] - 1));
+      colorY = viskores::Clamp(colorY, 0, viskores::Id(this->ColorMapSize[1] - 1));
+      const viskores::Id colorIdx = colorY * this->ColorMapSize[0] + colorX;
       color = colorMap.Get(colorIdx);
 
       color[0] *= viskores::Min(
@@ -133,18 +137,24 @@ public:
 
   }; //class Shade
 
-  class MapScalarToColor : public viskores::worklet::WorkletMapField
+  class MapTextureToColor : public viskores::worklet::WorkletMapField
   {
+    viskores::IdComponent2 ColorMapSize;
+
   public:
     VISKORES_CONT
-    MapScalarToColor() {}
+    explicit MapTextureToColor(const viskores::IdComponent2& colorMapSize)
+      : ColorMapSize(colorMapSize)
+    {
+    }
 
-    using ControlSignature = void(FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
-    using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
+    using ControlSignature = void(FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, WorkIndex);
 
     template <typename ColorPortalType, typename Precision, typename ColorMapPortalType>
     VISKORES_EXEC void operator()(const viskores::Id& hitIdx,
-                                  const Precision& scalar,
+                                  const Precision& textureR,
+                                  const Precision& textureS,
                                   ColorPortalType& colors,
                                   ColorMapPortalType colorMap,
                                   const viskores::Id& idx) const
@@ -158,12 +168,11 @@ public:
       viskores::Vec<Precision, 4> color;
       viskores::Id offset = idx * 4;
 
-      viskores::Int32 colorMapSize = static_cast<viskores::Int32>(colorMap.GetNumberOfValues());
-      viskores::Int32 colorIdx = viskores::Int32(scalar * Precision(colorMapSize - 1));
-
-      // clamp color index
-      colorIdx = viskores::Max(0, colorIdx);
-      colorIdx = viskores::Min(colorMapSize - 1, colorIdx);
+      viskores::Id colorX = viskores::Id(textureR * Precision(this->ColorMapSize[0] - 1));
+      viskores::Id colorY = viskores::Id(textureS * Precision(this->ColorMapSize[1] - 1));
+      colorX = viskores::Clamp(colorX, 0, viskores::Id(this->ColorMapSize[0] - 1));
+      colorY = viskores::Clamp(colorY, 0, viskores::Id(this->ColorMapSize[1] - 1));
+      const viskores::Id colorIdx = colorY * this->ColorMapSize[0] + colorX;
       color = colorMap.Get(colorIdx);
 
       colors.Set(offset + 0, color[0]);
@@ -172,11 +181,12 @@ public:
       colors.Set(offset + 3, color[3]);
     }
 
-  }; //class MapScalarToColor
+  }; //class MapTextureToColor
 
   template <typename Precision>
   VISKORES_CONT void run(Ray<Precision>& rays,
                          viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+                         const viskores::IdComponent2& colorMapSize,
                          const viskores::rendering::raytracing::Camera& camera,
                          bool shade)
   {
@@ -186,9 +196,10 @@ public:
       viskores::Vec3f_32 scale(2, 2, 2);
       viskores::Vec3f_32 lightPosition = camera.GetPosition() + scale * camera.GetUp();
       viskores::worklet::DispatcherMapField<Shade>(
-        Shade(lightPosition, camera.GetPosition(), camera.GetLookAt()))
+        Shade(lightPosition, camera.GetPosition(), camera.GetLookAt(), colorMapSize))
         .Invoke(rays.HitIdx,
-                rays.Scalar,
+                rays.TextureR,
+                rays.TextureS,
                 rays.Normal,
                 rays.Intersection,
                 rays.Buffers.at(0).Buffer,
@@ -196,8 +207,8 @@ public:
     }
     else
     {
-      viskores::worklet::DispatcherMapField<MapScalarToColor>(MapScalarToColor())
-        .Invoke(rays.HitIdx, rays.Scalar, rays.Buffers.at(0).Buffer, colorMap);
+      viskores::worklet::DispatcherMapField<MapTextureToColor>(MapTextureToColor(colorMapSize))
+        .Invoke(rays.HitIdx, rays.TextureR, rays.TextureS, rays.Buffers.at(0).Buffer, colorMap);
     }
   }
 }; // class SurfaceColor
@@ -206,6 +217,7 @@ public:
 
 RayTracer::RayTracer()
   : NumberOfShapes(0)
+  , ColorMapSize(0)
   , Shade(true)
 {
 }
@@ -227,16 +239,48 @@ void RayTracer::AddShapeIntersector(std::shared_ptr<ShapeIntersector> intersecto
   Intersectors.push_back(intersector);
 }
 
-void RayTracer::SetField(const viskores::cont::Field& scalarField,
-                         const viskores::Range& scalarRange)
+void RayTracer::SetField(const viskores::cont::Field& textureField,
+                         const viskores::Range& textureRange)
 {
-  ScalarField = scalarField;
-  ScalarRange = scalarRange;
+  this->SetField(textureField, viskores::cont::make_ArrayHandle({ textureRange }));
+}
+
+void RayTracer::SetField(const viskores::cont::Field& textureField,
+                         const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
+{
+  const viskores::IdComponent numberOfComponents =
+    textureField.GetData().GetNumberOfComponentsFlat();
+  if (numberOfComponents < 1 || numberOfComponents > 2)
+  {
+    throw viskores::cont::ErrorBadValue("RayTracer texture fields must have 1 or 2 components");
+  }
+  if (textureRanges.GetNumberOfValues() != numberOfComponents)
+  {
+    throw viskores::cont::ErrorBadValue(
+      "RayTracer requires one texture range for each texture field component");
+  }
+  TextureField = textureField;
+  TextureRanges = textureRanges;
 }
 
 void RayTracer::SetColorMap(const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap)
 {
+  this->SetColorMap(
+    colorMap,
+    viskores::IdComponent2(static_cast<viskores::IdComponent>(colorMap.GetNumberOfValues()), 1));
+}
+
+void RayTracer::SetColorMap(const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+                            const viskores::IdComponent2& colorMapSize)
+{
+  if ((colorMapSize[0] < 1) || (colorMapSize[1] < 1) ||
+      (Id{ colorMapSize[0] } * Id{ colorMapSize[1] } != colorMap.GetNumberOfValues()))
+  {
+    throw viskores::cont::ErrorBadValue(
+      "RayTracer color map dimensions must be positive and match the array size");
+  }
   ColorMap = colorMap;
+  ColorMapSize = colorMapSize;
 }
 
 void RayTracer::Render(Ray<viskores::Float32>& rays)
@@ -292,14 +336,14 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
       logger->AddLogData("intersect", time);
 
       timer.Start();
-      Intersectors[i]->IntersectionData(rays, ScalarField, ScalarRange);
+      Intersectors[i]->IntersectionData(rays, TextureField, TextureRanges);
       time = timer.GetElapsedTime();
       logger->AddLogData("intersection_data", time);
       timer.Start();
 
       // Calculate the color at the intersection  point
       detail::SurfaceColor surfaceColor;
-      surfaceColor.run(rays, ColorMap, camera, this->Shade);
+      surfaceColor.run(rays, ColorMap, ColorMapSize, camera, this->Shade);
 
       time = timer.GetElapsedTime();
       logger->AddLogData("shade", time);

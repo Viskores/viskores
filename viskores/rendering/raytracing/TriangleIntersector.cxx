@@ -7,6 +7,7 @@
 //============================================================================
 
 
+#include <viskores/rendering/raytracing/Texture.h>
 #include <viskores/rendering/raytracing/TriangleIntersector.h>
 
 #include <cstring>
@@ -242,42 +243,29 @@ public:
   class LerpScalar : public viskores::worklet::WorkletMapField
   {
   private:
-    Precision MinScalar;
-    Precision InvDeltaScalar;
-    bool Normalize;
+    TextureCoordinateTransform<Precision> Transform;
 
   public:
     VISKORES_CONT
-    LerpScalar(const viskores::Float32& minScalar, const viskores::Float32& maxScalar)
-      : MinScalar(minScalar)
+    explicit LerpScalar(const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
+      : Transform(textureRanges)
     {
-      Normalize = true;
-      if (minScalar >= maxScalar)
-      {
-        // support the scalar renderer
-        this->Normalize = false;
-        this->InvDeltaScalar = 1;
-      }
-      else
-      {
-        //Make sure the we don't divide by zero on
-        //something like an iso-surface
-        this->InvDeltaScalar = 1.f / (maxScalar - this->MinScalar);
-      }
     }
     typedef void ControlSignature(FieldIn,
                                   FieldIn,
                                   FieldIn,
                                   FieldInOut,
+                                  FieldInOut,
                                   WholeArrayIn,
                                   WholeArrayIn);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
-    template <typename ScalarPortalType, typename IndicesPortalType>
+    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
+    template <typename TexturePortalType, typename IndicesPortalType>
     VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
                                   const Precision& u,
                                   const Precision& v,
-                                  Precision& lerpedScalar,
-                                  const ScalarPortalType& scalars,
+                                  Precision& textureR,
+                                  Precision& textureS,
+                                  const TexturePortalType& texture,
                                   const IndicesPortalType& indicesPortal) const
     {
       if (hitIndex < 0)
@@ -286,15 +274,12 @@ public:
       viskores::Vec<Id, 4> indices = indicesPortal.Get(hitIndex);
 
       Precision n = 1.f - u - v;
-      Precision aScalar = Precision(scalars.Get(indices[1]));
-      Precision bScalar = Precision(scalars.Get(indices[2]));
-      Precision cScalar = Precision(scalars.Get(indices[3]));
-      lerpedScalar = aScalar * n + bScalar * u + cScalar * v;
-      //normalize
-      if (Normalize)
-      {
-        lerpedScalar = (lerpedScalar - this->MinScalar) * this->InvDeltaScalar;
-      }
+      const auto a = MakeTextureCoordinates<Precision>(texture.Get(indices[1]));
+      const auto b = MakeTextureCoordinates<Precision>(texture.Get(indices[2]));
+      const auto c = MakeTextureCoordinates<Precision>(texture.Get(indices[3]));
+      const auto coordinates = this->Transform(a * n + b * u + c * v);
+      textureR = coordinates[0];
+      textureS = coordinates[1];
     }
   }; //class LerpScalar
 
@@ -302,37 +287,23 @@ public:
   class NodalScalar : public viskores::worklet::WorkletMapField
   {
   private:
-    Precision MinScalar;
-    Precision InvDeltaScalar;
-    bool Normalize;
+    TextureCoordinateTransform<Precision> Transform;
 
   public:
     VISKORES_CONT
-    NodalScalar(const viskores::Float32& minScalar, const viskores::Float32& maxScalar)
-      : MinScalar(minScalar)
+    explicit NodalScalar(const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
+      : Transform(textureRanges)
     {
-      Normalize = true;
-      if (minScalar >= maxScalar)
-      {
-        // support the scalar renderer
-        Normalize = false;
-        this->InvDeltaScalar = Precision(0.f);
-      }
-      else
-      {
-        //Make sure the we don't divide by zero on
-        //something like an iso-surface
-        this->InvDeltaScalar = 1.f / (maxScalar - this->MinScalar);
-      }
     }
 
-    typedef void ControlSignature(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
+    typedef void ControlSignature(FieldIn, FieldOut, FieldOut, WholeArrayIn, WholeArrayIn);
 
-    typedef void ExecutionSignature(_1, _2, _3, _4);
-    template <typename ScalarPortalType, typename IndicesPortalType>
+    typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+    template <typename TexturePortalType, typename IndicesPortalType>
     VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
-                                  Precision& scalar,
-                                  const ScalarPortalType& scalars,
+                                  Precision& textureR,
+                                  Precision& textureS,
+                                  const TexturePortalType& texture,
                                   const IndicesPortalType& indicesPortal) const
     {
       if (hitIndex < 0)
@@ -340,13 +311,10 @@ public:
 
       viskores::Vec<Id, 4> indices = indicesPortal.Get(hitIndex);
 
-      //Todo: one normalization
-      scalar = Precision(scalars.Get(indices[0]));
-
-      if (Normalize)
-      {
-        scalar = (scalar - this->MinScalar) * this->InvDeltaScalar;
-      }
+      const auto coordinates =
+        this->Transform(MakeTextureCoordinates<Precision>(texture.Get(indices[0])));
+      textureR = coordinates[0];
+      textureS = coordinates[1];
     }
   }; //class LerpScalar
 
@@ -354,15 +322,15 @@ public:
   VISKORES_CONT void Run(Ray<Precision>& rays,
                          viskores::cont::ArrayHandle<viskores::Id4> triangles,
                          viskores::cont::CoordinateSystem coordsHandle,
-                         const viskores::cont::Field scalarField,
-                         const viskores::Range& scalarRange)
+                         const viskores::cont::Field textureField,
+                         const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
   {
-    const bool isSupportedField = scalarField.IsCellField() || scalarField.IsPointField();
+    const bool isSupportedField = textureField.IsCellField() || textureField.IsPointField();
     if (!isSupportedField)
     {
       throw viskores::cont::ErrorBadValue("Field not associated with cell set or points");
     }
-    const bool isAssocPoints = scalarField.IsPointField();
+    const bool isAssocPoints = textureField.IsPointField();
 
     // Find the triangle normal
     viskores::worklet::DispatcherMapField<CalculateNormals>(CalculateNormals())
@@ -373,23 +341,23 @@ public:
     if (isAssocPoints)
     {
       viskores::worklet::DispatcherMapField<LerpScalar<Precision>>(
-        LerpScalar<Precision>(viskores::Float32(scalarRange.Min),
-                              viskores::Float32(scalarRange.Max)))
+        LerpScalar<Precision>(textureRanges))
         .Invoke(rays.HitIdx,
                 rays.U,
                 rays.V,
-                rays.Scalar,
-                viskores::rendering::raytracing::GetScalarFieldArray(scalarField),
+                rays.TextureR,
+                rays.TextureS,
+                viskores::rendering::raytracing::GetTextureFieldArray(textureField),
                 triangles);
     }
     else
     {
       viskores::worklet::DispatcherMapField<NodalScalar<Precision>>(
-        NodalScalar<Precision>(viskores::Float32(scalarRange.Min),
-                               viskores::Float32(scalarRange.Max)))
+        NodalScalar<Precision>(textureRanges))
         .Invoke(rays.HitIdx,
-                rays.Scalar,
-                viskores::rendering::raytracing::GetScalarFieldArray(scalarField),
+                rays.TextureR,
+                rays.TextureS,
+                viskores::rendering::raytracing::GetTextureFieldArray(textureField),
                 triangles);
     }
   } // Run
@@ -542,28 +510,31 @@ VISKORES_CONT void TriangleIntersector::IntersectRaysImp(Ray<Precision>& rays, b
   RayOperations::UpdateRayStatus(rays);
 }
 
-VISKORES_CONT void TriangleIntersector::IntersectionData(Ray<viskores::Float32>& rays,
-                                                         const viskores::cont::Field scalarField,
-                                                         const viskores::Range& scalarRange)
+VISKORES_CONT void TriangleIntersector::IntersectionData(
+  Ray<viskores::Float32>& rays,
+  const viskores::cont::Field textureField,
+  const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
 {
-  IntersectionDataImp(rays, scalarField, scalarRange);
+  IntersectionDataImp(rays, textureField, textureRanges);
 }
 
-VISKORES_CONT void TriangleIntersector::IntersectionData(Ray<viskores::Float64>& rays,
-                                                         const viskores::cont::Field scalarField,
-                                                         const viskores::Range& scalarRange)
+VISKORES_CONT void TriangleIntersector::IntersectionData(
+  Ray<viskores::Float64>& rays,
+  const viskores::cont::Field textureField,
+  const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
 {
-  IntersectionDataImp(rays, scalarField, scalarRange);
+  IntersectionDataImp(rays, textureField, textureRanges);
 }
 
 template <typename Precision>
-VISKORES_CONT void TriangleIntersector::IntersectionDataImp(Ray<Precision>& rays,
-                                                            const viskores::cont::Field scalarField,
-                                                            const viskores::Range& scalarRange)
+VISKORES_CONT void TriangleIntersector::IntersectionDataImp(
+  Ray<Precision>& rays,
+  const viskores::cont::Field textureField,
+  const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
 {
   ShapeIntersector::IntersectionPoint(rays);
   detail::TriangleIntersectionData intData;
-  intData.Run(rays, this->Triangles, this->CoordsHandle, scalarField, scalarRange);
+  intData.Run(rays, this->Triangles, this->CoordsHandle, textureField, textureRanges);
 }
 
 viskores::Id TriangleIntersector::GetNumberOfShapes() const

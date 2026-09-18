@@ -305,7 +305,7 @@ void ScalarRenderer::AddBuffer(Ray<Precision>& rays, Precision missScalar, const
   ChannelBuffer<Precision> buffer(numChannels, rays.NumRays);
 
   this->Invoke(
-    detail::WriteBuffer<Precision>{ missScalar }, rays.HitIdx, rays.Scalar, buffer.Buffer);
+    detail::WriteBuffer<Precision>{ missScalar }, rays.HitIdx, rays.TextureR, buffer.Buffer);
 
   buffer.SetName(name);
   rays.Buffers.push_back(buffer);

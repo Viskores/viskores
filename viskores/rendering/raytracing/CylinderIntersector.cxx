@@ -12,6 +12,7 @@
 #include <viskores/rendering/raytracing/BVHTraverser.h>
 #include <viskores/rendering/raytracing/CylinderIntersector.h>
 #include <viskores/rendering/raytracing/RayOperations.h>
+#include <viskores/rendering/raytracing/Texture.h>
 #include <viskores/worklet/DispatcherMapTopology.h>
 
 namespace viskores
@@ -536,35 +537,21 @@ template <typename Precision>
 class GetScalar : public viskores::worklet::WorkletMapField
 {
 private:
-  Precision MinScalar;
-  Precision InvDeltaScalar;
-  bool Normalize;
+  TextureCoordinateTransform<Precision> Transform;
 
 public:
   VISKORES_CONT
-  GetScalar(const viskores::Float32& minScalar, const viskores::Float32& maxScalar)
-    : MinScalar(minScalar)
+  explicit GetScalar(const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
+    : Transform(textureRanges)
   {
-    Normalize = true;
-    if (minScalar >= maxScalar)
-    {
-      // support the scalar renderer
-      Normalize = false;
-      this->InvDeltaScalar = Precision(0.f);
-    }
-    else
-    {
-      //Make sure the we don't divide by zero on
-      //something like an iso-surface
-      this->InvDeltaScalar = 1.f / (maxScalar - this->MinScalar);
-    }
   }
-  typedef void ControlSignature(FieldIn, FieldInOut, WholeArrayIn, WholeArrayIn);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
-  template <typename ScalarPortalType, typename IndicesPortalType>
+  using ControlSignature = void(FieldIn, FieldInOut, FieldInOut, WholeArrayIn, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
+  template <typename TexturePortalType, typename IndicesPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
-                                Precision& scalar,
-                                const ScalarPortalType& scalars,
+                                Precision& textureR,
+                                Precision& textureS,
+                                const TexturePortalType& texture,
                                 const IndicesPortalType& indicesPortal) const
   {
     if (hitIndex < 0)
@@ -573,11 +560,10 @@ public:
     //TODO: this should be interpolated?
     viskores::Id3 pointId = indicesPortal.Get(hitIndex);
 
-    scalar = Precision(scalars.Get(pointId[0]));
-    if (Normalize)
-    {
-      scalar = (scalar - this->MinScalar) * this->InvDeltaScalar;
-    }
+    const auto coordinates =
+      this->Transform(MakeTextureCoordinates<Precision>(texture.Get(pointId[0])));
+    textureR = coordinates[0];
+    textureS = coordinates[1];
   }
 }; //class GetScalar
 
@@ -650,14 +636,15 @@ void CylinderIntersector::IntersectRaysImp(Ray<Precision>& rays,
 }
 
 template <typename Precision>
-void CylinderIntersector::IntersectionDataImp(Ray<Precision>& rays,
-                                              const viskores::cont::Field scalarField,
-                                              const viskores::Range& scalarRange)
+void CylinderIntersector::IntersectionDataImp(
+  Ray<Precision>& rays,
+  const viskores::cont::Field textureField,
+  const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
 {
   ShapeIntersector::IntersectionPoint(rays);
 
   // TODO: if this is nodes of a mesh, support points
-  const bool isSupportedField = scalarField.IsCellField() || scalarField.IsPointField();
+  const bool isSupportedField = textureField.IsCellField() || textureField.IsPointField();
   if (!isSupportedField)
   {
     throw viskores::cont::ErrorBadValue("Field not associated with a cell set");
@@ -674,26 +661,28 @@ void CylinderIntersector::IntersectionDataImp(Ray<Precision>& rays,
             CylIds);
 
   viskores::worklet::DispatcherMapField<detail::GetScalar<Precision>>(
-    detail::GetScalar<Precision>(viskores::Float32(scalarRange.Min),
-                                 viskores::Float32(scalarRange.Max)))
+    detail::GetScalar<Precision>(textureRanges))
     .Invoke(rays.HitIdx,
-            rays.Scalar,
-            viskores::rendering::raytracing::GetScalarFieldArray(scalarField),
+            rays.TextureR,
+            rays.TextureS,
+            viskores::rendering::raytracing::GetTextureFieldArray(textureField),
             CylIds);
 }
 
-void CylinderIntersector::IntersectionData(Ray<viskores::Float32>& rays,
-                                           const viskores::cont::Field scalarField,
-                                           const viskores::Range& scalarRange)
+void CylinderIntersector::IntersectionData(
+  Ray<viskores::Float32>& rays,
+  const viskores::cont::Field textureField,
+  const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
 {
-  IntersectionDataImp(rays, scalarField, scalarRange);
+  IntersectionDataImp(rays, textureField, textureRanges);
 }
 
-void CylinderIntersector::IntersectionData(Ray<viskores::Float64>& rays,
-                                           const viskores::cont::Field scalarField,
-                                           const viskores::Range& scalarRange)
+void CylinderIntersector::IntersectionData(
+  Ray<viskores::Float64>& rays,
+  const viskores::cont::Field textureField,
+  const viskores::cont::ArrayHandle<viskores::Range>& textureRanges)
 {
-  IntersectionDataImp(rays, scalarField, scalarRange);
+  IntersectionDataImp(rays, textureField, textureRanges);
 }
 
 viskores::Id CylinderIntersector::GetNumberOfShapes() const
