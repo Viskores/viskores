@@ -41,6 +41,7 @@ set(headers
   ShapeIntersector.h
   SphereExtractor.h
   SphereIntersector.h
+  Texture.h
   TriangleExtractor.h
   TriangleIntersections.h
   TriangleIntersector.h
