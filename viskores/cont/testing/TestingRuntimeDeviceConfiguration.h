@@ -16,8 +16,6 @@
 #include <viskores/cont/internal/RuntimeDeviceConfigurationOptions.h>
 #include <viskores/cont/testing/Testing.h>
 
-namespace internal = viskores::cont::internal;
-
 namespace viskores
 {
 namespace cont
@@ -30,7 +28,8 @@ struct TestingRuntimeDeviceConfiguration
 {
 
   VISKORES_CONT
-  static internal::RuntimeDeviceConfigurationOptions DefaultInitializeConfigOptions()
+  static viskores::cont::internal::RuntimeDeviceConfigurationOptions
+  DefaultInitializeConfigOptions()
   {
     internal::RuntimeDeviceConfigurationOptions runtimeDeviceOptions{};
     runtimeDeviceOptions.ViskoresNumThreads.SetOption(8);

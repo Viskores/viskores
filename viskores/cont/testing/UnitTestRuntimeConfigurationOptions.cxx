@@ -16,8 +16,7 @@
 #include <utility>
 #include <vector>
 
-namespace internal = viskores::cont::internal;
-namespace opt = internal::option;
+namespace opt = viskores::cont::internal::option;
 
 namespace
 {
@@ -58,7 +57,7 @@ void TestRuntimeDeviceOptionHappy()
 
   // Basic no value initialize
   {
-    internal::RuntimeDeviceOption testOption(TEST, env);
+    viskores::cont::internal::RuntimeDeviceOption testOption(TEST, env);
     testOption.Initialize(nullptr);
     VISKORES_TEST_ASSERT(!testOption.IsSet(), "test option should not be set");
   }
@@ -67,10 +66,11 @@ void TestRuntimeDeviceOptionHappy()
 
   // Initialize from environment
   {
-    internal::RuntimeDeviceOption testOption(TEST, env);
+    viskores::cont::internal::RuntimeDeviceOption testOption(TEST, env);
     testOption.Initialize(nullptr);
     VISKORES_TEST_ASSERT(testOption.IsSet(), "Option set through env");
-    VISKORES_TEST_ASSERT(testOption.GetSource() == internal::RuntimeDeviceOptionSource::ENVIRONMENT,
+    VISKORES_TEST_ASSERT(testOption.GetSource() ==
+                           viskores::cont::internal::RuntimeDeviceOptionSource::ENVIRONMENT,
                          "Option should be set");
     VISKORES_TEST_ASSERT(testOption.GetValue() == 1, "Option value should be 1");
   }
@@ -83,24 +83,25 @@ void TestRuntimeDeviceOptionHappy()
 
   // Initialize from argument with priority over environment
   {
-    internal::RuntimeDeviceOption testOption(TEST, env);
+    viskores::cont::internal::RuntimeDeviceOption testOption(TEST, env);
 
     testOption.Initialize(options.get());
     VISKORES_TEST_ASSERT(testOption.IsSet(), "Option should be set");
     VISKORES_TEST_ASSERT(testOption.GetSource() ==
-                           internal::RuntimeDeviceOptionSource::COMMAND_LINE,
+                           viskores::cont::internal::RuntimeDeviceOptionSource::COMMAND_LINE,
                          "Option should be set");
     VISKORES_TEST_ASSERT(testOption.GetValue() == 2, "Option value should be 1");
   }
 
   // Initialize then set manually
   {
-    internal::RuntimeDeviceOption testOption(TEST, env);
+    viskores::cont::internal::RuntimeDeviceOption testOption(TEST, env);
 
     testOption.Initialize(options.get());
     testOption.SetOption(3);
     VISKORES_TEST_ASSERT(testOption.IsSet(), "Option should be set");
-    VISKORES_TEST_ASSERT(testOption.GetSource() == internal::RuntimeDeviceOptionSource::IN_CODE,
+    VISKORES_TEST_ASSERT(testOption.GetSource() ==
+                           viskores::cont::internal::RuntimeDeviceOptionSource::IN_CODE,
                          "Option should be set");
     VISKORES_TEST_ASSERT(testOption.GetValue() == 3, "Option value should be 3");
   }
@@ -123,7 +124,7 @@ void TestRuntimeDeviceOptionError()
 
   // Parse a non integer
   {
-    internal::RuntimeDeviceOption testOption(TEST, env);
+    viskores::cont::internal::RuntimeDeviceOption testOption(TEST, env);
     viskores::cont::testing::Testing::SetEnv(env, "bad");
     try
     {
@@ -143,7 +144,7 @@ void TestRuntimeDeviceOptionError()
 
   // Parse an integer that's too large
   {
-    internal::RuntimeDeviceOption testOption(TEST, env);
+    viskores::cont::internal::RuntimeDeviceOption testOption(TEST, env);
     viskores::cont::testing::Testing::SetEnv(env, "9938489298493882949384989");
     try
     {
@@ -163,7 +164,7 @@ void TestRuntimeDeviceOptionError()
 
   // Parse an integer with some stuff on the end
   {
-    internal::RuntimeDeviceOption testOption(TEST, env);
+    viskores::cont::internal::RuntimeDeviceOption testOption(TEST, env);
     viskores::cont::testing::Testing::SetEnv(env, "100bad");
     try
     {
@@ -184,7 +185,8 @@ void TestRuntimeDeviceOptionError()
   viskores::cont::testing::Testing::UnsetEnv(env);
 }
 
-void TestConfigOptionValues(const internal::RuntimeDeviceConfigurationOptions& configOptions)
+void TestConfigOptionValues(
+  const viskores::cont::internal::RuntimeDeviceConfigurationOptions& configOptions)
 {
   VISKORES_TEST_ASSERT(configOptions.IsInitialized(),
                        "runtime config options should be initialized");
@@ -208,7 +210,7 @@ void TestRuntimeDeviceConfigurationOptions()
     usage.push_back({ 2, 0, "", "args", opt::ViskoresArg::Required, "" });
     usage.push_back({ 3, 0, "", "to", opt::ViskoresArg::Required, "" });
     usage.push_back({ 4, 0, "", "pass", opt::ViskoresArg::Required, "" });
-    internal::RuntimeDeviceConfigurationOptions configOptions(usage);
+    viskores::cont::internal::RuntimeDeviceConfigurationOptions configOptions(usage);
 
     usage.push_back({ opt::OptionIndex::UNKNOWN, 0, "", "", opt::ViskoresArg::UnknownOption, "" });
     usage.push_back({ 0, 0, 0, 0, 0, 0 });
@@ -230,7 +232,7 @@ void TestRuntimeDeviceConfigurationOptions()
     char** argv;
     viskores::cont::testing::Testing::MakeArgs(
       argc, argv, "--viskores-num-threads", "100", "--viskores-device-instance", "1");
-    internal::RuntimeDeviceConfigurationOptions configOptions(argc, argv);
+    viskores::cont::internal::RuntimeDeviceConfigurationOptions configOptions(argc, argv);
     TestConfigOptionValues(configOptions);
   }
 }

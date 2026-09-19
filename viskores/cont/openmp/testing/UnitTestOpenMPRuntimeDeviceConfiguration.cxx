@@ -9,8 +9,6 @@
 #include <viskores/cont/openmp/DeviceAdapterOpenMP.h>
 #include <viskores/cont/testing/TestingRuntimeDeviceConfiguration.h>
 
-namespace internal = viskores::cont::internal;
-
 namespace viskores
 {
 namespace cont
@@ -44,13 +42,13 @@ TestingRuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagOpenMP>::TestR
     numThreads = omp_get_num_threads();
   }
   VISKORES_TEST_ASSERT(config.GetThreads(setNumThreads) ==
-                         internal::RuntimeDeviceConfigReturnCode::SUCCESS,
+                         viskores::cont::internal::RuntimeDeviceConfigReturnCode::SUCCESS,
                        "Failed to get num threads");
   VISKORES_TEST_ASSERT(setNumThreads == numThreads,
                        "RTC's numThreads != numThreads openmp direct! " +
                          std::to_string(setNumThreads) + " != " + std::to_string(numThreads));
   VISKORES_TEST_ASSERT(config.GetMaxThreads(setMaxThreads) ==
-                         internal::RuntimeDeviceConfigReturnCode::SUCCESS,
+                         viskores::cont::internal::RuntimeDeviceConfigReturnCode::SUCCESS,
                        "Failed to get max threads");
   VISKORES_TEST_ASSERT(setMaxThreads == maxThreads,
                        "RTC's maxThreads != maxThreads openmp direct! " +
