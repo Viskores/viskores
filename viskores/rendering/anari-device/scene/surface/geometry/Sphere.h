@@ -23,11 +23,13 @@ struct Sphere : public Geometry
   void commitParameters() override;
   void finalize() override;
 
-  virtual void render(viskores::rendering::Canvas& canvas,
-                      const viskores::rendering::Camera& camera,
-                      const viskores::cont::Field& field,
-                      const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
-                      const viskores::Range& fieldRange) const override;
+  virtual void render(
+    viskores::rendering::Canvas& canvas,
+    const viskores::rendering::Camera& camera,
+    const viskores::cont::Field& field,
+    const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+    const viskores::IdComponent2& colorMapSize,
+    const viskores::cont::ArrayHandle<viskores::Range>& fieldRanges) const override;
 
 private:
   void SetupIndexBased();

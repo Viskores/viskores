@@ -45,27 +45,54 @@ void Surface::finalize()
 
   this->m_dataSet = this->m_geometry->getDataSet();
 
-  Mat4f_32 inFieldTransform;
-  viskores::Vec4f_32 inFieldOffset;
-  this->m_material->getColors(
-    this->m_dataSet, this->m_field, this->m_colorMap, inFieldTransform, inFieldOffset);
+  ColorMap colorMap;
+  this->m_material->getColors(this->m_dataSet, this->m_field, colorMap);
+  this->m_colorMap = colorMap.colors;
+  this->m_colorMapSize = colorMap.size;
+
+  if ((colorMap.inFieldTransform(0, 1) != 0) || (colorMap.inFieldTransform(0, 2) != 0) ||
+      (colorMap.inFieldTransform(1, 0) != 0) || (colorMap.inFieldTransform(1, 2) != 0))
+  {
+    reportMessage(ANARI_SEVERITY_WARNING,
+                  "inTransform for sampler only supports scaling and translating texture "
+                  "coordinates (no rotations)");
+  }
 
   bool inverseValid;
-  Mat4f_32 inverseTransform = viskores::MatrixInverse(inFieldTransform, inverseValid);
+  Mat4f_32 inverseTransform = viskores::MatrixInverse(colorMap.inFieldTransform, inverseValid);
+
+  viskores::IdComponent numTextureDims = this->m_field.GetData().GetNumberOfComponentsFlat();
+  if (numTextureDims > 2)
+  {
+    reportMessage(ANARI_SEVERITY_WARNING,
+                  "Only fields of 1 or 2 dimensions supported for texture lookup.");
+    numTextureDims = 2;
+  }
+  this->m_fieldRanges.Allocate(numTextureDims);
+  auto rangesPortal = this->m_fieldRanges.WritePortal();
 
   if (inverseValid)
   {
-    auto transformRange = [&](viskores::Float32 x)
+    auto transformRange = [&](viskores::Float32 x, viskores::IdComponent component)
     {
-      auto transformed = viskores::MatrixMultiply(inverseTransform, { x, 0, 0, 1 }) - inFieldOffset;
-      return transformed[0] / transformed[3];
+      viskores::Vec4f_32 v = { 0, 0, 0, 1 };
+      v[component] = x;
+      viskores::Vec4f_32 transformed =
+        viskores::MatrixMultiply(inverseTransform, v) - colorMap.inFieldOffset;
+      return transformed[component] / transformed[3];
     };
-    this->m_fieldRange = { transformRange(0), transformRange(1) };
+    for (viskores::IdComponent dim = 0; dim < numTextureDims; ++dim)
+    {
+      rangesPortal.Set(dim, { transformRange(0, 0), transformRange(1, 0) });
+    }
   }
   else
   {
     reportMessage(ANARI_SEVERITY_WARNING, "inTransform for sampler is not invertible");
-    this->m_fieldRange = { 0, 1 };
+    for (viskores::IdComponent dim = 0; dim < numTextureDims; ++dim)
+    {
+      rangesPortal.Set(dim, { 0, 1 });
+    }
   }
 }
 
@@ -82,7 +109,8 @@ const Material* Surface::material() const
 void Surface::render(viskores::rendering::Canvas& canvas,
                      const viskores::rendering::Camera& camera) const
 {
-  this->m_geometry->render(canvas, camera, this->m_field, this->m_colorMap, this->m_fieldRange);
+  this->m_geometry->render(
+    canvas, camera, this->m_field, this->m_colorMap, this->m_colorMapSize, this->m_fieldRanges);
 }
 
 viskores::Bounds Surface::bounds() const

@@ -8,7 +8,7 @@
 //
 //=============================================================================
 
-#include "Image1DSampler.h"
+#include "Image2DSampler.h"
 #include "array/ArrayConversion.h"
 // Viskores
 #include <viskores/TypeTraits.h>
@@ -20,13 +20,13 @@
 namespace viskores_device
 {
 
-Image1DSampler::Image1DSampler(ViskoresDeviceGlobalState* d)
+Image2DSampler::Image2DSampler(ViskoresDeviceGlobalState* d)
   : Sampler(d)
   , m_colorArray(this)
 {
 }
 
-void Image1DSampler::commitParameters()
+void Image2DSampler::commitParameters()
 {
   this->Sampler::commitParameters();
 
@@ -38,7 +38,7 @@ void Image1DSampler::commitParameters()
     this->getParam("inOffset", anari::math::float4(0.f, 0.f, 0.f, 0.f));
   this->m_inOffset = { inOffset[0], inOffset[1], inOffset[2], inOffset[3] };
 
-  this->m_colorArray = this->getParamObject<Array1D>("image");
+  this->m_colorArray = this->getParamObject<Array2D>("image");
 
   this->m_wrapMode = helium::wrapModeFromString(this->getParamString("wrapMode", "clampToEdge"));
   if (this->m_wrapMode == helium::WrapMode::DEFAULT)
@@ -47,7 +47,7 @@ void Image1DSampler::commitParameters()
   }
 }
 
-void Image1DSampler::finalize()
+void Image2DSampler::finalize()
 {
   this->Sampler::finalize();
 
@@ -58,13 +58,13 @@ void Image1DSampler::finalize()
   else
   {
     this->reportMessage(ANARI_SEVERITY_WARNING,
-                        "image1D sampling requested, but no color array given");
+                        "image2D sampling requested, but no color array given");
     this->m_colorMap.Allocate(1);
     this->m_colorMap.WritePortal().Set(0, { 1, 1, 1, 1 });
   }
 }
 
-bool Image1DSampler::getColors(const viskores::cont::DataSet& data,
+bool Image2DSampler::getColors(const viskores::cont::DataSet& data,
                                viskores::cont::Field& field,
                                ColorMap& colorMap) const
 {
@@ -77,24 +77,28 @@ bool Image1DSampler::getColors(const viskores::cont::DataSet& data,
 
   viskores::cont::Field attribField = data.GetField(this->inAttribute());
   viskores::cont::UnknownArrayHandle attribArray = attribField.GetData();
-  if (!attribArray.CanConvert<viskores::cont::ArrayHandle<viskores::Float32>>())
+  if (!attribArray.CanConvert<viskores::cont::ArrayHandle<viskores::Vec2f_32>>())
   {
     if (!attribArray.IsBaseComponentType<viskores::Float32>())
     {
       this->reportMessage(ANARI_SEVERITY_WARNING,
-                          "attribute array type not currently supported for image1D sampler.");
+                          "attribute array type not currently supported for image2D sampler.");
       return false;
     }
     this->reportMessage(ANARI_SEVERITY_PERFORMANCE_WARNING,
                         "todo: handle vector attributes more efficiently");
     viskores::cont::UnknownArrayHandle newArray;
-    viskores::cont::ArrayCopy(attribArray.ExtractComponent<viskores::Float32>(0), newArray);
+    viskores::cont::ArrayHandleRecombineVec<viskores::Float32> recombinedArray;
+    recombinedArray.AppendComponentArray(attribArray.ExtractComponent<viskores::Float32>(0));
+    recombinedArray.AppendComponentArray(attribArray.ExtractComponent<viskores::Float32>(1));
+    viskores::cont::ArrayCopy(recombinedArray, newArray);
     attribArray = newArray;
   }
 
   field = viskores::cont::Field{ attribField.GetName(), attribField.GetAssociation(), attribArray };
   colorMap.colors = this->m_colorMap;
-  colorMap.size = { viskores::IdComponent(this->m_colorMap.GetNumberOfValues()), 1 };
+  colorMap.size = { viskores::IdComponent(this->m_colorArray->size(0)),
+                    viskores::IdComponent(this->m_colorArray->size(1)) };
   colorMap.inFieldTransform = this->m_inTransform;
   colorMap.inFieldOffset = this->m_inOffset;
   return true;
