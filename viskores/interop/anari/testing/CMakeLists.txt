@@ -16,5 +16,6 @@ SOURCES
   UnitTestANARIGeometryCylinder.cxx
   UnitTestANARIGeometryQuad.cxx
   UnitTestANARIGeometrySphere.cxx
+  UnitTestANARISamplerImage2D.cxx
   UnitTestANARIScene.cxx
   )
