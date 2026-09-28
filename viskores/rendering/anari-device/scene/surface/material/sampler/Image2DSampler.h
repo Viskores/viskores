@@ -12,16 +12,16 @@
 
 #include "Sampler.h"
 
-#include "array/Array1D.h"
+#include "array/Array2D.h"
 // helium
 #include <helium/utility/ChangeObserverPtr.h>
 
 namespace viskores_device
 {
 
-struct Image1DSampler : public Sampler
+struct Image2DSampler : public Sampler
 {
-  Image1DSampler(ViskoresDeviceGlobalState* d);
+  Image2DSampler(ViskoresDeviceGlobalState* d);
 
   void commitParameters() override;
   void finalize() override;
@@ -41,7 +41,7 @@ private:
   Mat4f_32 m_inTransform;
   viskores::Vec4f_32 m_inOffset;
   std::string m_inAttribute;
-  helium::ChangeObserverPtr<Array1D> m_colorArray;
+  helium::ChangeObserverPtr<Array2D> m_colorArray;
   helium::WrapMode m_wrapMode;
 
   viskores::cont::ArrayHandle<viskores::Vec4f_32> m_colorMap;

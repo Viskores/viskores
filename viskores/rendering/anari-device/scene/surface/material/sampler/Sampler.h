@@ -10,10 +10,10 @@
 
 #pragma once
 
+#include "../ColorMap.h"
 #include "Object.h"
 
 #include <viskores/Matrix.h>
-#include <viskores/cont/ColorTable.h>
 #include <viskores/cont/DataSet.h>
 
 namespace viskores_device
@@ -35,9 +35,7 @@ struct Sampler : public Object
 
   virtual bool getColors(const viskores::cont::DataSet& data,
                          viskores::cont::Field& field,
-                         viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
-                         Mat4f_32& inFieldTransform,
-                         viskores::Vec4f_32& inFieldOffset) const = 0;
+                         ColorMap& colorMap) const = 0;
 
 private:
   Mat4f_32 m_outTransform;

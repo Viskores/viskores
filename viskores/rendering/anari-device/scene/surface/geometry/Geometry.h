@@ -39,7 +39,8 @@ struct Geometry : public Object
                       const viskores::rendering::Camera& camera,
                       const viskores::cont::Field& field,
                       const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
-                      const viskores::Range& fieldRange) const = 0;
+                      const viskores::IdComponent2& colorMapSize,
+                      const viskores::cont::ArrayHandle<viskores::Range>& fieldRanges) const = 0;
 
   // This struct helps manage a set of parameters providing arrays of data that
   // will be attached to fields on a Viskores dataset created by this geometry.
@@ -91,7 +92,8 @@ struct UnknownGeometry : public Geometry
                       const viskores::rendering::Camera&,
                       const viskores::cont::Field&,
                       const viskores::cont::ArrayHandle<viskores::Vec4f_32>&,
-                      const viskores::Range&) const override;
+                      const viskores::IdComponent2&,
+                      const viskores::cont::ArrayHandle<viskores::Range>&) const override;
 };
 
 } // namespace viskores_device

@@ -107,7 +107,8 @@ void Quad::render(viskores::rendering::Canvas& canvas,
                   const viskores::rendering::Camera& camera,
                   const viskores::cont::Field& field,
                   const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
-                  const viskores::Range& fieldRange) const
+                  const viskores::IdComponent2& colorMapSize,
+                  const viskores::cont::ArrayHandle<viskores::Range>& fieldRanges) const
 {
   viskores::rendering::raytracing::RayTracer tracer;
   viskores::rendering::raytracing::QuadExtractor quadExtractor;
@@ -143,8 +144,8 @@ void Quad::render(viskores::rendering::Canvas& canvas,
   viskores::rendering::raytracing::RayOperations::MapCanvasToRays(
     rays, camera.CreateRaytracingCamera(width, height), canvasRT->GetDepthBuffer());
 
-  tracer.SetField(field, fieldRange);
-  tracer.SetColorMap(colorMap);
+  tracer.SetField(field, fieldRanges);
+  tracer.SetColorMap(colorMap, colorMapSize);
   tracer.SetShadingOn(true);
   tracer.Render(rays, rayCamera.GetPosition());
 
