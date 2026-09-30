@@ -18,6 +18,7 @@ set(unit_tests
   UnitTestMapperPoints.cxx
   UnitTestMapperQuads.cxx
   UnitTestMapperRayTracer.cxx
+  UnitTestRayTracingTexture.cxx
   UnitTestMapperWireframer.cxx
   UnitTestMapperVolume.cxx
   UnitTestScalarRenderer.cxx

@@ -42,16 +42,18 @@ public:
 
   template <typename Precision>
   void IntersectionDataImp(Ray<Precision>& rays,
-                           const viskores::cont::Field field,
-                           const viskores::Range& range);
+                           const viskores::cont::Field textureField,
+                           const viskores::cont::ArrayHandle<viskores::Range>& textureRanges);
 
-  void IntersectionData(Ray<viskores::Float32>& rays,
-                        const viskores::cont::Field field,
-                        const viskores::Range& range) override;
+  void IntersectionData(
+    Ray<viskores::Float32>& rays,
+    const viskores::cont::Field textureField,
+    const viskores::cont::ArrayHandle<viskores::Range>& textureRanges = {}) override;
 
-  void IntersectionData(Ray<viskores::Float64>& rays,
-                        const viskores::cont::Field field,
-                        const viskores::Range& range) override;
+  void IntersectionData(
+    Ray<viskores::Float64>& rays,
+    const viskores::cont::Field textureField,
+    const viskores::cont::ArrayHandle<viskores::Range>& textureRanges = {}) override;
 
   viskores::Id GetNumberOfShapes() const override;
 

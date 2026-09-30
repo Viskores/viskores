@@ -46,17 +46,19 @@ public:
 
   //
   // Calling intersection data directly after IntersectRays popoulates
-  // ray data: intersection point, surface normal, and interpolated scalar
-  // value at the intersection location. Additionally, distance to intersection
+  // ray data: intersection point, surface normal, and interpolated texture
+  // coordinates at the intersection location. Additionally, distance to intersection
   // becomes the new max distance.
   //
   virtual void IntersectionData(Ray<viskores::Float32>& rays,
-                                const viskores::cont::Field scalarField,
-                                const viskores::Range& scalarRange = viskores::Range()) = 0;
+                                const viskores::cont::Field textureField,
+                                const viskores::cont::ArrayHandle<viskores::Range>& textureRanges =
+                                  viskores::cont::ArrayHandle<viskores::Range>()) = 0;
 
   virtual void IntersectionData(Ray<viskores::Float64>& rays,
-                                const viskores::cont::Field scalarField,
-                                const viskores::Range& scalarRange = viskores::Range()) = 0;
+                                const viskores::cont::Field textureField,
+                                const viskores::cont::ArrayHandle<viskores::Range>& textureRanges =
+                                  viskores::cont::ArrayHandle<viskores::Range>()) = 0;
 
 
   template <typename Precision>
