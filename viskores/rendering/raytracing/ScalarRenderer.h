@@ -32,6 +32,9 @@ private:
 protected:
   std::unique_ptr<ShapeIntersector> Intersector;
   std::vector<viskores::cont::Field> Fields;
+  viskores::rendering::raytracing::Camera CurrentCamera;
+  viskores::Vec3f_32 LightPosition;
+  bool LightPositionSet;
 
   template <typename Precision>
   void RenderOnDevice(Ray<Precision>& rays,
@@ -46,10 +49,19 @@ protected:
 
 public:
   VISKORES_CONT
+  ScalarRenderer();
+
+  VISKORES_CONT
   void SetShapeIntersector(std::unique_ptr<ShapeIntersector>&& intersector);
 
   VISKORES_CONT
   void AddField(const viskores::cont::Field& scalarField);
+
+  VISKORES_CONT
+  void SetLightPosition(const viskores::Vec3f_32& lightPosition);
+
+  VISKORES_CONT
+  viskores::Vec3f_32 GetLightPosition() const;
 
   VISKORES_CONT
   void Render(viskores::rendering::raytracing::Ray<viskores::Float32>& rays,

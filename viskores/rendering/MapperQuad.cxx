@@ -115,7 +115,7 @@ void MapperQuad::RenderCellsImpl(const viskores::cont::UnknownCellSet& cellset,
   this->Internals->Tracer.GetCamera() = this->Internals->RayCamera;
   this->Internals->Tracer.SetField(scalarField, scalarRange);
   this->Internals->Tracer.SetColorMap(this->ColorMap);
-  this->Internals->Tracer.Render(this->Internals->Rays);
+  this->Internals->Tracer.Render(this->Internals->Rays, this->GetLightPosition());
 
   timer.Start();
   this->Internals->Canvas->WriteToCanvas(

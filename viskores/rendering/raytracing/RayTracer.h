@@ -36,7 +36,7 @@ protected:
   bool Shade;
 
   template <typename Precision>
-  void RenderOnDevice(Ray<Precision>& rays);
+  void RenderOnDevice(Ray<Precision>& rays, const viskores::Vec3f_32& lightPosition);
 
 public:
   VISKORES_CONT
@@ -47,6 +47,7 @@ public:
   VISKORES_CONT
   Camera& GetCamera();
 
+  VISKORES_CONT
   VISKORES_CONT
   void AddShapeIntersector(std::shared_ptr<ShapeIntersector> intersector);
 
@@ -72,9 +73,15 @@ public:
 
   VISKORES_CONT
   void Render(viskores::rendering::raytracing::Ray<viskores::Float32>& rays);
+  VISKORES_CONT
+  void Render(viskores::rendering::raytracing::Ray<viskores::Float32>& rays,
+              const viskores::Vec3f_32& lightPosition);
 
   VISKORES_CONT
   void Render(viskores::rendering::raytracing::Ray<viskores::Float64>& rays);
+  VISKORES_CONT
+  void Render(viskores::rendering::raytracing::Ray<viskores::Float64>& rays,
+              const viskores::Vec3f_32& lightPosition);
 
   VISKORES_CONT
   viskores::Id GetNumberOfShapes() const;
