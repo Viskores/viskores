@@ -167,7 +167,7 @@ void Triangle::render(viskores::rendering::Canvas& canvas,
 
   tracer.SetColorMap(colorMap);
   tracer.SetShadingOn(true);
-  tracer.Render(rays);
+  tracer.Render(rays, rayCamera.GetPosition());
 
   canvasRT->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
 }

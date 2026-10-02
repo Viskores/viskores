@@ -171,7 +171,7 @@ void Sphere::render(viskores::rendering::Canvas& canvas,
   tracer.SetField(field, fieldRange);
   tracer.GetCamera() = rayCamera;
   tracer.SetColorMap(colorMap);
-  tracer.Render(rays);
+  tracer.Render(rays, rayCamera.GetPosition());
 
   canvasRT->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
 }

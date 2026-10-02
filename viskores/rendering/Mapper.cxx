@@ -24,6 +24,7 @@ void Mapper::RenderCells(const viskores::cont::UnknownCellSet& cellset,
                          const viskores::rendering::Camera& camera,
                          const viskores::Range& scalarRange)
 {
+  this->CameraPosition = camera.GetPosition();
   RenderCellsImpl(cellset,
                   coords,
                   scalarField,
@@ -43,6 +44,7 @@ void Mapper::RenderCells(const viskores::cont::UnknownCellSet& cellset,
                          const viskores::Range& scalarRange,
                          const viskores::cont::Field& ghostField)
 {
+  this->CameraPosition = camera.GetPosition();
   RenderCellsImpl(cellset, coords, scalarField, colorTable, camera, scalarRange, ghostField);
 };
 
@@ -142,6 +144,20 @@ void Mapper::SetLogarithmX(bool l)
 void Mapper::SetLogarithmY(bool l)
 {
   this->LogarithmY = l;
+}
+
+void Mapper::SetLightPosition(const viskores::Vec3f_32& lightPosition)
+{
+  this->LightPosition = lightPosition;
+  this->LightPositionSet = true;
+}
+
+viskores::Vec3f_32 Mapper::GetLightPosition() const
+{
+  if (this->LightPositionSet)
+    return this->LightPosition;
+
+  return this->CameraPosition;
 }
 }
 }

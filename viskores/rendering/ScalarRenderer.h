@@ -38,6 +38,8 @@ public:
   void SetWidth(viskores::Int32 width);
   void SetHeight(viskores::Int32 height);
   void SetDefaultValue(viskores::Float32 value);
+  void SetLightPosition(const viskores::Vec3f_32& lightPosition);
+  viskores::Vec3f_32 GetLightPosition() const;
 
   struct VISKORES_RENDERING_EXPORT Result
   {

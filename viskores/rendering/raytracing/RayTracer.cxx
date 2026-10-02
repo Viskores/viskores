@@ -188,13 +188,11 @@ public:
                          viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
                          const viskores::IdComponent2& colorMapSize,
                          const viskores::rendering::raytracing::Camera& camera,
+                         const viskores::Vec3f_32& lightPosition,
                          bool shade)
   {
     if (shade)
     {
-      // TODO: support light positions
-      viskores::Vec3f_32 scale(2, 2, 2);
-      viskores::Vec3f_32 lightPosition = camera.GetPosition() + scale * camera.GetUp();
       viskores::worklet::DispatcherMapField<Shade>(
         Shade(lightPosition, camera.GetPosition(), camera.GetLookAt(), colorMapSize))
         .Invoke(rays.HitIdx,
@@ -231,7 +229,6 @@ Camera& RayTracer::GetCamera()
 {
   return camera;
 }
-
 
 void RayTracer::AddShapeIntersector(std::shared_ptr<ShapeIntersector> intersector)
 {
@@ -285,12 +282,22 @@ void RayTracer::SetColorMap(const viskores::cont::ArrayHandle<viskores::Vec4f_32
 
 void RayTracer::Render(Ray<viskores::Float32>& rays)
 {
-  RenderOnDevice(rays);
+  this->Render(rays, this->camera.GetPosition());
+}
+
+void RayTracer::Render(Ray<viskores::Float32>& rays, const viskores::Vec3f_32& lightPosition)
+{
+  RenderOnDevice(rays, lightPosition);
 }
 
 void RayTracer::Render(Ray<viskores::Float64>& rays)
 {
-  RenderOnDevice(rays);
+  this->Render(rays, this->camera.GetPosition());
+}
+
+void RayTracer::Render(Ray<viskores::Float64>& rays, const viskores::Vec3f_32& lightPosition)
+{
+  RenderOnDevice(rays, lightPosition);
 }
 
 void RayTracer::SetShadingOn(bool on)
@@ -309,7 +316,7 @@ void RayTracer::Clear()
 }
 
 template <typename Precision>
-void RayTracer::RenderOnDevice(Ray<Precision>& rays)
+void RayTracer::RenderOnDevice(Ray<Precision>& rays, const viskores::Vec3f_32& lightPosition)
 {
   using Timer = viskores::cont::Timer;
 
@@ -343,7 +350,7 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
 
       // Calculate the color at the intersection  point
       detail::SurfaceColor surfaceColor;
-      surfaceColor.run(rays, ColorMap, ColorMapSize, camera, this->Shade);
+      surfaceColor.run(rays, ColorMap, ColorMapSize, camera, lightPosition, this->Shade);
 
       time = timer.GetElapsedTime();
       logger->AddLogData("shade", time);

@@ -479,7 +479,7 @@ void MapperGlyphScalar::RenderCellsImpl(
     tracer.SetField(processedField, scalarRange);
     tracer.GetCamera() = RayCamera;
     tracer.SetColorMap(this->ColorMap);
-    tracer.Render(Rays);
+    tracer.Render(Rays, this->GetLightPosition());
 
     timer.Start();
     this->Canvas->WriteToCanvas(Rays, Rays.Buffers.at(0).Buffer, camera);
