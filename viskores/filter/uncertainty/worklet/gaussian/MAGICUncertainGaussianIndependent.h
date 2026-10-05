@@ -6,8 +6,8 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-#ifndef viskores_filter_uncertainty_worklet_gaussian_ContourUncertainGaussianIndependent_h
-#define viskores_filter_uncertainty_worklet_gaussian_ContourUncertainGaussianIndependent_h
+#ifndef viskores_filter_uncertainty_worklet_gaussian_MAGICUncertainGaussianIndependent_h
+#define viskores_filter_uncertainty_worklet_gaussian_MAGICUncertainGaussianIndependent_h
 
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/Invoker.h>
@@ -191,4 +191,4 @@ VISKORES_CONT void ComputeEdgeVarianceMonteCarlo(
 } // namespace worklet
 } // namespace viskores
 
-#endif // viskores_filter_uncertainty_worklet_gaussian_ContourUncertainGaussianIndependent_h
+#endif // viskores_filter_uncertainty_worklet_gaussian_MAGICUncertainGaussianIndependent_h

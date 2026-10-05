@@ -1,26 +1,14 @@
-## Gaussian Isosurface Uncertainty Filters
+## MAGIC Gaussian Isosurface Uncertainty Filters
 
 Viskores now provides filters to compute the positional uncertainty of
 isosurfaces when input scalar data are uncertain and assumed to follow a
 Gaussian distribution. Two filters are provided:
 
-`ContourUncertainGaussianIndependent` computes isosurface crossing uncertainty
+`MAGICUncertainGaussianIndependent` computes isosurface crossing uncertainty
 for data where the Gaussian distributions at each grid point are independent.
 The filter takes a mean field and a pointwise variance field as input.
 
-The independent workflow also provides split APIs for explicit algorithm
-selection:
-
-`MAGICContourGaussianIndependentClosedForm` computes uncertainty with the
-closed-form derivation.
-
-`MAGICContourGaussianIndependentMonteCarlo` computes uncertainty with Monte
-Carlo sampling and configurable sample count.
-
-`ContourUncertainGaussianIndependent` remains available and unchanged as the
-combined interface.
-
-`ContourUncertainGaussianCorrelated` extends the independent case by accounting
+`MAGICUncertainGaussianCorrelated` extends the independent case by accounting
 for spatial correlation between neighboring grid points. It additionally takes
 per-axis edge covariance fields (RhoX, RhoY, RhoZ) and requires a structured
 3D grid as input.

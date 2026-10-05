@@ -7,8 +7,8 @@
 ##============================================================================
 
 set(headers
-  ContourUncertainGaussianCorrelated.h
-  ContourUncertainGaussianIndependent.h
+  MAGICUncertainGaussianCorrelated.h
+  MAGICUncertainGaussianIndependent.h
   GaussianDistribution.h
   InterpolateFieldWorklet.h
   )

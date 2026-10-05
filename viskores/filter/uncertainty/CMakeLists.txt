@@ -17,20 +17,16 @@
 ##============================================================================
 
 set(uncertainty_headers
-  ContourUncertainGaussianCorrelated.h
-  ContourUncertainGaussianIndependent.h
-  MAGICContourGaussianIndependentClosedForm.h
-  MAGICContourGaussianIndependentMonteCarlo.h
+  MAGICUncertainGaussianCorrelated.h
+  MAGICUncertainGaussianIndependent.h
   ContourUncertainUniform.h
   ContourUncertainUniformMonteCarlo.h
   FiberUncertainUniform.h
   )
 
 set(uncertainty_sources_device
-  ContourUncertainGaussianCorrelated.cxx
-  ContourUncertainGaussianIndependent.cxx
-  MAGICContourGaussianIndependentClosedForm.cxx
-  MAGICContourGaussianIndependentMonteCarlo.cxx
+  MAGICUncertainGaussianCorrelated.cxx
+  MAGICUncertainGaussianIndependent.cxx
   ContourUncertainUniform.cxx
   ContourUncertainUniformMonteCarlo.cxx
   FiberUncertainUniform.cxx

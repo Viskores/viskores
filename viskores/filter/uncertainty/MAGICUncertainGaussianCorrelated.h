@@ -6,8 +6,14 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-#ifndef viskores_filter_uncertainty_ContourUncertainGaussianIndependent_h
-#define viskores_filter_uncertainty_ContourUncertainGaussianIndependent_h
+//  This code is based on the MAGIC algorithm:
+//  Athawale, T., Moreland, K., Pugmire, D., Johnson, C., Rosen, P.,
+//  Norman, M., Georgiadou, A., Entezari, A. (2025). MAGIC: Marching Cubes
+//  Isosurface Uncertainty Visualization for Gaussian Uncertain Data with
+//  Spatial Correlation.
+
+#ifndef viskores_filter_uncertainty_MAGICUncertainGaussianCorrelated_h
+#define viskores_filter_uncertainty_MAGICUncertainGaussianCorrelated_h
 
 #include <viskores/filter/contour/AbstractContour.h>
 #include <viskores/filter/uncertainty/viskores_filter_uncertainty_export.h>
@@ -19,15 +25,17 @@ namespace filter
 namespace uncertainty
 {
 
-/// @brief Visualize isosurface uncertainty for independently Gaussian distributed data.
+/// @brief Visualize isosurface uncertainty for spatially correlated Gaussian data.
 ///
-/// This filter computes the positional uncertainty of isosurfaces as a function
-/// of uncertainty in the input scalar data, where the data at each grid point are
-/// assumed to follow an independent Gaussian distribution. The mean and variance
-/// fields define the distribution at each point. The filter outputs expected
+/// This filter implements the spatially correlated form of the MAGIC algorithm.
+/// It extends the independent Gaussian filter by accounting for spatial correlation
+/// between neighboring grid points. In addition to the mean and pointwise variance
+/// fields, this filter accepts three per-axis edge covariance fields (`RhoX`, `RhoY`,
+/// `RhoZ`) that encode the covariance between adjacent points along each physical
+/// axis. The input must be a structured 3D grid. The filter outputs the expected
 /// isosurface vertex positions and a per-vertex crossing variance field.
 ///
-class VISKORES_FILTER_UNCERTAINTY_EXPORT ContourUncertainGaussianIndependent
+class VISKORES_FILTER_UNCERTAINTY_EXPORT MAGICUncertainGaussianCorrelated
   : public viskores::filter::contour::AbstractContour
 {
 public:
@@ -54,11 +62,37 @@ public:
   }
 
   /// @brief Sets the variance field.
-  /// Sets the name of the field containing the variance of the Gaussian
-  /// distribution at each grid point.
+  /// Sets the name of the field containing the pointwise variance of the
+  /// Gaussian distribution at each grid point.
   VISKORES_CONT void SetVarianceField(const std::string& fieldName)
   {
     this->SetActiveField(1, fieldName, viskores::cont::Field::Association::Points);
+  }
+
+  /// @brief Sets the covariance field along the X axis.
+  /// Sets the name of the field containing the covariance between adjacent
+  /// grid points along the physical X axis (the fastest-varying storage axis
+  /// under standard VTK structured-points layout).
+  VISKORES_CONT void SetRhoXField(const std::string& fieldName)
+  {
+    this->SetActiveField(2, fieldName, viskores::cont::Field::Association::Points);
+  }
+
+  /// @brief Sets the covariance field along the Y axis.
+  /// Sets the name of the field containing the covariance between adjacent
+  /// grid points along the physical Y axis.
+  VISKORES_CONT void SetRhoYField(const std::string& fieldName)
+  {
+    this->SetActiveField(3, fieldName, viskores::cont::Field::Association::Points);
+  }
+
+  /// @brief Sets the covariance field along the Z axis.
+  /// Sets the name of the field containing the covariance between adjacent
+  /// grid points along the physical Z axis (the slowest-varying storage axis
+  /// under standard VTK structured-points layout).
+  VISKORES_CONT void SetRhoZField(const std::string& fieldName)
+  {
+    this->SetActiveField(4, fieldName, viskores::cont::Field::Association::Points);
   }
 
   /// @brief Sets the crossing variance output field.
@@ -121,4 +155,4 @@ protected:
 } // namespace filter
 } // namespace viskores
 
-#endif // viskores_filter_uncertainty_ContourUncertainGaussianIndependent_h
+#endif // viskores_filter_uncertainty_MAGICUncertainGaussianCorrelated_h

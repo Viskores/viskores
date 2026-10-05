@@ -6,8 +6,8 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-#ifndef viskores_filter_uncertainty_MAGICContourGaussianIndependentMonteCarlo_h
-#define viskores_filter_uncertainty_MAGICContourGaussianIndependentMonteCarlo_h
+#ifndef viskores_filter_uncertainty_MAGICUncertainGaussianIndependent_h
+#define viskores_filter_uncertainty_MAGICUncertainGaussianIndependent_h
 
 #include <viskores/filter/contour/AbstractContour.h>
 #include <viskores/filter/uncertainty/viskores_filter_uncertainty_export.h>
@@ -21,19 +21,28 @@ namespace uncertainty
 
 /// @brief Visualize isosurface uncertainty for independently Gaussian distributed data.
 ///
-/// This filter computes the positional uncertainty of isosurfaces as a function
-/// of uncertainty in the input scalar data, where the data at each grid point are
-/// assumed to follow an independent Gaussian distribution. The mean and variance
-/// fields define the distribution at each point. The filter outputs expected
-/// isosurface vertex positions and a per-vertex crossing variance field.
+/// This filter implements the MAGIC algorithm for independent Gaussian data. It
+/// computes the positional uncertainty of isosurfaces as a function of uncertainty
+/// in the input scalar data, where the data at each grid point are assumed to follow
+/// an independent Gaussian distribution. The mean and variance fields define the
+/// distribution at each point. The filter outputs expected isosurface vertex
+/// positions and a per-vertex crossing variance field.
 ///
-/// This variant computes edge-crossing uncertainty using Monte Carlo sampling.
-class VISKORES_FILTER_UNCERTAINTY_EXPORT MAGICContourGaussianIndependentMonteCarlo
+class VISKORES_FILTER_UNCERTAINTY_EXPORT MAGICUncertainGaussianIndependent
   : public viskores::filter::contour::AbstractContour
 {
+public:
+  /// @brief Algorithm used to compute the isosurface uncertainty.
+  enum struct ApproachEnum
+  {
+    ClosedForm,
+    MonteCarlo
+  };
+
 private:
   std::string CrossingVarianceName = "variance_edge_crossing";
   std::string ExpectedCrossingName = "expected_edge_crossing";
+  ApproachEnum Approach = ApproachEnum::ClosedForm;
   viskores::Id NumberOfSamples = 4000;
 
 public:
@@ -85,7 +94,18 @@ public:
     return this->ExpectedCrossingName;
   }
 
+  /// @brief Sets the algorithm used to compute the isosurface uncertainty.
+  /// `ClosedForm` (the default) uses the Hinkley/Marsaglia derivation.
+  /// `MonteCarlo` samples the joint Gaussian distribution and accumulates
+  /// statistics over the crossing positions; the sample count is controlled by
+  /// @ref SetNumberOfSamples.
+  VISKORES_CONT void SetApproach(ApproachEnum approach) { this->Approach = approach; }
+
+  /// @brief Gets the algorithm used to compute the isosurface uncertainty.
+  VISKORES_CONT ApproachEnum GetApproach() const { return this->Approach; }
+
   /// @brief Sets the number of Monte Carlo samples per edge.
+  /// Only used when @ref SetApproach selects `MonteCarlo`.
   VISKORES_CONT void SetNumberOfSamples(viskores::Id numSamples)
   {
     this->NumberOfSamples = numSamples;
@@ -102,4 +122,4 @@ protected:
 } // namespace filter
 } // namespace viskores
 
-#endif // viskores_filter_uncertainty_MAGICContourGaussianIndependentMonteCarlo_h
+#endif // viskores_filter_uncertainty_MAGICUncertainGaussianIndependent_h
