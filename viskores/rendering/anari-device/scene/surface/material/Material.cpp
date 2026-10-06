@@ -26,9 +26,7 @@ struct UnknownMaterial : viskores_device::Material
 
   void getColors(const viskores::cont::DataSet& data,
                  viskores::cont::Field& field,
-                 viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
-                 viskores_device::Mat4f_32& inFieldTransform,
-                 viskores::Vec4f_32& inFieldOffset) const override;
+                 viskores_device::ColorMap& colorMap) const override;
 };
 
 UnknownMaterial::UnknownMaterial(viskores_device::ViskoresDeviceGlobalState* d)
@@ -52,9 +50,7 @@ bool UnknownMaterial::isValid() const
 
 void UnknownMaterial::getColors(const viskores::cont::DataSet&,
                                 viskores::cont::Field&,
-                                viskores::cont::ArrayHandle<viskores::Vec4f_32>&,
-                                viskores_device::Mat4f_32&,
-                                viskores::Vec4f_32&) const
+                                viskores_device::ColorMap&) const
 {
   // invalid
 }

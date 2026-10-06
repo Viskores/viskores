@@ -10,6 +10,8 @@
 
 #include "Sampler.h"
 #include "Image1DSampler.h"
+#include "Image2DSampler.h"
+
 namespace
 {
 
@@ -24,9 +26,7 @@ struct UnknownSampler : viskores_device::Sampler
 
   bool getColors(const viskores::cont::DataSet& data,
                  viskores::cont::Field& field,
-                 viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
-                 viskores_device::Mat4f_32& inFieldTransform,
-                 viskores::Vec4f_32& inFieldOffset) const override;
+                 viskores_device::ColorMap& colorMap) const override;
 };
 
 UnknownSampler::UnknownSampler(viskores_device::ViskoresDeviceGlobalState* d)
@@ -50,9 +50,7 @@ bool UnknownSampler::isValid() const
 
 bool UnknownSampler::getColors(const viskores::cont::DataSet&,
                                viskores::cont::Field&,
-                               viskores::cont::ArrayHandle<viskores::Vec4f_32>&,
-                               viskores_device::Mat4f_32&,
-                               viskores::Vec4f_32&) const
+                               viskores_device::ColorMap&) const
 {
   // invalid
   return false;
@@ -75,6 +73,10 @@ Sampler* Sampler::createInstance(std::string_view subtype, ViskoresDeviceGlobalS
   if (subtype == "image1D")
   {
     return new Image1DSampler(s);
+  }
+  else if (subtype == "image2D")
+  {
+    return new Image2DSampler(s);
   }
   else
   {

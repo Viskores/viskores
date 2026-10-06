@@ -24,11 +24,13 @@ struct Triangle : Geometry
 
   bool isValid() const override;
 
-  virtual void render(viskores::rendering::Canvas& canvas,
-                      const viskores::rendering::Camera& camera,
-                      const viskores::cont::Field& field,
-                      const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
-                      const viskores::Range& fieldRange) const override;
+  virtual void render(
+    viskores::rendering::Canvas& canvas,
+    const viskores::rendering::Camera& camera,
+    const viskores::cont::Field& field,
+    const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+    const viskores::IdComponent2& colorMapSize,
+    const viskores::cont::ArrayHandle<viskores::Range>& fieldRanges) const override;
 
 private:
   helium::ChangeObserverPtr<Array1D> m_index;
