@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_arg_TypeCheckTagExecObject_h
 #define viskores_cont_arg_TypeCheckTagExecObject_h
 
@@ -34,8 +25,7 @@ namespace arg
 {
 
 /// The ExecObject type check passes for any object that inherits from \c
-/// ExecutionObjectBase. This is supposed to signify that the object can be
-/// used in the execution environment although there is no way to verify that.
+/// ExecutionObjectBase and follows the conventions of that class.
 ///
 struct TypeCheckTagExecObject
 {

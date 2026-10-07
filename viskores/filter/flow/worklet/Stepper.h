@@ -6,17 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//=============================================================================
-//
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
-//=============================================================================
 
 #ifndef viskores_filter_flow_worklet_Stepper_h
 #define viskores_filter_flow_worklet_Stepper_h
@@ -107,7 +96,7 @@ public:
       //See if we can step by currStep
       IntegratorStatus status = this->Integrator.CheckStep(particle, currStep, currVelocity);
 
-      if (status.CheckOk()) //Integration step succedded.
+      if (status.CheckOk()) //Integration step succeeded.
       {
         //See if this point is in/out.
         auto newPos = particle.GetPosition() + currStep * currVelocity;
@@ -120,7 +109,7 @@ public:
         }
         else
         {
-          //The step succedded, but the next point is outside.
+          //The step succeeded, but the next point is outside.
           //Step too long. Set range to: {stepRange[0], currStep} and continue.
           stepRange[1] = currStep;
         }

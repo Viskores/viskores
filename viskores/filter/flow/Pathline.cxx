@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/filter/flow/Pathline.h>
 #include <viskores/filter/flow/internal/FilterParticleAdvectionUnsteadyStateImpl.h>
@@ -32,7 +23,7 @@ VISKORES_CONT Pathline::FieldType Pathline::GetField(const viskores::cont::DataS
 {
   const auto& fieldNm = this->GetActiveFieldName();
   if (!dataset.HasPointField(fieldNm) && !dataset.HasCellField(fieldNm))
-    throw viskores::cont::ErrorFilterExecution("Unsupported field assocation");
+    throw viskores::cont::ErrorFilterExecution("Unsupported field association");
   auto assoc = dataset.GetField(fieldNm).GetAssociation();
   ArrayType arr;
   viskores::cont::ArrayCopyShallowIfPossible(dataset.GetField(fieldNm).GetData(), arr);

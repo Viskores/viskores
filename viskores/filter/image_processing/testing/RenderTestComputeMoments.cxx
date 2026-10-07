@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/filter/image_processing/ComputeMoments.h>
 #include <viskores/source/Wavelet.h>
@@ -37,12 +28,13 @@ void TestComputeMoments()
   viskores::cont::DataSet result = filter.Execute(data);
 
   viskores::rendering::testing::RenderTestOptions testOptions;
-  testOptions.AllowedPixelErrorRatio = 0.001f;
   testOptions.ColorTable = viskores::cont::ColorTable("inferno");
   testOptions.EnableAnnotations = false;
   viskores::rendering::testing::RenderTest(result, "index", "filter/moments.png", testOptions);
-  viskores::rendering::testing::RenderTest(result, "index0", "filter/moments0.png", testOptions);
-  viskores::rendering::testing::RenderTest(result, "index12", "filter/moments12.png", testOptions);
+  viskores::rendering::testing::RenderTest(
+    result, "index0", "filter/moments0index.png", testOptions);
+  viskores::rendering::testing::RenderTest(
+    result, "index12", "filter/moments12index.png", testOptions);
 }
 } // namespace
 

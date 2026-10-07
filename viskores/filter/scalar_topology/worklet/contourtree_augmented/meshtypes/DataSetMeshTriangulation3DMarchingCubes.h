@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -132,7 +123,7 @@ inline DataSetMeshTriangulation3DMarchingCubes::DataSetMeshTriangulation3DMarchi
                                      viskores::CopyFlag::Off);
   this->CubeVertexPermutations = viskores::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes::
-      CubeVertexPermutations_PermVecLength>( // create 2D array of vectors of lenghts ...PermVecLength
+      CubeVertexPermutations_PermVecLength>( // create 2D array of vectors of lengths ...PermVecLength
     viskores::cont::make_ArrayHandle(
       m3d_marchingcubes::CubeVertexPermutations, // the array to convert
       m3d_marchingcubes::CubeVertexPermutations_NumPermutations *
@@ -140,7 +131,7 @@ inline DataSetMeshTriangulation3DMarchingCubes::DataSetMeshTriangulation3DMarchi
       viskores::CopyFlag::Off));
   this->LinkVertexConnectionsSix = viskores::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes::
-      VertexConnections_VecLength>( // create 2D array of vectors o lenght ...VecLength
+      VertexConnections_VecLength>( // create 2D array of vectors o length ...VecLength
     viskores::cont::make_ArrayHandle(
       m3d_marchingcubes::LinkVertexConnectionsSix, // the array to convert
       m3d_marchingcubes::LinkVertexConnectionsSix_NumPairs *
@@ -148,7 +139,7 @@ inline DataSetMeshTriangulation3DMarchingCubes::DataSetMeshTriangulation3DMarchi
       viskores::CopyFlag::Off));
   this->LinkVertexConnectionsEighteen = viskores::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes::
-      VertexConnections_VecLength>( // create 2D array of vectors o lenght ...VecLength
+      VertexConnections_VecLength>( // create 2D array of vectors o length ...VecLength
     viskores::cont::make_ArrayHandle(
       m3d_marchingcubes::LinkVertexConnectionsEighteen, // the array to convert
       m3d_marchingcubes::LinkVertexConnectionsEighteen_NumPairs *
@@ -216,7 +207,7 @@ inline void DataSetMeshTriangulation3DMarchingCubes::GetBoundaryVertices(
   );
 }
 
-// Overwrite the implemenation from the base DataSetMesh parent class
+// Overwrite the implementation from the base DataSetMesh parent class
 inline void DataSetMeshTriangulation3DMarchingCubes::GetOwnedVerticesByGlobalId(
   const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler,
   IdArrayType& ownedVertices) const

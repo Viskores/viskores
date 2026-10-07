@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -74,7 +65,7 @@ namespace contourtree_distributed
 namespace tree_grafter
 {
 
-// Worklet implementing the inner parallel loop to collaps the regular chains in TreeGrafter.CollapseRegularChains
+// Worklet implementing the inner parallel loop to collapse the regular chains in TreeGrafter.CollapseRegularChains
 class CollapseRegularChainsWorklet : public viskores::worklet::WorkletMapField
 {
 public:

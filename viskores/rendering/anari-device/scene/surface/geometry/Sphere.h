@@ -27,7 +27,9 @@ struct Sphere : public Geometry
     viskores::rendering::Canvas& canvas,
     const viskores::rendering::Camera& camera,
     const viskores::cont::Field& field,
-    const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const override;
+    const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+    const viskores::IdComponent2& colorMapSize,
+    const viskores::cont::ArrayHandle<viskores::Range>& fieldRanges) const override;
 
 private:
   void SetupIndexBased();

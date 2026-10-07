@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_rendering_Wireframer_h
 #define viskores_rendering_Wireframer_h
@@ -143,7 +134,10 @@ struct CopyIntoFrameBuffer : public viskores::worklet::WorkletMapField
   using ExecutionSignature = void(_1, _2, _3);
 
   VISKORES_CONT
-  CopyIntoFrameBuffer() {}
+  CopyIntoFrameBuffer(bool clearDepth)
+    : ClearExistingDepth(clearDepth)
+  {
+  }
 
   VISKORES_EXEC
   void operator()(const viskores::Vec4f_32& color,
@@ -152,9 +146,11 @@ struct CopyIntoFrameBuffer : public viskores::worklet::WorkletMapField
   {
     PackedValue packed;
     packed.Ints.Color = PackColor(color);
-    packed.Floats.Depth = depth;
+    packed.Floats.Depth = this->ClearExistingDepth ? 1.0f : depth;
     outValue = packed.Raw;
   }
+
+  bool ClearExistingDepth;
 }; //struct CopyIntoFrameBuffer
 
 template <typename DeviceTag>
@@ -229,8 +225,8 @@ public:
     viskores::Float32 y2 = viskores::Round(point2[1]);
     viskores::Float32 z2 = point2[2];
     // If the line is steep, i.e., the height is greater than the width, then
-    // transpose the co-ordinates to prevent "holes" in the line. This ensures
-    // that we pick the co-ordinate which grows at a lesser rate than the other.
+    // transpose the coordinates to prevent "holes" in the line. This ensures
+    // that we pick the coordinate which grows at a lesser rate than the other.
     bool transposed = viskores::Abs(y2 - y1) > viskores::Abs(x2 - x1);
     if (transposed)
     {
@@ -413,7 +409,10 @@ struct BufferConverter : public viskores::worklet::WorkletMapField
 {
 public:
   VISKORES_CONT
-  BufferConverter() {}
+  BufferConverter(bool ignoreExistingDepth)
+    : IgnoreExistingDepth(ignoreExistingDepth)
+  {
+  }
 
   using ControlSignature = void(FieldIn, WholeArrayOut, WholeArrayOut);
   using ExecutionSignature = void(_1, _2, _3, WorkIndex);
@@ -427,7 +426,9 @@ public:
     PackedValue packed;
     packed.Raw = packedValue;
     float depth = packed.Floats.Depth;
-    if (depth <= depthBuffer.Get(index))
+    if ((this->IgnoreExistingDepth &&
+         packed.Ints.Depth != static_cast<viskores::UInt32>(ClearDepth)) ||
+        (!this->IgnoreExistingDepth && depth <= depthBuffer.Get(index)))
     {
       viskores::Vec4f_32 color;
       UnpackColor(packed.Ints.Color, color);
@@ -435,6 +436,8 @@ public:
       depthBuffer.Set(index, depth);
     }
   }
+
+  bool IgnoreExistingDepth;
 };
 
 } // namespace
@@ -507,6 +510,8 @@ private:
     viskores::Id width = static_cast<viskores::Id>(Canvas->GetWidth());
     viskores::Id height = static_cast<viskores::Id>(Canvas->GetHeight());
     viskores::Id pixelCount = width * height;
+    bool ortho2d = Camera.GetMode() == viskores::rendering::Camera::Mode::TwoD;
+    bool ignoreExistingDepth = this->IsOverlay && ortho2d;
 
     if (this->ShowInternalZones && !this->IsOverlay)
     {
@@ -516,14 +521,14 @@ private:
     else
     {
       VISKORES_ASSERT(this->SolidDepthBuffer.GetNumberOfValues() == pixelCount);
-      CopyIntoFrameBuffer bufferCopy;
+      CopyIntoFrameBuffer bufferCopy(ignoreExistingDepth);
       viskores::worklet::DispatcherMapField<CopyIntoFrameBuffer>(bufferCopy)
         .Invoke(this->Canvas->GetColorBuffer(), this->SolidDepthBuffer, this->FrameBuffer);
     }
     //
     // detect a 2D camera and set the correct viewport.
     // The View port specifies what the region of the screen
-    // to draw to which baiscally modifies the width and the
+    // to draw to which basically modifies the width and the
     // height of the "canvas"
     //
     viskores::Id xOffset = 0;
@@ -531,7 +536,6 @@ private:
     viskores::Id subsetWidth = width;
     viskores::Id subsetHeight = height;
 
-    bool ortho2d = Camera.GetMode() == viskores::rendering::Camera::Mode::TwoD;
     if (ortho2d)
     {
       viskores::Float32 vl, vr, vb, vt;
@@ -576,7 +580,7 @@ private:
                                viskores::rendering::raytracing::GetScalarFieldArray(ScalarField));
     }
 
-    BufferConverter converter;
+    BufferConverter converter(ignoreExistingDepth);
     viskores::worklet::DispatcherMapField<BufferConverter> converterDispatcher(converter);
     converterDispatcher.SetDevice(DeviceTag());
     converterDispatcher.Invoke(FrameBuffer, Canvas->GetDepthBuffer(), Canvas->GetColorBuffer());

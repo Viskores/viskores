@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -99,9 +90,9 @@ void MergeBlockFunctor(
   //      and we don't need to have the special case for rank 0.
 
   // Here we do the deque first before the send due to the way the iteration is handled in DIY, i.e., in each iteration
-  // A block needs to first collect the data from its neighours and then send the combined block to its neighbours
+  // A block needs to first collect the data from its neighbours and then send the combined block to its neighbours
   // for the next iteration.
-  // 1. dequeue the block and compute the new contour tree and contour tree mesh for the block if we have the hight GID
+  // 1. dequeue the block and compute the new contour tree and contour tree mesh for the block if we have the height GID
   std::vector<int> incoming;
   rp.incoming(incoming);
   for (const int ingid : incoming)
@@ -210,7 +201,7 @@ void MergeBlockFunctor(
         {
           // We should not be able to get here
           throw viskores::cont::ErrorFilterExecution(
-            "Parallel contour tree requires at least parial boundary augmentation");
+            "Parallel contour tree requires at least partial boundary augmentation");
         }
 
         // Copy the data from newContourTreeMesh into  block
@@ -224,14 +215,14 @@ void MergeBlockFunctor(
         block->BlockSize = currBlockSize;
         block->GlobalSize = globalSize;
 
-        // Viskores keeps track of the arrays for us, so we can savely delete the ContourTreeMesh
+        // Viskores keeps track of the arrays for us, so we can safely delete the ContourTreeMesh
         // as all data has been transferred into our data block
         delete newContourTreeMesh;
       }
     }
   }
   // Send our current block (which is either our original block or the one we just combined from the ones we received) to our next neighbour.
-  // Once a rank has send his block (either in its orignal or merged form) it is done with the reduce
+  // Once a rank has send his block (either in its original or merged form) it is done with the reduce
   for (int cc = 0; cc < rp.out_link().size(); ++cc)
   {
     auto target = rp.out_link().target(cc);

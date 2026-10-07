@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/io/VTKDataSetReaderBase.h>
 
@@ -757,13 +748,13 @@ void VTKDataSetReaderBase::SkipArrayMetaData(viskores::IdComponent numComponents
     return;
   }
 
-  auto begining = this->DataFile->Stream.tellg();
+  auto beginning = this->DataFile->Stream.tellg();
 
   std::string tag;
   this->DataFile->Stream >> tag;
   if (tag != "METADATA")
   {
-    this->DataFile->Stream.seekg(begining);
+    this->DataFile->Stream.seekg(beginning);
     return;
   }
 

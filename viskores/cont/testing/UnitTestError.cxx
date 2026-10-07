@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/Error.h>
 #include <viskores/cont/ErrorBadValue.h>
@@ -57,7 +48,7 @@ void ValidateError(const viskores::cont::Error& error)
   {
 #if defined(NDEBUG)
     // The compiler can optimize out the recursion and other function calls in release
-    // mode, but the backtrace should contain atleast one entry.
+    // mode, but the backtrace should contain at least one entry.
     std::string assert_msg = "No entries in the stack frame\n" + stackTrace;
     VISKORES_TEST_ASSERT(count >= 1, assert_msg);
 #else

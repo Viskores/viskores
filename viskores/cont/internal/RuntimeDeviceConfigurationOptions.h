@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_internal_RuntimeDeviceConfigurationOptions_h
 #define viskores_cont_internal_RuntimeDeviceConfigurationOptions_h
 
@@ -53,13 +44,18 @@ public:
   /// Calls Initialize for each of this class's current configuration options and marks
   /// the options as initialized.
   VISKORES_CONT void Initialize(const option::Option* options);
+
+  /// Returns whether this device has been initialized.
   VISKORES_CONT bool IsInitialized() const;
 
+  /// Holds the number of threads this device is configured to use.
   RuntimeDeviceOption ViskoresNumThreads;
+
+  /// Holds the device instance being used by Viskores.
   RuntimeDeviceOption ViskoresDeviceInstance;
 
 protected:
-  /// Sets the option indices and environment varaible names for the viskores supported options.
+  /// Sets the option indices and environment variable names for the viskores supported options.
   /// If useOptionIndex is set the OptionParserArguments enum for option indices will be used,
   /// otherwise ints from 0 - numOptions will be used.
   VISKORES_CONT RuntimeDeviceConfigurationOptions(const bool& useOptionIndex);

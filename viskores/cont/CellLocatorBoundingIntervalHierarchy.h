@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_cont_CellLocatorBoundingIntervalHierarchy_h
 #define viskores_cont_CellLocatorBoundingIntervalHierarchy_h
@@ -109,7 +100,7 @@ public:
   /// Larger numbers for the maximum leaf size result in a shallower tree (which is good
   /// because it means fewer memory lookups to find a cell), but it also means there will
   /// be more cells to check in each leaf (which is bad as checking a cell is slower
-  /// than decending a tree level).
+  /// than descending a tree level).
   ///
   /// The default value is 5.
   VISKORES_CONT void SetMaxLeafSize(viskores::IdComponent maxLeafSize)

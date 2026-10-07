@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_rendering_MapperQuad_h
 #define viskores_rendering_MapperQuad_h
 
@@ -32,7 +23,7 @@ namespace rendering
 /**
  * \brief A mapper that renderers quad faces from a cell set via ray tracing.
  *
- *        As opposed to breaking quads into two trianges, scalars are
+ *        As opposed to breaking quads into two triangles, scalars are
  *        interpolated using all 4 points of the quad resulting in more
  *        accurate interpolation.
  */

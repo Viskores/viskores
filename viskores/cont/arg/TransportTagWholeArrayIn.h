@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_arg_TransportTagWholeArrayIn_h
 #define viskores_cont_arg_TransportTagWholeArrayIn_h
 
@@ -34,12 +25,12 @@ namespace arg
 
 /// \brief \c Transport tag for in-place arrays with random access.
 ///
-/// \c TransportTagWholeArrayIn is a tag used with the \c Transport class to
-/// transport \c ArrayHandle objects for input data.
-///
-/// The worklet will have random access to the array through a portal
-/// interface.
-///
+/// Loads data from an `viskores::cont::ArrayHandle` onto the specified device
+/// using the array handle’s `viskores::cont::ArrayHandle::PrepareForInput()`
+/// method. This transport is designed for random-access whole arrays, so unlike
+/// `viskores::cont::arg::TransportTagArrayIn`, the array size can be
+/// unassociated with the input domain. The returned execution object is an array
+/// portal.
 struct TransportTagWholeArrayIn
 {
 };

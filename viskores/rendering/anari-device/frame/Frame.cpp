@@ -146,7 +146,7 @@ void Frame::commitParameters()
   m_objIdType = getParam<anari::DataType>("channel.objectId", ANARI_UNKNOWN);
   m_instIdType = getParam<anari::DataType>("channel.instanceId", ANARI_UNKNOWN);
 
-  m_frameData.size = getParam<uint2>("size", uint2(10));
+  m_frameData.size = getParam<anari::math::uint2>("size", anari::math::uint2(10));
 }
 
 void Frame::finalize()
@@ -317,7 +317,8 @@ void* Frame::map(std::string_view channel,
   else if (channel == "channel.depth")
   {
     *pixelType = ANARI_FLOAT32;
-    viskores::cont::ArrayHandleBasic<viskores::Float32> basicArray = this->Canvas.GetDepthBuffer();
+    viskores::cont::ArrayHandleBasic<viskores::Float32> basicArray =
+      this->Canvas.GetDistancesToCamera();
     // Note: Although we are returning a non-const pointer, this is
     // essentially a mistake in the ANARI API. Client code is not supposed
     // to modify the buffer.

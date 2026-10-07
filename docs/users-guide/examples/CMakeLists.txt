@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 set(examples
   GuideExampleArrayHandle.cxx
@@ -28,6 +19,7 @@ set(examples
   GuideExampleArrayHandlePermutation.cxx
   GuideExampleArrayHandleRandom.cxx
   GuideExampleArrayHandleRuntimeVec.cxx
+  GuideExampleArrayHandleSOAStride.cxx
   GuideExampleArrayHandleSwizzle.cxx
   GuideExampleArrayHandleView.cxx
   GuideExampleArrayHandleZip.cxx
@@ -53,11 +45,14 @@ set(examples_device
   GuideExampleCellEdgesFaces.cxx
   GuideExampleCellLocator.cxx
   GuideExampleCellOperations.cxx
+  GuideExampleCustomDeviceAdapter.cxx
   GuideExampleDataSetCreation.cxx
   GuideExampleDeviceAdapterAlgorithms.cxx
   GuideExampleErrorHandling.cxx
   GuideExampleFields.cxx
   GuideExampleFilterDataSetWithField.cxx
+  GuideExampleFractalWorklets.cxx
+  GuideExampleFunctionInterface.cxx
   GuideExampleGenerateMeshCombineLike.cxx
   GuideExampleGenerateMeshConstantShape.cxx
   GuideExampleGenerateMeshHash.cxx
@@ -70,7 +65,9 @@ set(examples_device
   GuideExampleSimpleAlgorithm.cxx
   GuideExampleSimpleHistogram.cxx
   GuideExampleSumOfAngles.cxx
+  GuideExampleTransferringArguments.cxx
   GuideExampleTriangleQuality.cxx
+  GuideExampleTryExecute.cxx
   GuideExampleUnknownArrayHandle.cxx
   GuideExampleUseWorkletMapField.cxx
   GuideExampleUseWorkletPointNeighborhood.cxx
@@ -79,6 +76,15 @@ set(examples_device
   GuideExampleUseWorkletVisitPointsWithCells.cxx
   )
 set(extra_libs)
+
+if(Viskores_ENABLE_MPI)
+  list(APPEND examples
+    GuideExampleDIYSerialization.cxx
+    )
+  list(APPEND examples_device
+    GuideExampleDIY.cxx
+    )
+endif()
 
 viskores_find_gl(OPTIONAL GL GLUT)
 if(TARGET GLUT::GLUT)

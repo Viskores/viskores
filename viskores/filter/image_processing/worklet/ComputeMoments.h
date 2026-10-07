@@ -6,17 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
-//=======================================================================
 #ifndef viskores_worklet_moments_ComputeMoments_h
 #define viskores_worklet_moments_ComputeMoments_h
 
@@ -49,7 +38,8 @@ public:
     : RadiusDiscrete(viskores::IdComponent(_radius / (_spacing[0] - 1e-10)),
                      viskores::IdComponent(_radius / (_spacing[1] - 1e-10)),
                      viskores::IdComponent(_radius / (_spacing[2] - 1e-10)))
-    , SpacingProduct(_spacing[0] * _spacing[1])
+    , SpacingProduct(static_cast<viskores::Float64>(_spacing[0]) *
+                     static_cast<viskores::Float64>(_spacing[1]))
     , p(_p)
     , q(_q)
   {

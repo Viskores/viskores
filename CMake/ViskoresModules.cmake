@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 option(Viskores_VERBOSE_MODULES
   "When on, extra information about what modules are found and why they are \
@@ -428,7 +419,7 @@ function(_viskores_modules_try_build target_module dependent_module dependency_c
   if(NOT exists)
     # The calling code should check to make sure something is a module before calling this.
     message(FATAL_ERROR "\
-Internal error: _viskores_modules_try_build called for a non-existant module `${target_module}`.")
+Internal error: _viskores_modules_try_build called for a non-existent module `${target_module}`.")
   endif()
 
   if(TARGET ${target_module})

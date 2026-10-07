@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/filter/flow/WarpXStreamline.h>
 #include <viskores/filter/flow/internal/FilterParticleAdvectionSteadyStateImpl.h>
@@ -34,9 +25,9 @@ VISKORES_CONT WarpXStreamline::FieldType WarpXStreamline::GetField(
   const auto& electric = this->GetEField();
   const auto& magnetic = this->GetBField();
   if (!dataset.HasPointField(electric) && !dataset.HasCellField(electric))
-    throw viskores::cont::ErrorFilterExecution("Unsupported field assocation");
+    throw viskores::cont::ErrorFilterExecution("Unsupported field association");
   if (!dataset.HasPointField(magnetic) && !dataset.HasCellField(magnetic))
-    throw viskores::cont::ErrorFilterExecution("Unsupported field assocation");
+    throw viskores::cont::ErrorFilterExecution("Unsupported field association");
   auto eAssoc = dataset.GetField(electric).GetAssociation();
   auto bAssoc = dataset.GetField(magnetic).GetAssociation();
   if (eAssoc != bAssoc)

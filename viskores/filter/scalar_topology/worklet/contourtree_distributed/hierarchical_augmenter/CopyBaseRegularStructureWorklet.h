@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -134,7 +125,7 @@ public:
     // this *MAY* make certain sorts run faster
     augmentedTreeRegularNodeSortOrderValue = newRegularId;
 
-    // NOTE: we can skip this step since Regular2supernode is already initalized with NO_SUCH_ELEMENT
+    // NOTE: we can skip this step since Regular2supernode is already initialized with NO_SUCH_ELEMENT
     // since these are *ALL* only regular nodes, this one's easy:
     // augmentedTree->regular2supernode  [newRegularID]    =  NO_SUCH_ELEMENT;
 

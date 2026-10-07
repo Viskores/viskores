@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -60,7 +51,7 @@
 
 // This header contains a collection of classes used to describe the boundary
 // of a mesh, for each main mesh type (i.e., 2D, 3D, and ContourTreeMesh).
-// For each mesh type, there are two classes, the actual boundary desriptor
+// For each mesh type, there are two classes, the actual boundary descriptor
 // class and an ExectionObject class with the PrepareForInput function that
 // Viskores expects to generate the object for the execution environment.
 
@@ -85,7 +76,7 @@ namespace contourtree_augmented
 class MeshBoundary2D
 {
 public:
-  // Sort indicies types
+  // Sort indices types
   using SortIndicesPortalType = IdArrayType::ReadPortalType;
 
   VISKORES_EXEC_CONT

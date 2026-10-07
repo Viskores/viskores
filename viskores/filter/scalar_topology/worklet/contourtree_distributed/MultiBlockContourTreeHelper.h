@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -148,7 +139,7 @@ public:
     unsigned int computeRegularStructure)
 
   {
-    // compute the global mesh index and initalize the local contour tree mesh
+    // compute the global mesh index and initialize the local contour tree mesh
     if (computeRegularStructure == 1)
     {
       // Compute the global mesh index
@@ -170,7 +161,7 @@ public:
       // Compute the global mesh index for the partially augmented contour tree. I.e., here we
       // don't need the global mesh index for all nodes, but only for the augmented nodes from the
       // tree. We, hence, permute the sortOrder by contourTree.augmentednodes and then compute the
-      // GlobalMeshIndex by tranforming those indices with our IdRelabler
+      // GlobalMeshIndex by transforming those indices with our IdRelabler
       viskores::worklet::contourtree_augmented::IdArrayType localGlobalMeshIndex;
       viskores::cont::ArrayHandlePermutation<viskores::worklet::contourtree_augmented::IdArrayType,
                                              viskores::worklet::contourtree_augmented::IdArrayType>
@@ -189,7 +180,7 @@ public:
     {
       // We should not be able to get here
       throw viskores::cont::ErrorFilterExecution(
-        "Parallel contour tree requires at least parial boundary augmentation");
+        "Parallel contour tree requires at least partial boundary augmentation");
     }
   }
 

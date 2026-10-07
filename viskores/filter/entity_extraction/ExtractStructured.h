@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_filter_entity_extraction_ExtractStructured_h
 #define viskores_filter_entity_extraction_ExtractStructured_h
@@ -52,7 +43,7 @@ public:
   ///
   /// The VOI is specified using the 3D indices of the structured mesh. Meshes with fewer
   /// than 3 dimensions will ignore the extra dimensions in the VOI. The VOI is inclusive
-  /// on the minium index and exclusive on the maximum index.
+  /// on the minimum index and exclusive on the maximum index.
   ///
   /// By default the VOI is the entire input.
   VISKORES_CONT

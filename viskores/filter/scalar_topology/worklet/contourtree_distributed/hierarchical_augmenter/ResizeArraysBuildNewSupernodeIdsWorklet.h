@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -79,7 +70,7 @@ public:
     ExecObject findRegularByGlobal,
     WholeArrayIn baseTreeRegular2Supernode,
     WholeArrayInOut
-      newSupernodeIds // output/input (both are necessary since not all valyes will be overwritten)
+      newSupernodeIds // output/input (both are necessary since not all values will be overwritten)
   );
 
   using ExecutionSignature = void(_1, _2, _3, _4, _5);

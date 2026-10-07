@@ -17,7 +17,7 @@ An exception raised in one thread may or may not be thrown in another, which inc
 
 |Viskores| handles this problem by using a flag and check mechanism.
 When a worklet (or other subclass of :class:`viskores::exec::FunctorBase`) encounters an error, it can call its :func:`viskores::exec::FunctorBase::RaiseError` method to flag the problem and record a message for the error.
-Once all the threads terminate, the scheduler checks for the error, and if one exists it throws a \viskorescont{ErrorExecution} exception in the control environment.
+Once all the threads terminate, the scheduler checks for the error, and if one exists it throws a :class:`viskores::cont::ErrorExecution` exception in the control environment.
 Thus, calling :func:`viskores::exec::FunctorBase::RaiseError` looks like an exception was thrown from the perspective of the control environment code that invoked it.
 
 .. load-example:: ExecutionErrors

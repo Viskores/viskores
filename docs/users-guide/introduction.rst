@@ -60,25 +60,6 @@ This information describes how to adapt |Viskores| to custom data structures and
 :partref:`part-core:Core Development` exposes the inner workings of |Viskores|.
 These concepts allow you to design new algorithmic structures not already available in |Viskores|.
 
-.. ------------------------------
-.. Conventions Used in This Guide
-.. ------------------------------
-..
-.. When documenting the |Viskores| API, the following conventions are used.
-.. \begin{itemize}
-.. \item Filenames are printed in a \textfilename{sans serif font}.
-.. \item C++ code is printed in a \textcode{monospace font}.
-.. \item Macros and namespaces from |Viskores| are printed in \textnamespace{red}.
-.. \item Identifiers from |Viskores| are printed in \textidentifier{blue}.
-.. \item Signatures, described in Chapter \ref{chap:SimpleWorklets}, and the
-..   tags used in them are printed in \textsignature{green}.
-.. \end{itemize}
-..
-.. This guide provides actual code samples throughout its discussions to
-.. demonstrate their use. These examples are all valid code that can be
-.. compiled and used although it is often the case that code snippets are
-.. provided. In such cases, the code must be placed in a larger context.
-
 .. didyouknow::
    In this guide we periodically use these **Did you know?** boxes to provide additional information related to the topic at hand.
 

@@ -16,14 +16,7 @@ Well, maybe.
 In C++, the declaration ``int`` does not simply mean "an integer."
 ``int`` means something much more specific than that.
 If you were to look up the C++11 standard, you would find that ``int`` is an integer represented in 32 bits with a two's complement signed representation.
-In fact, a C++ compiler has no less than 8 standard integer types.
-
-..
-   \footnote{%
-     I intentionally use the phrase ``no less than'' for our pedantic readers.
-     One could argue that \textcode{char} and \textcode{bool} are treated distinctly by the compiler even if their representations match either \textcode{signed char} or \textcode{unsigned char}.
-     Furthermore, many modern C++ compilers have extensions for less universally accepted types like 128-bit integers.
-   }
+In fact, a C++ compiler has no less than 8 standard integer types. [#c-int-types]_
 
 So, ``int`` is nowhere near as general as the code might make it seem, and treating it as such could lead to trouble.
 For example, consider the MPI standard, which, back in the 1990's, implicitly selected ``int`` for its indexing needs.
@@ -139,7 +132,7 @@ So :type:`viskores::Vec3f_32` contains 3 32-bit (4-byte) floating point componen
 
 .. doxygentypedef:: viskores::Vec4f_64
 
-To help with indexing 2-, 3-, and 4- dimensional arrays, |Viskores| provides the types :type:`viskores::Id2`, :type:`viskores::Id3`, and :type:`viskores::Id4`, which are \textidentifier{Vec}s of type :type:`viskores::Id`.
+To help with indexing 2-, 3-, and 4- dimensional arrays, |Viskores| provides the types :type:`viskores::Id2`, :type:`viskores::Id3`, and :type:`viskores::Id4`, which are each a :type:`viskores::Vec` of type :type:`viskores::Id`.
 Likewise, |Viskores| provides :type:`viskores::IdComponent2`, :type:`viskores::IdComponent3`, and :type:`viskores::IdComponent4`.
 
 .. doxygentypedef:: viskores::Id2
@@ -154,7 +147,7 @@ Likewise, |Viskores| provides :type:`viskores::IdComponent2`, :type:`viskores::I
 
 .. doxygentypedef:: viskores::IdComponent4
 
-|Viskores| also provides types for \textidentifier{Vec}s of integers of all varieties described in Section \ref{sec:IntegerTypes}.
+|Viskores| also provides types for a :type:`viskores::Vec` of integers of all varieties described in :secref:`base-types:Integer Types`.
 :type:`viskores::Vec2i`, :type:`viskores::Vec3i`, and :type:`viskores::Vec4i` are vectors of signed integers whereas :type:`viskores::Vec2ui`, :type:`viskores::Vec3ui`, and :type:`viskores::Vec4ui` are vectors of unsigned integers.
 All of these sport components of a width equal to :type:`viskores::Id`.
 
@@ -170,8 +163,8 @@ All of these sport components of a width equal to :type:`viskores::Id`.
 
 .. doxygentypedef:: viskores::Vec4ui
 
-The width can be specified by appending the desired number of bits in the same way as the floating point \textidentifier{Vec}s.
-For example, :type:`viskores::Vec4ui_8` is a \textidentifier{Vec} of 4 unsigned bytes.
+The width can be specified by appending the desired number of bits in the same way as a floating point :type:`viskores::Vec`.
+For example, :type:`viskores::Vec4ui_8` is a :type:`viskores::Vec` of 4 unsigned bytes.
 
 .. doxygentypedef:: viskores::Vec2i_8
 
@@ -223,3 +216,7 @@ For example, :type:`viskores::Vec4ui_8` is a \textidentifier{Vec} of 4 unsigned 
 
 These types really just scratch the surface of the ``Vec`` types available in |Viskores| and the things that can be done with them.
 See :chapref:`advanced-types:Advanced Types` for more information on ``Vec`` types and what can be done with them.
+
+.. rubric:: Footnotes
+
+.. [#c-int-types] I intentionally use the phrase "no less than" for our pedantic readers. One could argue that ``char`` and ``bool`` are treated distinctly by the compiler even if their representations match either ``signed char`` or ``unsigned char``. Furthermore, many modern C++ compilers have extensions for less universally accepted types like 128-bit integers.

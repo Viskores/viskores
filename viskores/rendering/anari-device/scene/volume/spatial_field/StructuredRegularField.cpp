@@ -28,9 +28,9 @@ void StructuredRegularField::commitParameters()
   // called again if the array contents change.
   this->m_dataArray = getParamObject<Array3D>("data");
 
-  float3 origin = getParam("origin", float3{ 0, 0, 0 });
-  float3 spacing = getParam("spacing", float3{ 1, 1, 1 });
-  uint3 dimensions = this->m_dataArray->size();
+  anari::math::float3 origin = getParam("origin", anari::math::float3{ 0, 0, 0 });
+  anari::math::float3 spacing = getParam("spacing", anari::math::float3{ 1, 1, 1 });
+  anari::math::uint3 dimensions = this->m_dataArray->size();
 
   this->m_dataSet = viskores::cont::DataSetBuilderUniform::Create(
     viskores::Id3{ static_cast<viskores::Id>(dimensions[0]),

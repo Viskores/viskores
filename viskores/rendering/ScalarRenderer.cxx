@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/rendering/ScalarRenderer.h>
 
@@ -66,6 +57,16 @@ void ScalarRenderer::SetWidth(viskores::Int32 width)
 void ScalarRenderer::SetDefaultValue(viskores::Float32 value)
 {
   Internals->DefaultValue = value;
+}
+
+void ScalarRenderer::SetLightPosition(const viskores::Vec3f_32& lightPosition)
+{
+  this->Internals->Tracer.SetLightPosition(lightPosition);
+}
+
+viskores::Vec3f_32 ScalarRenderer::GetLightPosition() const
+{
+  return this->Internals->Tracer.GetLightPosition();
 }
 
 void ScalarRenderer::SetHeight(viskores::Int32 height)
@@ -140,7 +141,8 @@ ScalarRenderer::Result ScalarRenderer::Render(const viskores::rendering::Camera&
   std::vector<ArrayF32> res;
   std::vector<std::string> names;
   const size_t numBuffers = rays.Buffers.size();
-  viskores::Id expandSize = Internals->Width * Internals->Height;
+  viskores::Id expandSize =
+    static_cast<viskores::Id>(Internals->Width) * static_cast<viskores::Id>(Internals->Height);
 
   for (size_t i = 0; i < numBuffers; ++i)
   {

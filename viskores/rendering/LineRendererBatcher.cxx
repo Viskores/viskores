@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/rendering/LineRendererBatcher.h>
 
@@ -76,7 +67,7 @@ struct RenderLine : public viskores::worklet::WorkletMapField
       viskores::Float32 deltaY = static_cast<viskores::Float32>(y0 - yStart);
       // Depth is wrong, but its far less wrong that it used to be.
       // These depth values are in screen space, which have been
-      // potentially tranformed by a perspective correction.
+      // potentially transformed by a perspective correction.
       // To interpolated the depth correctly, there must be a perspective correction.
       // I haven't looked, but the wireframmer probably suffers from this too.
       // Additionally, this should not happen on the CPU. Annotations take

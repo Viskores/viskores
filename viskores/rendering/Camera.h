@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_rendering_Camera_h
 #define viskores_rendering_Camera_h
 
@@ -354,6 +345,24 @@ public:
   /// @copydoc Zoom
   VISKORES_CONT
   viskores::Float32 GetZoom() const { return this->Camera3D.Zoom; }
+
+  /// @brief The aspect ratio of the camera
+  ///
+  /// If the aspect ratio is not explicitly overwritten by `SetAspectRatio`, it will be
+  /// computed from the width and height of the rendered image.
+  ///
+  /// Setting the aspect ratio changes the mode to 3D.
+  ///
+  VISKORES_CONT
+  viskores::Float32 GetAspectRatio() const { return this->Camera3D.AspectRatio; }
+
+  /// @copydoc GetAspectRatio
+  VISKORES_CONT
+  void SetAspectRatio(viskores::Float32 aspect)
+  {
+    this->SetModeTo3D();
+    this->Camera3D.AspectRatio = aspect;
+  }
 
   /// @brief Moves the camera as if a point was dragged along a sphere.
   ///

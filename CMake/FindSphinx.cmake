@@ -97,7 +97,7 @@ if(SPHINX_BUILD_EXECUTABLE)
   if(CMAKE_HOST_WIN32)
     # script-build on Windows located under (when PIP is used):
     # C:/Program Files/PythonXX/Scripts
-    # C:/Users/username/AppData/Roaming/Python/PythonXX/Sripts
+    # C:/Users/username/AppData/Roaming/Python/PythonXX/Scripts
     #
     # Python modules are installed under:
     # C:/Program Files/PythonXX/Lib

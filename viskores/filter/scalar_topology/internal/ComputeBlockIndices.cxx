@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -192,7 +183,7 @@ VISKORES_CONT viskoresdiy::DiscreteBounds ComputeBlockIndices(
     // Number of blocks/divisions along axis is number of unique origins along this axis
     diyDivisions.push_back(static_cast<int>(origins_block->Origins.size()));
 
-    // Block index aling this axis is the index of the origin in that list
+    // Block index along this axis is the index of the origin in that list
     for (viskores::Id ds_no = 0; ds_no < input.GetNumberOfPartitions(); ++ds_no)
     {
       diyBlockCoords[ds_no].push_back(static_cast<int>(std::find(origins_block->Origins.begin(),

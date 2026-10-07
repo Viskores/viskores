@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_arg_TransportTagArrayIn_h
 #define viskores_cont_arg_TransportTagArrayIn_h
 
@@ -34,9 +25,10 @@ namespace arg
 
 /// \brief \c Transport tag for input arrays.
 ///
-/// \c TransportTagArrayIn is a tag used with the \c Transport class to
-/// transport \c ArrayHandle objects for input data.
-///
+/// Loads data from an `viskores::cont::ArrayHandle` onto the specified device
+/// using the array handle’s `viskores::cont::ArrayHandle::PrepareForInput()`
+/// method. The size of the array must be the same as the input domain. The
+/// returned execution object is an array portal.
 struct TransportTagArrayIn
 {
 };

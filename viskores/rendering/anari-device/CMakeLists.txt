@@ -34,6 +34,7 @@ set (sources
   scene/surface/material/Material.cpp
   scene/surface/material/MatteMaterial.cpp
   scene/surface/material/sampler/Image1DSampler.cpp
+  scene/surface/material/sampler/Image2DSampler.cpp
   scene/surface/material/sampler/Sampler.cpp
   scene/volume/Volume.cpp
   scene/volume/spatial_field/SpatialField.cpp

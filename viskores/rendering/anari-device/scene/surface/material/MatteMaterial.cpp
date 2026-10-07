@@ -45,7 +45,7 @@ void MatteMaterial::finalize()
 
 void MatteMaterial::getColors(const viskores::cont::DataSet& data,
                               viskores::cont::Field& field,
-                              viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const
+                              ColorMap& colorMap) const
 {
   if (this->m_sampler && this->m_sampler->isValid())
   {
@@ -57,13 +57,15 @@ void MatteMaterial::getColors(const viskores::cont::DataSet& data,
 
   // TODO: Implement sampling and attributes.
   // This should be the fallback when other coloring is missing.
-  colorMap.Allocate(1);
-  colorMap.WritePortal().Set(
-    0, { this->m_color[0], this->m_color[1], this->m_color[2], this->m_opacity });
   field = viskores::cont::Field{ "data",
                                  viskores::cont::Field::Association::Points,
                                  viskores::cont::make_ArrayHandleConstant(
                                    viskores::Float32{ 0.0f }, data.GetNumberOfPoints()) };
+  colorMap.colors.AllocateAndFill(
+    1, { this->m_color[0], this->m_color[1], this->m_color[2], this->m_opacity });
+  colorMap.size = { 1, 1 };
+  viskores::MatrixIdentity(colorMap.inFieldTransform);
+  colorMap.inFieldOffset = viskores::Vec4f_32{ 0 };
 }
 
 } // namespace viskores_device

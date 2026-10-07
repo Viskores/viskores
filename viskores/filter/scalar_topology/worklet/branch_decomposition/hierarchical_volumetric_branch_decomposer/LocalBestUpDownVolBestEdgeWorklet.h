@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -82,7 +73,7 @@ public:
     FieldIn permutedDependetValues,      // dependentValues permuted by actualSuperarcs
     FieldIn permutedIntrinsicValues,     // intrinsicValues permuted by actualSuperarcs
     FieldOut permutedUpVolume,           // upVolume permuted by actualSuperarcs
-    FieldOut permitedDownVolume          // downVolume permited by actualSuperarcs
+    FieldOut permitedDownVolume          // downVolume permitted by actualSuperarcs
   );
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
@@ -126,7 +117,7 @@ public:
       upVolume = (this->TotalVolume - dependentValue) + (intrinsicValue - 1);
     } // descending superarc
 
-    /* // This worklet implements the follwing loop
+    /* // This worklet implements the following loop
          for (viskores::Id actualSuperarc = 0; actualSuperarc < nActualSuperarcs; actualSuperarc++)
       { // per actual superarc
         // retrieve the superarc ID

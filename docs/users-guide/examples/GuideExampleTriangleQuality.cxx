@@ -6,17 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//=============================================================================
-//
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
-//=============================================================================
 
 #include <viskores/cont/ArrayHandle.h>
 #include <viskores/cont/DataSet.h>
@@ -315,7 +304,7 @@ struct ComputeTriangleQualityValues : viskores::worklet::WorkletMapField
 VISKORES_CONT
 viskores::cont::ArrayHandle<viskores::Float32> BuildTriangleQualityTable()
 {
-  // Repurpose uniform point coordinates to compute triange edge lengths.
+  // Repurpose uniform point coordinates to compute triangle edge lengths.
   viskores::cont::ArrayHandleUniformPointCoordinates edgeLengths(
     viskores::Id3(detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
                   detail::TRIANGLE_QUALITY_TABLE_DIMENSION,

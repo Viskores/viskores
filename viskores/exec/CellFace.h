@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_exec_CellFace_h
 #define viskores_exec_CellFace_h
 
@@ -276,7 +267,7 @@ static inline VISKORES_EXEC viskores::ErrorCode CellFaceLocalIndex(viskores::IdC
 /// the same if and only if the faces contain the same points.
 ///
 /// Note that this property is only true if the mesh is conforming. That is, any two neighboring
-/// cells that share a face have the same points on that face. This preculdes 2 faces sharing more
+/// cells that share a face have the same points on that face. This precludes 2 faces sharing more
 /// than a single point or single edge.
 ///
 template <typename CellShapeTag, typename GlobalPointIndicesVecType>

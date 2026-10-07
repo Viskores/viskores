@@ -15,8 +15,6 @@
 #include "array/Array1D.h"
 // helium
 #include <helium/utility/ChangeObserverPtr.h>
-// viskores
-#include <viskores/cont/ColorTable.h>
 
 namespace viskores_device
 {
@@ -37,7 +35,7 @@ struct Image1DSampler : public Sampler
 
   bool getColors(const viskores::cont::DataSet& data,
                  viskores::cont::Field& field,
-                 viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const override;
+                 ColorMap& colorMap) const override;
 
 private:
   Mat4f_32 m_inTransform;

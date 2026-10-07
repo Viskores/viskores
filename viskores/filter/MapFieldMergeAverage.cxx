@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/Logging.h>
 #include <viskores/filter/MapFieldMergeAverage.h>
@@ -57,7 +48,7 @@ bool viskores::filter::MapFieldMergeAverage(const viskores::cont::Field& inputFi
   }
   catch (...)
   {
-    VISKORES_LOG_S(viskores::cont::LogLevel::Warn, "Faild to map field " << inputField.GetName());
+    VISKORES_LOG_S(viskores::cont::LogLevel::Warn, "Failed to map field " << inputField.GetName());
     return false;
   }
 }

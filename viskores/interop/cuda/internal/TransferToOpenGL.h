@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_interop_cuda_internal_TransferToOpenGL_h
 #define viskores_interop_cuda_internal_TransferToOpenGL_h
 
@@ -183,7 +174,7 @@ public:
 
     if (!this->Resource->IsRegistered() || resize)
     {
-      //register the buffer as being used by cuda. This needs to be done everytime
+      //register the buffer as being used by cuda. This needs to be done every time
       //we change the size of the buffer. That is why we only change the buffer
       //size as infrequently as possible
       this->Resource->Register(this->State.GetHandle());

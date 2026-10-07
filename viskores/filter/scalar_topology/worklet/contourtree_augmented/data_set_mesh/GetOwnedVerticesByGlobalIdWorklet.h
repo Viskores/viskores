@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -94,7 +85,7 @@ public:
   }
 
   /// Functor returning NO_SUCH_ELEMENT if vertex is not owed or the global mesh index if the vertex is owned
-  /// The functor simply calls the GetVertexOwned functin of the meshStructure for all vertices
+  /// The functor simply calls the GetVertexOwned function of the meshStructure for all vertices
   template <typename MeshStructureType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id meshIndex,
                                         const MeshStructureType& meshStructure) const

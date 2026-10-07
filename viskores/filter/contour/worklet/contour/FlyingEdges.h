@@ -7,15 +7,6 @@
 //============================================================================
 
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_worklet_contour_flyingedges_h
 #define viskores_worklet_contour_flyingedges_h
@@ -79,7 +70,7 @@ viskores::cont::CellSetSingleType<> execute(
 
   auto metaDataSums = viskores::cont::make_ArrayHandleGroupVec<3>(metaDataLinearSums);
 
-  // Since sharedState can be re-used between invocations of contour,
+  // Since sharedState can be reused between invocations of contour,
   // we need to make sure we reset the size of the Interpolation
   // arrays so we don't execute Pass5 over an array that is too large
   sharedState.InterpolationEdgeIds.ReleaseResources();

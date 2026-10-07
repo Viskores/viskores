@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -152,7 +143,7 @@ inline void PermuteArrayWithRawIndex(const ArrayType& input,
 } // PermuteArrayWithRawIndex()
 
 
-// transform functor used in ContourTreeMesh to flag indicies as other when using the CombinedVectorClass
+// transform functor used in ContourTreeMesh to flag indices as other when using the CombinedVectorClass
 struct MarkOther
 {
   VISKORES_EXEC_CONT

@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 #-----------------------------------------------------------------------------
 # Adds a performance benchmark test
@@ -94,7 +85,7 @@ function(add_benchmark_test benchmark)
 
   set(test_name "PerformanceTest${Viskores_PERF_NAME}")
 
-  ###TEST INVOKATIONS##########################################################
+  ###TEST INVOCATIONS##########################################################
   if (NOT TEST PerformanceTestFetch)
     add_test(NAME "PerformanceTestFetch"
       COMMAND ${CMAKE_COMMAND}

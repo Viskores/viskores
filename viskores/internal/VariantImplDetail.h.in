@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 $# This file uses the pyexpander macro processing utility to build the
 $# FunctionInterface facilities that use a variable number of arguments.
 $# Information, documentation, and downloads for pyexpander can be found at:
@@ -246,7 +237,7 @@ template <$typename_list(param_length)>
 union VariantUnionTD<$type_list(param_length)>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<$type_list(param_length)> Placeholder;
 
 $for(param_index in range(param_length + 1))\
@@ -259,7 +250,7 @@ template <$typename_list(param_length)>
 union VariantUnionNTD<$type_list(param_length)>
 {
   // Work around issue where some compilers miss initializing some struct members if another entry
-  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  // in the variant has a struct with padding. Place an item that requires everything to be copied.
   SizedPlaceholder<$type_list(param_length)> Placeholder;
 
 $for(param_index in range(param_length + 1))\
@@ -276,8 +267,8 @@ template <$typename_list(max_expanded), typename... Ts>
 union VariantUnionTD<$type_list(max_expanded), Ts...>
 {
   // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
+  // if another entry in the variant has a struct with padding. Place an item that requires
+  // everything to be copied.
   SizedPlaceholder<$type_list(max_expanded), Ts...> Placeholder;
 
 $for(param_index in range(max_expanded))\
@@ -293,8 +284,8 @@ template <$typename_list(max_expanded), typename... Ts>
 union VariantUnionNTD<$type_list(max_expanded), Ts...>
 {
   // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
+  // if another entry in the variant has a struct with padding. Place an item that requires
+  // everything to be copied.
   SizedPlaceholder<$type_list(max_expanded), Ts...> Placeholder;
 
 $for(param_index in range(max_expanded))\

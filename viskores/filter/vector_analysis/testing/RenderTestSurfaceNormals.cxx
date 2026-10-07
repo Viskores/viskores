@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/Math.h>
 #include <viskores/cont/testing/Testing.h>
@@ -32,7 +23,7 @@ void TestSurfaceNormals()
   std::cout << "Generate Image for SurfaceNormals filter" << std::endl;
 
   // NOTE: This dataset stores a shape value of 7 for polygons.  The
-  // VTKDataSetReader currently converts all polygons with 4 verticies to
+  // VTKDataSetReader currently converts all polygons with 4 vertices to
   // quads (shape 9).
   auto pathname =
     viskores::cont::testing::Testing::DataPath("unstructured/SurfaceNormalsTestDataSet.vtk");

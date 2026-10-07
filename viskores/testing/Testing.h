@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_testing_Testing_h
 #define viskores_testing_Testing_h
 
@@ -89,7 +80,7 @@
 /// Asserts a condition for a test to pass. A passing condition is when \a
 /// condition resolves to true. If \a condition is false, then the test is
 /// aborted and failure is returned. If one or more message arguments are
-/// given, they are printed out by concatinating them. If no messages are
+/// given, they are printed out by concatenating them. If no messages are
 /// given, a generic message is given. In any case, the condition that failed
 /// is written out.
 

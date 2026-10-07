@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
 //
@@ -137,13 +128,13 @@ void CosmoTools<T, StorageType>::HaloFinder(viskores::cont::ArrayHandle<viskores
     viskores::worklet::DispatcherMapField<GraftParticles<T>> graftParticlesDispatcher(
       graftParticles);
 
-    graftParticlesDispatcher.Invoke(indexArray,   // (input) index into particles
-                                    partId,       // (input) particle id sorted by bin
-                                    binId,        // (input) bin id sorted by bin
-                                    activeMask,   // (input) flag indicates if neighor range is used
-                                    partId,       // (input) particle id (whole array)
-                                    location,     // (input) location on original particle order
-                                    leftNeighbor, // (input) first partId for neighbor
+    graftParticlesDispatcher.Invoke(indexArray, // (input) index into particles
+                                    partId,     // (input) particle id sorted by bin
+                                    binId,      // (input) bin id sorted by bin
+                                    activeMask, // (input) flag indicates if neighbor range is used
+                                    partId,     // (input) particle id (whole array)
+                                    location,   // (input) location on original particle order
+                                    leftNeighbor,   // (input) first partId for neighbor
                                     rightNeighbor,  // (input) last partId for neighbor
                                     haloIdCurrent); // (output)
 #ifdef DEBUG_PRINT

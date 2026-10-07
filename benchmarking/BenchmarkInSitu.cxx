@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//==========================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//==========================================================================
 
 #include "Benchmarker.h"
 
@@ -1104,7 +1095,7 @@ int main(int argc, char* argv[])
       benchmark_report_aggregates_only = true;
 
   // If repetitions are explicitly set without also specifying a minimum_time,
-  // force the minimum time to be fairly small so that in all likelyhood, benchmarks
+  // force the minimum time to be fairly small so that in all likelihood, benchmarks
   // will only run 1 iteration for each test
   //
   // And, for good measure, only output the accumulated statistics

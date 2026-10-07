@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <cstdlib>
 #include <mutex>
@@ -47,7 +38,7 @@ static bool IsInitialized = false;
 
 // Holds how Viskores currently allocates memory.
 // When Viskores is initialized we set this based on the hardware support ( HardwareSupportsManagedMemory ).
-// The user can explicitly disable managed memory through an enviornment variable
+// The user can explicitly disable managed memory through an environment variable
 // or by calling a function on the CudaAllocator.
 // Likewise managed memory can be re-enabled by calling a function on CudaAllocator
 // if and only if the underlying hardware supports pageable managed memory

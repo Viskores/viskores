@@ -7,13 +7,6 @@
 //============================================================================
 
 //============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
 //  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
@@ -103,7 +96,7 @@ public:
   {
   }
 
-  // Main constructure used in the code
+  // Main constructor used in the code
   VISKORES_CONT
   MeshStructureContourTreeMesh(const cpp2_ns::IdArrayType neighborConnectivity,
                                const cpp2_ns::IdArrayType neighborOffsets,

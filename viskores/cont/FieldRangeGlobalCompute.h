@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_FieldRangeGlobalCompute_h
 #define viskores_cont_FieldRangeGlobalCompute_h
 
@@ -66,6 +57,19 @@ viskores::cont::ArrayHandle<viskores::Range> FieldRangeGlobalCompute(
   const viskores::cont::PartitionedDataSet& pds,
   const std::string& name,
   viskores::cont::Field::Association assoc = viskores::cont::Field::Association::Any);
+
+/// Returns the range for a field from a PartitionedDataSet. The range for the local partitions
+/// may be computed concurrently using up to `numberOfThreads` threads before the ranges are
+/// reduced across ranks. If `numberOfThreads` is less than 2, local partitions are processed
+/// sequentially. The caller is responsible for selecting a thread count appropriate for the
+/// active device.
+VISKORES_CONT_EXPORT
+VISKORES_CONT
+viskores::cont::ArrayHandle<viskores::Range> FieldRangeGlobalCompute(
+  const viskores::cont::PartitionedDataSet& pds,
+  const std::string& name,
+  viskores::cont::Field::Association assoc,
+  viskores::Id numberOfThreads);
 //@}
 
 }

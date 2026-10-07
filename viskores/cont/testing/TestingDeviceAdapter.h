@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_testing_TestingDeviceAdapter_h
 #define viskores_cont_testing_TestingDeviceAdapter_h
 
@@ -2246,7 +2237,7 @@ private:
     }
     VISKORES_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
 
-    // This is spcifically to test the cuda-backend but should pass for all backends
+    // This is specifically to test the cuda-backend but should pass for all backends
     std::cout << "Testing if execution errors are eventually propagated to the host "
               << "without explicit synchronization\n";
     message = "";

@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/ArrayHandleCounting.h>
 #include <viskores/cont/ArrayHandleIndex.h>
@@ -95,7 +86,7 @@ void Test()
     ////
     //// BEGIN-EXAMPLE ArrayHandleCountingVec
     ////
-    // Create an array containg [(0,-3,75), (1,2,25), (3,7,-25)]
+    // Create an array containing [(0,-3,75), (1,2,25), (3,7,-25)]
     viskores::cont::make_ArrayHandleCounting(
       viskores::make_Vec(0, -3, 75), viskores::make_Vec(1, 5, -50), 3)
     ////

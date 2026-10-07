@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_filter_contour_AbstractContour_h
 #define viskores_filter_contour_AbstractContour_h
@@ -207,7 +198,7 @@ public:
   /// set to true, a secondary operation will find all duplicated points and combine
   /// them together. If false, points will be duplicated. In addition to requiring more
   /// storage, duplicated points mean that triangles next to each other will not be
-  /// considered adjecent to subsequent filters.
+  /// considered adjacent to subsequent filters.
   ///
   VISKORES_CONT
   void SetMergeDuplicatePoints(bool on) { this->MergeDuplicatedPoints = on; }

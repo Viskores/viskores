@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_ArrayHandleRecombineVec_h
 #define viskores_cont_ArrayHandleRecombineVec_h
 
@@ -412,7 +403,7 @@ struct RecombineVecMetaData
     this->ArrayBufferOffsets = src.ArrayBufferOffsets;
 
     this->PortalBuffers.clear();
-    // Intentionally not copying portals. Portals will be recreated from proper array when requsted.
+    // Intentionally not copying portals. Portals will be recreated from proper array when requested.
 
     return *this;
   }

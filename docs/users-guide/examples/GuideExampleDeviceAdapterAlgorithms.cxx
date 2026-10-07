@@ -610,7 +610,7 @@ struct DoFunctor
   //// PAUSE-EXAMPLE
   VISKORES_CONT void DoUnique()
   {
-    std::cout << "Testing Unqiue" << std::endl;
+    std::cout << "Testing Unique" << std::endl;
 
     //// RESUME-EXAMPLE
     viskores::cont::ArrayHandle<viskores::Int32> values =

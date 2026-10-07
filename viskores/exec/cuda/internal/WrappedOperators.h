@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_exec_cuda_internal_WrappedOperators_h
 #define viskores_exec_cuda_internal_WrappedOperators_h
 
@@ -32,6 +23,9 @@ VISKORES_THIRDPARTY_POST_INCLUDE
 
 #if THRUST_VERSION >= 200500
 #include <cuda/std/type_traits>
+#endif
+#if THRUST_VERSION >= 300300
+#include <cuda/functional>
 #endif
 
 namespace viskores
@@ -199,29 +193,36 @@ struct WrappedBinaryPredicate
 }
 } //namespace viskores::exec::cuda::internal
 
+//
+// We tell Thrust/CUDA that our WrappedBinaryOperator is commutative so that we
+// activate fast paths which are only available when the binary functor is
+// commutative and the T type is is_arithmetic.
+//
+//
+#if THRUST_VERSION >= 300300
+template <typename T, typename F>
+inline constexpr bool ::cuda::
+  is_commutative_v<::viskores::exec::cuda::internal::WrappedBinaryOperator<T, F>, T> =
+    ::cuda::std::is_arithmetic<T>::value;
+#else // THRUST_VERSION < 300300
 VISKORES_THRUST_NAMESPACE_BEGIN
 namespace detail
 {
-//
-// We tell Thrust that our WrappedBinaryOperator is commutative so that we
-// activate numerous fast paths inside thrust which are only available when
-// the binary functor is commutative and the T type is is_arithmetic
-//
-//
 #if THRUST_VERSION >= 200500
 template <typename T, typename F>
 struct is_commutative<viskores::exec::cuda::internal::WrappedBinaryOperator<T, F>>
   : public ::cuda::std::is_arithmetic<T>
 {
 };
-#else
+#else  // THRUST_VERSION < 200500
 template <typename T, typename F>
 struct is_commutative<viskores::exec::cuda::internal::WrappedBinaryOperator<T, F>>
   : public ::thrust::detail::is_arithmetic<T>
 {
 };
-#endif
+#endif // THRUST_VERSION < 200500
 }
 VISKORES_THRUST_NAMESPACE_END //namespace thrust::detail
+#endif // THRUST_VERSION < 300300
 
 #endif //viskores_exec_cuda_internal_WrappedOperators_h

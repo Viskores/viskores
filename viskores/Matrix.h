@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_Matrix_h
 #define viskores_Matrix_h
 
@@ -649,7 +640,7 @@ VISKORES_EXEC_CONT bool operator!=(const viskores::Matrix<T, NumRow, NumCol>& a,
   return !(a == b);
 }
 
-/// Helper function for printing out matricies during testing
+/// Helper function for printing out matrices during testing
 ///
 template <typename T, viskores::IdComponent NumRow, viskores::IdComponent NumCol>
 VISKORES_CONT std::ostream& operator<<(std::ostream& stream,

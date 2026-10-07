@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -404,7 +395,7 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
   viskoresdiy::RegularMergePartners partners(
     decomposer, // domain decomposition
     2,          // raix of k-ary reduction.
-    true        // contiguous: true=distance doubling , false=distnace halving
+    true        // contiguous: true=distance doubling , false=distance halving
   );
   // reduction
   viskoresdiy::reduce(
@@ -438,7 +429,7 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
     contourTreeMeshOut.NeighborConnectivity = localDataBlocks[0]->NeighborConnectivity;
     contourTreeMeshOut.NeighborOffsets = localDataBlocks[0]->NeighborOffsets;
     contourTreeMeshOut.MaxNeighbors = localDataBlocks[0]->MaxNeighbors;
-    // Construct the mesh boundary exectuion object needed for boundary augmentation
+    // Construct the mesh boundary execution object needed for boundary augmentation
     viskores::Id3 minIdx(0, 0, 0);
     viskores::Id3 maxIdx = globalPointDimensions;
     maxIdx[0] = maxIdx[0] - 1;
@@ -458,11 +449,11 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
 
     // Set the final mesh sort order we need to use
     this->MeshSortOrder = contourTreeMeshOut.GlobalMeshIndex;
-    // Remeber the number of iterations for the output
+    // Remember the number of iterations for the output
     this->NumIterations = currNumIterations;
 
     // Return the sorted values of the contour tree as the result
-    // TODO the result we return for the parallel and serial case are different right now. This should be made consistent. However, only in the parallel case are we useing the result output
+    // TODO the result we return for the parallel and serial case are different right now. This should be made consistent. However, only in the parallel case are we using the result output
     viskores::cont::DataSet temp;
     viskores::cont::Field rfield(this->GetOutputFieldName(),
                                  viskores::cont::Field::Association::WholeDataSet,

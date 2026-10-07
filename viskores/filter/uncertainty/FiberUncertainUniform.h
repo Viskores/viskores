@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 //  This code is based on the algorithm presented in the following paper:
 //  Hari, G., Joshi, N., Wang, Z., Gong, Q., Pugmire, D., Moreland, K.,
@@ -75,7 +66,7 @@ public:
     this->SetActiveField(0, fieldName, viskores::cont::Field::Association::Points);
   }
 
-  /// @brief Sets maxmimum X.
+  /// @brief Sets maximum X.
   /// Sets maximum value of the uniform distribution of the variable X at each grid point.
   VISKORES_CONT void SetField1Max(const std::string& fieldName)
   {
@@ -89,7 +80,7 @@ public:
     this->SetActiveField(2, fieldName, viskores::cont::Field::Association::Points);
   }
 
-  /// @brief Sets maxmimum Y.
+  /// @brief Sets maximum Y.
   /// Sets maximum value of the uniform distribution of the variable Y at each grid point.
   VISKORES_CONT void SetField2Max(const std::string& fieldName)
   {

@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_Geometry_h
 #define viskores_Geometry_h
@@ -78,7 +69,7 @@ struct Ray
   VISKORES_EXEC_CONT
   Vector Evaluate(CoordType param) const;
 
-  /// Return the minmum distance from \a point to this line/ray.
+  /// Return the minimum distance from \a point to this line/ray.
   ///
   /// Note that when the direction has zero length, this simplifies
   /// the distance between \a point and the ray's origin.
@@ -162,7 +153,7 @@ struct LineSegment
   VISKORES_EXEC_CONT
   Vector Evaluate(CoordType param) const;
 
-  /// Return the minmum distance from \a point to this line segment.
+  /// Return the minimum distance from \a point to this line segment.
   ///
   /// Note that when the endpoints are coincident, this simplifies
   /// the distance between \a point and either endpoint.

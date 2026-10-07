@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_interop_anari_ANARIMapper_h
 #define viskores_interop_anari_ANARIMapper_h
@@ -78,7 +69,7 @@ struct VISKORES_ANARI_EXPORT ANARIMapper
   /// @brief Set color map arrays using raw ANARI array handles.
   /// @param color Color array used for color mapping.
   /// @param opacity (unused/deprecated, will remove on future ANARI version)
-  /// @param releaseArrays If true this function will release the hanldes passed in.
+  /// @param releaseArrays If true this function will release the handles passed in.
   virtual void SetANARIColorMap(anari_cpp::Array1D color,
                                 anari_cpp::Array1D opacity,
                                 bool releaseArrays = true);

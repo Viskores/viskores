@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_io_VTKVisItFileReader_h
 #define viskores_io_VTKVisItFileReader_h
@@ -29,7 +20,7 @@ namespace viskores
 namespace io
 {
 
-/// Reader for ".visit" files, a simple file format for partioned data sets.
+/// Reader for ".visit" files, a simple file format for partitioned data sets.
 /// The file format consists of the keyword "!NBLOCKS <N>", where N is the number of
 /// partitions, followed by a list of the N files. For example:
 ///

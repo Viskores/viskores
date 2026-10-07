@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -95,7 +86,7 @@ public:
   SetInteriorForestWorklet() {}
 
   // Allow for different portal type for the meshGlobalIds as they may be a fancy
-  // array handle rather than a portal direclty to a IdArrayType
+  // array handle rather than a portal directly to a IdArrayType
   template <typename InFieldPortalType, typename GlobalIdFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& sortId,
                                 const viskores::Id& isNecessary,

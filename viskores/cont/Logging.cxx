@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/Logging.h>
 
@@ -237,7 +228,7 @@ std::string GetLogErrorContext()
 VISKORES_CONT
 std::string GetStackTrace(viskores::Int32 skip)
 {
-  (void)skip; // unsed when logging disabled.
+  (void)skip; // unused when logging disabled.
 
   std::string result;
 

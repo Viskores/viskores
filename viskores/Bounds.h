@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_Bounds_h
 #define viskores_Bounds_h
@@ -173,7 +164,7 @@ struct Bounds
 
   /// \b Returns the min point of the bounds
   ///
-  /// \c MinCorder returns the minium point of the bounds.If the bounds
+  /// \c MinCorder returns the minimum point of the bounds.If the bounds
   /// are empty, the results are undefined.
   ///
   VISKORES_EXEC_CONT
@@ -184,7 +175,7 @@ struct Bounds
 
   /// \b Returns the max point of the bounds
   ///
-  /// \c MaxCorder returns the minium point of the bounds.If the bounds
+  /// \c MaxCorder returns the minimum point of the bounds.If the bounds
   /// are empty, the results are undefined.
   ///
   VISKORES_EXEC_CONT

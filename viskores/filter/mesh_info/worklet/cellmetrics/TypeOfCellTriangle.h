@@ -7,13 +7,6 @@
 //============================================================================
 
 //============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
 //  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2018 UT-Battelle, LLC.
 //  Copyright 2018 Los Alamos National Security.
@@ -130,7 +123,7 @@ VISKORES_EXEC Scalar GetTriangleL2Magnitude(const CollectionOfPoints& pts)
  *
  *  That is to say, the length of the longest side.
  *
- *  \param [in] pts The three points which define the verticies of the triangle.
+ *  \param [in] pts The three points which define the vertices of the triangle.
  *
  *  \return Returns the max of the triangle side lengths.
  */
@@ -149,7 +142,7 @@ VISKORES_EXEC Scalar GetTriangleLMax(const CollectionOfPoints& pts)
  *
  *  That is to say, the length of the shortest side.
  *
- *  \param [in] pts The three points which define the verticies of the triangle.
+ *  \param [in] pts The three points which define the vertices of the triangle.
  *
  *  \return Returns the max of the triangle side lengths.
  */
@@ -166,7 +159,7 @@ VISKORES_EXEC Scalar GetTriangleLMin(const CollectionOfPoints& pts)
 /**
  *  Returns the area of the triangle.
  *
- *  \param [in] pts The three points which define the verticies of the triangle.
+ *  \param [in] pts The three points which define the vertices of the triangle.
  *
  *  \return Returns the are of the triangle..
  */
@@ -185,7 +178,7 @@ VISKORES_EXEC Scalar GetTriangleArea(const CollectionOfPoints& pts)
 /**
  *  Returns the radius of a circle inscribed within the given triangle. This is commonly denoted as 'r'.
  *
- *  \param [in] pts The three points which define the verticies of the triangle.
+ *  \param [in] pts The three points which define the vertices of the triangle.
  *
  *  \return Returns the inradius.
  */
@@ -204,7 +197,7 @@ VISKORES_EXEC Scalar GetTriangleInradius(const CollectionOfPoints& pts)
 /**
  *  Returns the radius of a circle circumscribed around the given triangle. This is commonly denoted as 'R'.
  *
- *  \param [in] pts The three points which define the verticies of the triangle.
+ *  \param [in] pts The three points which define the vertices of the triangle.
  *
  *  \return Returns the circumradius.
  */

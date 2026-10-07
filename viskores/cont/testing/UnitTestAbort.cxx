@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/ErrorUserAbort.h>
 #include <viskores/cont/RuntimeDeviceTracker.h>
@@ -28,12 +19,12 @@ namespace
 {
 
 // A function that checks for abort request.
-// This function will be called by `TryExecute` befaure lauching a device task
+// This function will be called by `TryExecute` befaure launching a device task
 // to check if abort has been requested.
 // For this test case, we are using a simple logic of returning true for the
 // `abortAt`th check.
 // If this test is failing, one of the things to check would be to see if the
-// `Contour` filter has changed such that it no longer has atleast `abortAt`
+// `Contour` filter has changed such that it no longer has at least `abortAt`
 // task invocations.
 bool ShouldAbort()
 {

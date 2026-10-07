@@ -7,13 +7,6 @@
 //============================================================================
 
 //============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
 //  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
@@ -127,7 +120,7 @@ inline viskores::Id3 to3DIndex(viskores::Id idx, viskores::Id3 dims)
 /// @param[in] blocksPerDim Number of data blocks to use per dimension
 /// @param[in] selectSize Select subset of this size from the dataset. Set to (-1,-1,-1) to select the full size
 /// @param[out] nDims Number of data dimensions (i.e, 2 or 3)
-/// @param[out] useDataSet Viskores partioned dataset to be used with the distributed contour tree filter
+/// @param[out] useDataSet Viskores partitioned dataset to be used with the distributed contour tree filter
 /// @param[out] globalSize Global extends of the input mesh (i.e., number of mesh points in each dimension)
 /// @param[out] localBlockIndices  Array with the (x,y,z) index of each local data block with
 ///                              with respect to blocksPerDim
@@ -357,7 +350,7 @@ bool read3DHDF5File(const int& mpi_rank,
   // Swap also the blocks per dimension accordingly
   blocksPerDim = viskores::Id3(blocksPerDim[1], blocksPerDim[0], blocksPerDim[2]);
 
-  // Swap first and second dimenion here as well for consistency
+  // Swap first and second dimension here as well for consistency
   const viskores::Vec<ValueType, 3> v_origin{ static_cast<ValueType>(offset[1]),
                                               static_cast<ValueType>(offset[0]),
                                               static_cast<ValueType>(offset[2]) };
@@ -406,7 +399,7 @@ bool read3DHDF5File(const int& mpi_rank,
 /// @param[in] filename Name of the file with %d as placeholder for the integer index of the block
 /// @param[in] blocksPerRank Number of data blocks to process on each rank
 /// @param[out] nDims Number of data dimensions (i.e, 2 or 3)
-/// @param[out] useDataSet Viskores partioned dataset to be used with the distributed contour tree filter
+/// @param[out] useDataSet Viskores partitioned dataset to be used with the distributed contour tree filter
 /// @param[out] globalSize Global extends of the input mesh (i.e., number of mesh points in each dimension)
 /// @param[in] blocksPerDim  Number of data blocks used in each data dimension
 /// @param[in] localBlockIndices  Array with the (x,y,z) index of each local data block with
@@ -570,7 +563,7 @@ bool readPreSplitFiles(const int& rank,
                                            << "D. "
                                               "The input data must be either 2D or 3D.");
 
-    // If we found any errors in the setttings than finalize MPI and exit the execution
+    // If we found any errors in the settings than finalize MPI and exit the execution
     if (invalidNumDimensions)
     {
       return false;
@@ -666,7 +659,7 @@ bool readPreSplitFiles(const int& rank,
 /// @param[in] numBlocks Number of blocks to use during computation
 /// @param[in] blocksPerRank Number of data blocks to process on each rank
 /// @param[out] nDims Number of data dimensions (i.e, 2 or 3)
-/// @param[out] useDataSet Viskores partioned dataset to be used with the distributed contour tree filter
+/// @param[out] useDataSet Viskores partitioned dataset to be used with the distributed contour tree filter
 /// @param[out] globalSize Global extends of the input mesh (i.e., number of mesh points in each dimension)
 /// @param[in] blocksPerDim  Number of data blocks used in each data dimension
 /// @param[in] localBlockIndices  Array with the (x,y,z) index of each local data block with
@@ -760,7 +753,7 @@ bool readSingleBlockFile(const int& rank,
                       invalidNumDimensions && (rank == 0),
                       "The input mesh is " << nDims
                                            << "D. The input data must be either 2D or 3D.");
-    // If we found any errors in the setttings than finalize MPI and exit the execution
+    // If we found any errors in the settings than finalize MPI and exit the execution
     if (invalidNumDimensions)
     {
       return false;

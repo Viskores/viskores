@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_exec_ArrayHandleExecutionManager_h
 #define viskores_cont_exec_ArrayHandleExecutionManager_h
 
@@ -144,7 +135,7 @@ public:
   VISKORES_CONT
   void Shrink(viskores::Id numberOfValues) { this->ShrinkImpl(numberOfValues); }
 
-  /// Frees any resources (i.e. memory) allocated for the exeuction
+  /// Frees any resources (i.e. memory) allocated for the execution
   /// environment, if any.
   ///
   VISKORES_CONT

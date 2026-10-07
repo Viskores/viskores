@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_rendering_raytracing_Sampler_h
 #define viskores_rendering_raytracing_Sampler_h
 #include <viskores/Math.h>
@@ -59,7 +50,7 @@ VISKORES_EXEC
 viskores::Vec3f_32 CosineWeightedHemisphere(const viskores::Int32& sampleNum,
                                             const viskores::Vec3f_32& normal)
 {
-  //generate orthoganal basis about normal
+  //generate orthogonal basis about normal
   int kz = 0;
   if (viskores::Abs(normal[0]) > viskores::Abs(normal[1]))
   {

@@ -10,6 +10,8 @@
 
 #include "Sampler.h"
 #include "Image1DSampler.h"
+#include "Image2DSampler.h"
+
 namespace
 {
 
@@ -24,7 +26,7 @@ struct UnknownSampler : viskores_device::Sampler
 
   bool getColors(const viskores::cont::DataSet& data,
                  viskores::cont::Field& field,
-                 viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const override;
+                 viskores_device::ColorMap& colorMap) const override;
 };
 
 UnknownSampler::UnknownSampler(viskores_device::ViskoresDeviceGlobalState* d)
@@ -48,7 +50,7 @@ bool UnknownSampler::isValid() const
 
 bool UnknownSampler::getColors(const viskores::cont::DataSet&,
                                viskores::cont::Field&,
-                               viskores::cont::ArrayHandle<viskores::Vec4f_32>&) const
+                               viskores_device::ColorMap&) const
 {
   // invalid
   return false;
@@ -72,6 +74,10 @@ Sampler* Sampler::createInstance(std::string_view subtype, ViskoresDeviceGlobalS
   {
     return new Image1DSampler(s);
   }
+  else if (subtype == "image2D")
+  {
+    return new Image2DSampler(s);
+  }
   else
   {
     return new UnknownSampler(s);
@@ -82,7 +88,8 @@ void Sampler::commitParameters()
 {
   mat4 outTransform = this->getParam("outTransform", mat4(linalg::identity));
   this->m_outTransform = toViskoresMatrix(outTransform);
-  float4 outOffset = this->getParam("outOffset", float4(0.f, 0.f, 0.f, 0.f));
+  anari::math::float4 outOffset =
+    this->getParam("outOffset", anari::math::float4(0.f, 0.f, 0.f, 0.f));
   this->m_outOffset = { outOffset[0], outOffset[1], outOffset[2], outOffset[3] };
 }
 

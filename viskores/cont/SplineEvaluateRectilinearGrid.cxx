@@ -6,20 +6,12 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/ArrayCopy.h>
-#include <viskores/cont/ArrayIsMonotonic.h>
 #include <viskores/cont/CellSetStructured.h>
+#include <viskores/cont/ErrorBadValue.h>
 #include <viskores/cont/SplineEvaluateRectilinearGrid.h>
+#include <viskores/cont/internal/ArrayGetMonotonicity.h>
 
 namespace viskores
 {
@@ -38,12 +30,15 @@ viskores::exec::SplineEvaluateRectilinearGrid SplineEvaluateRectilinearGrid::Pre
 
   viskores::cont::CoordinateSystem coordSystem = this->DataSet.GetCoordinateSystem();
   RectCoordsType coords = coordSystem.GetData().template AsArrayHandle<RectCoordsType>();
-  if (!viskores::cont::ArrayIsMonotonicIncreasing(coords.GetFirstArray()) ||
-      !viskores::cont::ArrayIsMonotonicIncreasing(coords.GetSecondArray()) ||
-      !viskores::cont::ArrayIsMonotonicIncreasing(coords.GetThirdArray()))
-
+  using Monotonicity = viskores::cont::internal::ArrayMonotonicity;
+  if (viskores::cont::internal::ArrayGetStrictMonotonicity(coords.GetFirstArray()) ==
+        Monotonicity::NotMonotonic ||
+      viskores::cont::internal::ArrayGetStrictMonotonicity(coords.GetSecondArray()) ==
+        Monotonicity::NotMonotonic ||
+      viskores::cont::internal::ArrayGetStrictMonotonicity(coords.GetThirdArray()) ==
+        Monotonicity::NotMonotonic)
   {
-    throw viskores::cont::ErrorBadType("Coordinates are not monotonic increasing.");
+    throw viskores::cont::ErrorBadValue("Rectilinear coordinate axes must be strictly monotonic.");
   }
 
   viskores::cont::ArrayHandle<viskores::FloatDefault> fieldArray;

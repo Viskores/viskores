@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/DataSetBuilderExplicit.h>
@@ -124,10 +115,9 @@ void RenderTests()
     viskores::rendering::testing::RenderTestOptions testOptions;
     testOptions.Mapper = viskores::rendering::testing::MapperType::Wireframer;
     testOptions.Colors = { viskores::rendering::Color::black };
-    testOptions.AllowedPixelErrorRatio = 0.05f;
     testOptions.AllowAnyDevice = false;
     viskores::rendering::testing::RenderTest(
-      Make3DUniformDataSet(), "pointvar", "rendering/wireframer/wf_uniform3D.png", testOptions);
+      Make3DUniformDataSet(16), "pointvar", "rendering/wireframer/wf_uniform3D.png", testOptions);
     viskores::rendering::testing::RenderTest(maker.Make3DExplicitDataSet4(),
                                              "pointvar",
                                              "rendering/wireframer/wf_expl3D.png",

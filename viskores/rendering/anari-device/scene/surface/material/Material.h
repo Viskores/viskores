@@ -10,10 +10,10 @@
 
 #pragma once
 
+#include "ColorMap.h"
 #include "Object.h"
 #include "sampler/Sampler.h"
 
-#include <viskores/cont/ColorTable.h>
 #include <viskores/cont/DataSet.h>
 
 namespace viskores_device
@@ -27,7 +27,7 @@ struct Material : public Object
 
   virtual void getColors(const viskores::cont::DataSet& data,
                          viskores::cont::Field& field,
-                         viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const = 0;
+                         ColorMap& colorMap) const = 0;
 };
 
 } // namespace viskores_device

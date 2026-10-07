@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_internal_CellLocatorBase_h
 #define viskores_cont_internal_CellLocatorBase_h
 
@@ -80,14 +71,14 @@ public:
 
   /// @brief Build the search structure used to look up cells.
   ///
-  /// This method must be called after the cells and coordiantes are specified with
+  /// This method must be called after the cells and coordinates are specified with
   /// `SetCellSet()` and `SetCoordinates()`, respectively.
   /// The method must also be called before it is used with a worklet.
   /// Before building the search structure `Update()` checks to see if the structure is
   /// already built and up to date. If so, the method quickly returns.
   /// Thus, it is good practice to call `Update()` before each use in a worklet.
   ///
-  /// Although `Update()` is called from the control environment, it lauches jobs in the
+  /// Although `Update()` is called from the control environment, it launches jobs in the
   /// execution environment to quickly build the search structure.
   VISKORES_CONT void Update() const;
 

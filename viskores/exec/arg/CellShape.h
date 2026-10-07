@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_exec_arg_CellShape_h
 #define viskores_exec_arg_CellShape_h
 
@@ -31,7 +22,7 @@ namespace arg
 /// \brief Aspect tag to use for getting the cell shape.
 ///
 /// The \c AspectTagCellShape aspect tag causes the \c Fetch class to
-/// obtain the type of element (e.g. cell cell) from the topology object.
+/// obtain the type of element (e.g. cell shape) from the topology object.
 ///
 struct AspectTagCellShape
 {

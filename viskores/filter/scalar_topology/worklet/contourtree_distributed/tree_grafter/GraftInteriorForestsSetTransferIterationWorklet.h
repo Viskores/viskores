@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -79,7 +70,7 @@ class GraftInteriorForestsSetTransferIterationWorklet : public viskores::worklet
 {
 public:
   // NOTE: supernodeType is sized to ContourTree.Supernodes.GetNumberOfValues() so we can use it for our iteration
-  // NOTE: for whenTransferred we neeed need FieldInOut type to avoid overwrite of existing value as not all values will be updated
+  // NOTE: for whenTransferred we need FieldInOut type to avoid overwrite of existing value as not all values will be updated
   using ControlSignature = void(FieldIn supernodeType,       // input
                                 FieldIn hierarchicalSuperId, // input
                                 FieldInOut whenTransferred   // output

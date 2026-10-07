@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -75,8 +66,8 @@ namespace contourtree_distributed
 namespace hierarchical_augmenter
 {
 
-// Implementatin of predicate used in HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints
-// to determine whether an attachement points needs to be transferred
+// Implementation of predicate used in HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints
+// to determine whether an attachment points needs to be transferred
 class IsAttachementPointNeededPredicateImpl
 {
 public:
@@ -114,7 +105,7 @@ private:
 
 
 // Predicate ExecutonObject used in HierarchicalAugmenter<FieldType>::PrepareOutAttachmentPoints
-// to determine whether an attachement points needs to be transferred
+// to determine whether an attachment points needs to be transferred
 class IsAttachementPointNeededPredicate : public viskores::cont::ExecutionObjectBase
 {
 public:

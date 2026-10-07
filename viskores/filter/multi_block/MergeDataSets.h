@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_filter_multi_block_MergeDataSets_h
 #define viskores_filter_multi_block_MergeDataSets_h
 
@@ -44,7 +35,7 @@ class VISKORES_FILTER_MULTI_BLOCK_EXPORT MergeDataSets : public viskores::filter
 public:
   /// @brief Specify the value to use where field values are missing.
   ///
-  /// One issue when merging blocks in a paritioned dataset is that the blocks/partitions
+  /// One issue when merging blocks in a partitioned dataset is that the blocks/partitions
   /// may have different fields. That is, one partition might not have all the fields of
   /// another partition. When these partitions are merged together, the values for this
   /// missing field must be set to something. They will be set to this value, which defaults
@@ -62,7 +53,7 @@ private:
   viskores::Float64 InvalidValue = viskores::Nan64();
 };
 } // namespace multi_block
-} // namesapce filter
+} // namespace filter
 } // namespace viskores
 
 #endif //viskores_filter_multi_block_MergeDataSets_h

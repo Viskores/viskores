@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 set(headers
   TestingDeviceAdapter.h
@@ -54,7 +45,7 @@ set(unit_tests
   UnitTestFieldRangeCompute.cxx
   UnitTestInitializeCustomOptions.cxx
   UnitTestInitializeCustomOptionsWithArgs.cxx
-  UnitTestInitializeRuntimeDeviceConfigurationWithArgs.cxx 
+  UnitTestInitializeRuntimeDeviceConfigurationWithArgs.cxx
   UnitTestInitializeMixedOptions.cxx
   UnitTestInitializeNoOptions.cxx
   UnitTestInitializeStandardOptions.cxx
@@ -128,7 +119,7 @@ set(unit_tests_device
   UnitTestImplicitFunction.cxx
   UnitTestParticleArrayCopy.cxx
   UnitTestPointLocatorSparseGrid.cxx
-  UnitTestSplineEvaluate.cxx  
+  UnitTestSplineEvaluate.cxx
   UnitTestTransportArrayIn.cxx
   UnitTestTransportArrayInOut.cxx
   UnitTestTransportArrayOut.cxx

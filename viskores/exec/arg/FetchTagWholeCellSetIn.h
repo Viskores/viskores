@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_exec_arg_FetchTagWholeCellSetIn_h
 #define viskores_exec_arg_FetchTagWholeCellSetIn_h
 
@@ -30,9 +21,11 @@ namespace exec
 namespace arg
 {
 
-/// \brief \c Fetch tag for whole cell sets.
+/// @brief `Fetch` tag for whole cell sets.
 ///
-///
+/// This fetch supports only the `viskores::exec::arg::AspectTagDefault` aspect.
+/// Its `Load()` method returns the execution object in the associated parameter,
+/// and its `Store()` method does nothing.
 struct FetchTagWholeCellSetIn
 {
 };

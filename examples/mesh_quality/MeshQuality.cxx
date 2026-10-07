@@ -7,13 +7,6 @@
 //============================================================================
 
 //============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
 //  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2018 UT-Battelle, LLC.
 //  Copyright 2018 Los Alamos National Security.
@@ -223,7 +216,7 @@ int TestMetrics(const char* outFileName,
   catch (viskores::cont::ErrorExecution&)
   {
     //TODO: need to add something else here...
-    std::cerr << "Error occured while executing the filter. Exiting" << std::endl;
+    std::cerr << "Error occurred while executing the filter. Exiting" << std::endl;
     return 1;
   }
   try
@@ -235,7 +228,7 @@ int TestMetrics(const char* outFileName,
   catch (viskores::io::ErrorIO&)
   {
     //TODO: need to add something else here...
-    std::cerr << "Error occured while writing the output data set. Exiting" << std::endl;
+    std::cerr << "Error occurred while writing the output data set. Exiting" << std::endl;
     return 1;
   }
   return 0;
@@ -271,12 +264,12 @@ int main(int argc, char* argv[])
 
   try
   {
-    input = reader.ReadDataSet(); //FIELD not supported errors here, but doesnt affect data
+    input = reader.ReadDataSet(); //FIELD not supported errors here, but doesn't affect data
     //input = Make3DExplicitDataSet();
   }
   catch (viskores::io::ErrorIO&)
   {
-    std::cerr << "Error occured while reading input. Exiting" << std::endl;
+    std::cerr << "Error occurred while reading input. Exiting" << std::endl;
     return 1;
   }
 

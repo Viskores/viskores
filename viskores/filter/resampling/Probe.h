@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_filter_resampling_Probe_h
 #define viskores_filter_resampling_Probe_h
 
@@ -39,7 +30,7 @@ namespace resampling
 /// The most important feature of this geometry is its coordinate system.
 /// When you call `Execute()`, the output will be the data specified with
 /// `SetGeometry()` but will have the fields of the input to `Execute()`
-/// transferred to it. The fields are transfered by probing the input data
+/// transferred to it. The fields are transferred by probing the input data
 /// set at the point locations of the geometry.
 ///
 class VISKORES_FILTER_RESAMPLING_EXPORT Probe : public viskores::filter::Filter

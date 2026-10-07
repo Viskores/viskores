@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/ArrayHandleCast.h>
 #include <viskores/cont/ArrayHandleIndex.h>
@@ -157,7 +148,7 @@ void ChannelBuffer<Precision>::Resize(const viskores::Id newSize)
 class ExtractChannel : public viskores::worklet::WorkletMapField
 {
 protected:
-  viskores::Id NumChannels; // the nnumber of channels in the buffer
+  viskores::Id NumChannels; // the number of channels in the buffer
   viskores::Id ChannelNum;  // the channel to extract
 
 public:

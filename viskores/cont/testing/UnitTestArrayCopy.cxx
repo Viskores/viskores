@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayCopyDevice.h>
@@ -165,7 +156,7 @@ void TryCopy()
   }
 
   {
-    std::cout << "concatinate -> basic" << std::endl;
+    std::cout << "concatenate -> basic" << std::endl;
     viskores::cont::ArrayHandle<ValueType> input1 = MakeInputArray<ValueType>();
     viskores::cont::ArrayHandleConstant<ValueType> input2(TestValue(6, ValueType{}),
                                                           ARRAY_SIZE / 2);

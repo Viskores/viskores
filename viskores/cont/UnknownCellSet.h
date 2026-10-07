@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_UnknownCellSet_h
 #define viskores_cont_UnknownCellSet_h
 
@@ -241,7 +232,7 @@ public:
 
   /// \brief Call a functor using the underlying cell set type.
   ///
-  /// `CastAndCallForTypes` attemts to cast the held cell set to a specific type
+  /// `CastAndCallForTypes` attempts to cast the held cell set to a specific type
   /// and then calls the given functor with the cast cell set. You must specify
   /// the `CellSetList` (in a `viskores::List`) as a template argument.
   ///

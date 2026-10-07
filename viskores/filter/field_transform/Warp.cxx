@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/StaticAssert.h>
 #include <viskores/TypeTraits.h>
@@ -60,7 +51,7 @@ struct WarpWorklet : viskores::worklet::WorkletMapField
   }
 };
 
-// The warp filter operates on 3 arrays: coordiantes, directions, and scale factors. Rather than
+// The warp filter operates on 3 arrays: coordinates, directions, and scale factors. Rather than
 // try to satisfy every possible array type we expect, which would add to a lot of possibilities
 // (especially because we add the constant varieties), we will just extract components as either
 // `viskores::Float32` or `viskores::Float64`. That way for each we just need just 6 combinations. We can

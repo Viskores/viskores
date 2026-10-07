@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_exec_CellLocatorUniformBins_h
 #define viskores_exec_CellLocatorUniformBins_h
 
@@ -432,7 +423,12 @@ private:
     {
       VISKORES_RETURN_ON_ERROR(viskores::exec::WorldCoordinatesToParametricCoordinates(
         cellPoints, point, cellShape, pCoords));
-      inside = viskores::exec::CellInside(pCoords, cellShape);
+      // A vertex has no interior, so CellInside always returns false for it. The
+      // world-space bounds check above is the containment test for a vertex cell.
+      if (cellShape.Id == viskores::CELL_SHAPE_VERTEX)
+        inside = true;
+      else
+        inside = viskores::exec::CellInside(pCoords, cellShape);
     }
     else
     {

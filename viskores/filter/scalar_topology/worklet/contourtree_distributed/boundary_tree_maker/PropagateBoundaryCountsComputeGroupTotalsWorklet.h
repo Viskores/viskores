@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -127,7 +118,7 @@ public:
 
     // In serial this worklet implements the following operation
     /*
-    // NOTE: in contrast to the original imlementation this worklet starts the iteration at
+    // NOTE: in contrast to the original implementation this worklet starts the iteration at
     //       0 for simplicity, hence, we need to check this case separately here
     for (viskores::Id hyperarc = 1; hyperarc < hyperarcTargetSortPermutation.size(); hyperarc++)
     { // per hyperarc

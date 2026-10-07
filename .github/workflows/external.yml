@@ -13,13 +13,15 @@ on:
 
 permissions:
   contents: read
-  statuses: write
 
 jobs:
   generate_statuses:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: Kitware/cdash-status@release
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: Kitware/cdash-status@697751fc655b300a9e16e285f2e2ee981f59e45a # release
         with:
           project: Viskores

@@ -12,7 +12,7 @@ Getting |Viskores|
 |Viskores| is an open source software product where the code is made freely available.
 To get the latest released version of |Viskores|, go to the |Viskores| releases page:
 
-  https://github.com/Viskores/viskores/-/releases
+  https://github.com/Viskores/viskores/releases
 
 From there with your favorite browser you may download the source code from any of the recent |Viskores| releases in a variety of different archive files such as zip or tar gzip.
 
@@ -22,37 +22,11 @@ The repository can be browsed from its project web page:
 
   https://github.com/Viskores/viskores
 
+.. index::
+   single: git
+
 We leave access to the :index:`git` hosted repository as an exercise for the user.
 Those interested in :command:`git` access for the purpose of contributing to |Viskores| should consult the `CONTRIBUTING <https://github.com/Viskores/viskores/blob/master/CONTRIBUTING.md>`_ guidelines documented in the source code.
-
-.. %% \index{git|(}
-
-.. %% The source code in the |Viskores| repository is access through the \textfilename{git} version control tool.
-.. %% If you have not used \textfilename{git} before, there are several resources available to help you get familiar with it.
-.. %% Github has a nice setup guide (\url{https://help.github.com/articles/set-up-git}) to help you get up and running quickly.
-.. %% For more complete documentation, we recommend the \emph{Pro Git} book (\url{https://git-scm.com/book}).
-
-.. %% To get a copy of the |Viskores| repository, issue a git clone command.
-
-.. %% \begin{blankexample}{Cloning the main |Viskores| git repository.}
-.. %% git clone https://github.com/Viskores/viskores.git
-.. %% \end{blankexample}
-
-.. %% The git clone command will create a copy of all the source code to your local machine.
-.. %% As time passes and you want to get an update of changes in the repository, you can do that with the git pull command.
-
-.. %% \begin{blankexample}{Updating a git repository with the pull command.}
-.. %% git pull
-.. %% \end{blankexample}
-
-.. %% \begin{didyouknow}
-.. %%   The proceeding examples for using git are based on the \textfilename{git} command line tool, which is particularly prevalent on Unix-based and Mac systems.
-.. %%   There also exist several GUI tools for accessing git repositories.
-.. %%   These tools each have their own interface and they can be quite different.
-.. %%   However, they all should have roughly equivalent commands named ``clone'' to download a repository given a url and ``pull'' to update an existing repository.
-.. %% \end{didyouknow}
-
-.. %% \index{git|)}
 
 
 ------------------------------
@@ -134,7 +108,7 @@ The following list contains the most common configuration parameters.
 
 .. cmake:variable:: Viskores_ENABLE_EXAMPLES
 
-   The |Viskores| repository comes with an \textfilename{examples} directory.
+   The |Viskores| repository comes with an :file:`examples` directory.
    This macro determines whether they are built.
 
 .. cmake:variable:: Viskores_ENABLE_BENCHMARKS
@@ -154,7 +128,7 @@ The following list contains the most common configuration parameters.
 
 .. cmake:variable:: Viskores_ENABLE_MPI
 
-   Determines whether |Viskores| is built with :index:`MPI` suppoert for running on distributed memory clusters.
+   Determines whether |Viskores| is built with :index:`MPI` support for running on distributed memory clusters.
 
 .. cmake:variable:: Viskores_ENABLE_OPENMP
 
@@ -174,6 +148,7 @@ The following list contains the most common configuration parameters.
 
    If on, the |Viskores| build includes building many test programs.
    The |Viskores| source includes hundreds of regression tests to ensure quality during development.
+   See :secref:`testing:Running Regression Testing` for instructions on running them.
 
 .. cmake:variable:: Viskores_ENABLE_TUTORIALS
 
@@ -201,7 +176,7 @@ As stated earlier, CMake supports generating configuration files for several dif
 Make and ninja are common build tools, but CMake also supports building project files for several different types of integrated development environments such as Microsoft Visual Studio and Apple XCode.
 
 The |Viskores| libraries and test files are compiled when the default build is invoked.
-For example, if a :file:`Makefile` was generated, the build is invoked by calling \textfilename{make} in the build directory.
+For example, if a :file:`Makefile` was generated, the build is invoked by calling :command:`make` in the build directory.
 Expanding on :numref:`ex:RunningCMake`
 
 .. code-block:: bash
@@ -260,8 +235,8 @@ Thus, the documentation in this section is specifically for finding and configur
 |Viskores| can be configured from an external project using the :cmake:command:`find_package` CMake function.
 The behavior and use of this function is well described in the CMake documentation.
 The first argument to :cmake:command:`find_package` is the name of the package, which in this case is ``Viskores``.
-CMake configures this package by looking for a file named :file:`ViskoresConfig.cmake`, which will be located in the :file:`lib/cmake/viskores-<\Viskores version>` directory of the install or build of |Viskores|.
-The configurable CMake variable :cmake:variable:`CMAKE_PREFIX_PATH` can be set to the build or install directory, the :cmake:envvar:`CMAKE_PREFIX_PATH` environment variable can likewise be set, or \cmakevar{Viskores_DIR} can be set to the directory that contains this file.
+CMake configures this package by looking for a file named :file:`ViskoresConfig.cmake`, which will be located in the :file:`lib/cmake/viskores-<Viskores version>` directory of the install or build of |Viskores|.
+The configurable CMake variable :cmake:variable:`CMAKE_PREFIX_PATH` can be set to the build or install directory, the :cmake:envvar:`CMAKE_PREFIX_PATH` environment variable can likewise be set, or :cmake:variable:`Viskores_DIR` can be set to the directory that contains this file.
 
 .. code-block:: cmake
    :caption: Loading |Viskores| configuration from an external CMake project.
@@ -301,7 +276,7 @@ Several library targets are provided, but most projects will need to link in one
 
    Contains |Viskores|'s pre-built filters.
    Applications that are looking to use Viskores filters will need to link to this library.
-   The filters are further broken up into several smaller library packages (such as :cmake:variable:`viskores::filter_contour`, :cmake:variable`viskores::filter_flow`, :cmake:variable:`viskores::filter_field_transform`, and many more.
+   The filters are further broken up into several smaller library packages such as :cmake:variable:`viskores::filter_contour`, :cmake:variable:`viskores::filter_flow`, :cmake:variable:`viskores::filter_field_transform`, and many more.
    :cmake:variable:`viskores::filter` is actually a meta library that links all of these filter libraries to a CMake target.
 
 .. cmake:variable:: viskores::io
@@ -331,7 +306,7 @@ Several library targets are provided, but most projects will need to link in one
 .. index::
    triple: CMake; Viskores package; variables
 
-The following is a list of all the CMake variables defined when the \textcode{find_package} function completes.
+The following is a list of all the CMake variables defined when the :cmake:command:`find_package` function completes.
 
 .. cmake:variable:: Viskores_FOUND
 
@@ -346,7 +321,7 @@ The following is a list of all the CMake variables defined when the \textcode{fi
 .. cmake:variable:: Viskores_VERSION_FULL
 
    The extended version number of the |Viskores| package including patch and in-between-release information.
-   This is in the form "major.minor.patch[.gitsha1]" where "gitsha" is only included if the source code is in between releases.
+   This is in the form "major.minor.patch[.gitsha]" where "gitsha" is only included if the source code is in between releases.
 
 .. cmake:variable:: Viskores_VERSION_MAJOR
 
@@ -391,7 +366,7 @@ These package variables can be used to query whether optional components are sup
 
    find_package(Viskores REQUIRED)
 
-   if (NOT Viskores::ENABLE::RENDERING)
+   if (NOT Viskores_ENABLE_RENDERING)
      message(FATAL_ERROR "Viskores must be built with rendering on.")
    endif()
 

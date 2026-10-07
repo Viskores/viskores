@@ -6,17 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//=============================================================================
-//
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
-//=============================================================================
 #define viskores_filter_flow_worklet_Analysis_cxx
 
 #include <viskores/filter/flow/worklet/Analysis.h>
@@ -93,7 +82,7 @@ public:
   using ExecutionSignature = void(_1, _2, _3);
 
   // Offset is number of points in streamline.
-  // 1 (inital point) + number of steps taken (p.NumSteps - initalNumSteps)
+  // 1 (initial point) + number of steps taken (p.NumSteps - initalNumSteps)
   template <typename ParticleType>
   VISKORES_EXEC void operator()(const ParticleType& p,
                                 const viskores::Id& initialNumSteps,

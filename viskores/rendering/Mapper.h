@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_rendering_Mapper_h
 #define viskores_rendering_Mapper_h
 
@@ -73,10 +64,20 @@ public:
   virtual void SetLogarithmX(bool l);
   virtual void SetLogarithmY(bool l);
 
+  /// @brief Specify the position of the point light used for shading.
+  ///
+  /// If no position is specified, the current camera position is used.
+  void SetLightPosition(const viskores::Vec3f_32& lightPosition);
+  /// @copydoc SetLightPosition
+  viskores::Vec3f_32 GetLightPosition() const;
+
 protected:
   viskores::cont::ArrayHandle<viskores::Vec4f_32> ColorMap;
   bool LogarithmX = false;
   bool LogarithmY = false;
+  viskores::Vec3f_32 CameraPosition{ 0.f, 0.f, 1.f };
+  viskores::Vec3f_32 LightPosition{ 0.f, 0.f, 0.f };
+  bool LightPositionSet = false;
 
   // for the volume renderer sorting back to front gives better results for transarent colors, which is the default
   // but for the raytracer front to back is better.

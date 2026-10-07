@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_ArrayHandleConstant_h
 #define viskores_cont_ArrayHandleConstant_h
 
@@ -155,7 +146,7 @@ struct VISKORES_CONT_EXPORT ArrayRangeComputeImpl<viskores::cont::StorageTagCons
     bool allMasked = false;
     if (maskArray.GetNumberOfValues() != 0)
     {
-      // Find if there is atleast one value that is not masked
+      // Find if there is at least one value that is not masked
       auto ids = GetFirstAndLastUnmaskedIndices(maskArray, devId);
       allMasked = (ids[1] < ids[0]);
     }
@@ -196,7 +187,7 @@ struct VISKORES_CONT_EXPORT ArrayRangeComputeMagnitudeImpl<viskores::cont::Stora
   {
     if (maskArray.GetNumberOfValues() != 0)
     {
-      // Find if there is atleast one value that is not masked
+      // Find if there is at least one value that is not masked
       auto ids = GetFirstAndLastUnmaskedIndices(maskArray, devId);
       if (ids[1] < ids[0])
       {

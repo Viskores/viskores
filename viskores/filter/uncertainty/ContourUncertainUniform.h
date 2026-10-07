@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 //  This code is based on the algorithm presented in the following papers:
 //  Wang, J., Athawale, T., Moreland, K., Chen, J., Johnson, C., & Pugmire,
@@ -95,26 +86,26 @@ public:
     return this->GetOutputFieldName();
   }
 
-  /// @brief Sets toplogy case count field (uncertainty field type 2).
-  /// Sets the output field name that stores the number of marching cubes toplogy cases for each grid cell.
+  /// @brief Sets topology case count field (uncertainty field type 2).
+  /// Sets the output field name that stores the number of marching cubes topology cases for each grid cell.
   VISKORES_CONT void SetNumberNonzeroProbabilityName(const std::string& name)
   {
     this->NumberNonzeroProbabilityName = name;
   }
 
-  /// @brief Gets toplogy case count field (uncertainty field type 2.
-  /// Gets the output field name that stores the number of marching cubes toplogy cases for each grid cell.
+  /// @brief Gets topology case count field (uncertainty field type 2.
+  /// Gets the output field name that stores the number of marching cubes topology cases for each grid cell.
   VISKORES_CONT const std::string& GetNumberNonzeroProbabilityName() const
   {
     return this->NumberNonzeroProbabilityName;
   }
 
   /// @brief Sets entropy field. (uncertainty field type 3)
-  /// Sets the output field name that stores the entropy of a histogram of marching cubes toplogy cases.
+  /// Sets the output field name that stores the entropy of a histogram of marching cubes topology cases.
   VISKORES_CONT void SetEntropyName(const std::string& name) { this->EntropyName = name; }
 
   /// @brief Gets entropy field. (uncertainty field type 3)
-  /// Gets the output field name that stores the entropy of a histogram of marching cubes toplogy cases.
+  /// Gets the output field name that stores the entropy of a histogram of marching cubes topology cases.
   VISKORES_CONT const std::string& GetEntropyName() const { return this->EntropyName; }
 
 protected:

@@ -7,13 +7,6 @@
 //============================================================================
 
 //============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
 //  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
@@ -117,8 +110,8 @@ public:
       ? viskores::LowerBound(otherArrayPortal, value, comparisonFunctor)
       : viskores::UpperBound(otherArrayPortal, value, comparisonFunctor);
 
-    // The position of the current elemnt is its index in our array plus its
-    // position in the ohter array.
+    // The position of the current element is its index in our array plus its
+    // position in the other array.
     resultArrayPortal.Set(idx + posInOther, value);
   }
 }; //  CopyIntoCombinedArrayWorklet

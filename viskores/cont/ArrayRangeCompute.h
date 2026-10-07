@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_ArrayRangeCompute_h
 #define viskores_cont_ArrayRangeCompute_h
 
@@ -47,7 +38,7 @@ namespace cont
 ///
 /// The optional `computeFiniteRange` parameter specifies whether if non-finite
 /// values in the array should be ignored to compute the finite range of
-/// the array. For Vec types, individual component values are considered independantly.
+/// the array. For Vec types, individual component values are considered independently.
 ///
 /// The optional `device` parameter can be used to specify a device to run the
 /// range computation on. The default value is `viskores::cont::DeviceAdapterTagAny{}`.

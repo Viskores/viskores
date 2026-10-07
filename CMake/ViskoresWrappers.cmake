@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 include(CMakeParseArguments)
 
@@ -355,7 +346,7 @@ endfunction(viskores_install_targets)
 #                               )
 #   target_link_libraries(lib_that_uses_viskores PRIVATE viskores_filter)
 #
-#  DROP_UNUSED_SYMBOLS: If enabled will apply the appropiate link
+#  DROP_UNUSED_SYMBOLS: If enabled will apply the appropriate link
 #  flags to drop unused Viskores symbols. This works as Viskores is compiled with
 #  -ffunction-sections which allows for the linker to remove unused functions.
 #  If you are building a program that loads runtime plugins that can call
@@ -450,7 +441,7 @@ function(viskores_add_target_information uses_viskores_target)
 
   if(Viskores_TI_DEVICE_SOURCES)
     foreach(target IN LISTS targets)
-      target_link_libraries(${target} 
+      target_link_libraries(${target}
         PRIVATE $<TARGET_NAME_IF_EXISTS:viskores_exec>  $<TARGET_NAME_IF_EXISTS:viskores::viskores_exec>)
     endforeach()
 
@@ -698,7 +689,7 @@ function(viskores_add_instantiations instantiations_list)
   get_filename_component(instantations_name "${instantiations_file}" NAME_WE)
   set(INSTANTIATION_INC_GUARD "viskores_${instantations_name}Instantiation")
 
-  # Generate instatiation file in the build directory
+  # Generate instantiation file in the build directory
   set(counter 0)
   foreach(instantiation IN LISTS instantiations)
     string(REPLACE "$" ";" instantiation ${instantiation})

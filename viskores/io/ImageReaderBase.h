@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_io_ImageReaderBase_h
 #define viskores_io_ImageReaderBase_h
 
@@ -34,7 +25,7 @@ namespace io
 /// are represented as a point field in a 2D uniform dataset.
 ///
 /// `ImageReaderBase` implements virtual methods for reading files.  Ideally,
-/// these methods will be overriden in various subclasses to implement specific
+/// these methods will be overridden in various subclasses to implement specific
 /// functionality for reading data to specific image file-types.
 ///
 class VISKORES_IO_EXPORT ImageReaderBase

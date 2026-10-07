@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_rendering_raytracing_Quad_Intersector_h
 #define viskores_rendering_raytracing_Quad_Intersector_h
 
@@ -55,16 +46,18 @@ public:
 
   template <typename Precision>
   void IntersectionDataImp(Ray<Precision>& rays,
-                           const viskores::cont::Field scalarField,
-                           const viskores::Range& scalarRange);
+                           const viskores::cont::Field textureField,
+                           const viskores::cont::ArrayHandle<viskores::Range>& textureRanges);
 
-  void IntersectionData(Ray<viskores::Float32>& rays,
-                        const viskores::cont::Field scalarField,
-                        const viskores::Range& scalarRange = viskores::Range()) override;
+  void IntersectionData(
+    Ray<viskores::Float32>& rays,
+    const viskores::cont::Field textureField,
+    const viskores::cont::ArrayHandle<viskores::Range>& textureRanges = {}) override;
 
-  void IntersectionData(Ray<viskores::Float64>& rays,
-                        const viskores::cont::Field scalarField,
-                        const viskores::Range& scalarRange = viskores::Range()) override;
+  void IntersectionData(
+    Ray<viskores::Float64>& rays,
+    const viskores::cont::Field textureField,
+    const viskores::cont::ArrayHandle<viskores::Range>& textureRanges = {}) override;
 
   viskores::Id GetNumberOfShapes() const override;
 }; // class ShapeIntersector

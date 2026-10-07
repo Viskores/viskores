@@ -16,9 +16,8 @@ All the file I/O classes are declared under the ``viskores::io`` namespace.
    Files are just one of many ways to get data in and out of |Viskores|.
    In later chapters we explore ways to define |Viskores| data structures of
    increasing power and complexity.
-   In particular, :secref:`dataset:Building Data Sets` describes how to build |Viskores| data set objects and Section \ref{sec:ArrayHandle:Adapting} documents how to adapt data structures defined in other libraries to be used directly in |Viskores|.
-
-.. todo:: Add custom ArrayHandle section reference above.
+   :secref:`dataset:Building Data Sets` describes how to build |Viskores| data set objects.
+   :secref:`basic-array-handles:Creating Array Handles` describes how simple arrays can be transferred to |Viskores| and :chapref:`memory-layout:Memory Layout of Array Handles` describes how these basic arrays can be used to describe different memory layouts.
 
 ------------------------------
 Readers

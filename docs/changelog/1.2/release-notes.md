@@ -17,6 +17,8 @@
 3. [Rendering](#rendering)
    - New ANARI device enabled by Viskores
    - Pan with 3D camera fixed
+   - Fixed rendering issue with viewport changes
+   - Wireframe overlay now visible through pseudocolor
 4. [Bug Fixes](#bug-fixes)
    - Bug fix for CellLocatorBoundingIntervalHierarchy
    - Fix array access for rectilinear splines
@@ -38,6 +40,7 @@
    - Shorten header filenames to fix Windows MAX_PATH install failures
    - Fixed error about ambiguous thrust namespace
    - Remove warnings for deprecated Thrust utilities
+   - Fix compile issues with CUDA
 
 ## Core
 
@@ -167,6 +170,19 @@ Although the `Camera` object for 3D rendering provided panning
 options in the image plane, the underlying camera in the raytracing
 code did not support it. The raycast mapping now supports X/Y panning
 when rendering 3D objects.
+
+### Fixed rendering issue with viewport changes
+
+Viskores had an issue with setting the viewport properly when not in 3D camera
+mode. The camera now properly resizes the viewport when using 2D camera
+projections.
+
+### Wireframe overlay now visible through pseudocolor
+
+There was an issue when combining overlay wireframes with pseudocolor renderings
+where the pseudocolor rendering would obscure the wireframe. Viskores now
+detects when a wireframe is rendered as an overlay and ignores the depth buffer
+to ensure visibility.
 
 ## Bug Fixes
 
@@ -375,3 +391,22 @@ and `thrust::plus`, as well as utilities such as `thrust::distance`, is
 deprecated. These are replaced with the more general `cuda::std` equivalents.
 The Viskores code is updated to point to the latter classes and functions for
 newer versions of Cuda.
+
+### Fix compile issues with CUDA
+
+CUDA 13.3 updated the Thrust library to version 3.3. This version changed the
+use of an internal `is_commutative` traits class that Viskores specialized to
+engage optimized paths of several algorithms. Viskore's use of this no longer
+existing internal class caused compile errors.
+
+Thrust moved to using the more general `cuda::is_commutative_v`, and Viskores
+has followed by overloading this particular trait instead. As this class is no
+longer marked as internal, hopefully it will be more stable across CUDA/Thrust
+versions.
+
+CUDA also changed how it handles visibility. Previous to CUDA 11, the nvcc
+compiler did not support the `__attribute__((visibility("default")))` symbol
+modifier. CUDA now does support this modifier, and with the most recent versions
+it is important to add the default visibility to prevent symbols from being
+hidden. Viskores now checks against the CUDA version to ensure that the proper
+attribute (or lack thereof) is used for `VISKORES_ALWAYS_EXPORT`.

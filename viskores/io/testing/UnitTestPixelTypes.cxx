@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/io/PixelTypes.h>
@@ -64,7 +55,7 @@ void TestPixelTypeOperations(const viskores::UInt16& numPixels = 10)
     }
   }
 
-  // Test that a pixel can be retreived from the filled out data vector
+  // Test that a pixel can be retrieved from the filled out data vector
   for (viskores::Id i = 0; i < numPixels; i++)
   {
     VISKORES_TEST_ASSERT(pixelVector[static_cast<typename std::vector<PixelType>::size_type>(i)] ==
@@ -102,7 +93,7 @@ void TestGreyPixelConstructors()
   float color = 10.0f / GreyPixel_16::MAX_COLOR_VALUE;
   auto pixel_7 = GreyPixel_16({ color, color, color, 5 });
 
-  VISKORES_TEST_ASSERT(viskores::UInt16(1) == pixel_1[0], "Type mis-match");
+  VISKORES_TEST_ASSERT(viskores::UInt16(1) == pixel_1[0], "Type mismatch");
   VISKORES_TEST_ASSERT(viskores::FloatDefault(0) == pixel_1.Diff(pixel_2), "Incorrect Diff");
   VISKORES_TEST_ASSERT(viskores::FloatDefault(1) == pixel_1.Diff(pixel_3), "Incorrect Diff");
   VISKORES_TEST_ASSERT(viskores::Vec4f_32(1.0f / 255, 1.0f / 255, 1.0f / 255, 1) ==
@@ -146,7 +137,7 @@ void TestRGBPixelConstructors()
   float color = 10.0f / RGBPixel_16::MAX_COLOR_VALUE;
   auto pixel_8 = RGBPixel_16({ color, color, color, 5 });
 
-  VISKORES_TEST_ASSERT(viskores::Vec3ui_8(1, 1, 1) == pixel_1, "Type mis-match");
+  VISKORES_TEST_ASSERT(viskores::Vec3ui_8(1, 1, 1) == pixel_1, "Type mismatch");
   VISKORES_TEST_ASSERT(viskores::FloatDefault(0) == pixel_1.Diff(pixel_2), "Incorrect Diff");
   VISKORES_TEST_ASSERT(viskores::FloatDefault(0) == pixel_1.Diff(pixel_3), "Incorrect Diff");
   VISKORES_TEST_ASSERT(viskores::FloatDefault(3) == pixel_1.Diff(pixel_4), "Incorrect Diff");

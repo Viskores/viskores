@@ -7,13 +7,6 @@
 //============================================================================
 
 //============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
 //  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
@@ -38,7 +31,7 @@ namespace filter
 namespace mesh_info
 {
 
-/// @brief Compute for each cell a metric derived from the Jacobian matric with normalization involving edge length.
+/// @brief Compute for each cell a metric derived from the Jacobian matrix with normalization involving edge length.
 ///
 /// This only produces values for triangles, quadrilaterals, tetrahedra, and hexahedra.
 ///

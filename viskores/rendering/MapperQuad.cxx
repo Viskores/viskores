@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/rendering/MapperQuad.h>
 
@@ -124,7 +115,7 @@ void MapperQuad::RenderCellsImpl(const viskores::cont::UnknownCellSet& cellset,
   this->Internals->Tracer.GetCamera() = this->Internals->RayCamera;
   this->Internals->Tracer.SetField(scalarField, scalarRange);
   this->Internals->Tracer.SetColorMap(this->ColorMap);
-  this->Internals->Tracer.Render(this->Internals->Rays);
+  this->Internals->Tracer.Render(this->Internals->Rays, this->GetLightPosition());
 
   timer.Start();
   this->Internals->Canvas->WriteToCanvas(

@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_RuntimeDeviceInformation_h
 #define viskores_cont_RuntimeDeviceInformation_h
 
@@ -73,13 +64,13 @@ public:
   /// devices using parsed viskores arguments.
   ///
   /// params:
-  ///   id - The specific device to retreive the RuntimeDeviceConfiguration options for
+  ///   id - The specific device to retrieve the RuntimeDeviceConfiguration options for
   ///   configOptions - Viskores provided options that should be included when initializing
   ///                   a given RuntimeDeviceConfiguration
   ///   argc - The number of command line arguments to parse when Initializing
   ///          a given RuntimeDeviceConfiguration
   ///   argv - The extra command line arguments to parse when Initializing a given
-  ///          RuntimeDeviceConfiguration. This argument is mainlued used in conjuction
+  ///          RuntimeDeviceConfiguration. This argument is mainlued used in conjunction
   ///          with Kokkos config arg parsing to include specific --kokkos command
   ///          line flags and environment variables.
   VISKORES_CONT

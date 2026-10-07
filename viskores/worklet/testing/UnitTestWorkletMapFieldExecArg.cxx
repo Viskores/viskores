@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #include <viskores/cont/ArrayHandle.h>
 #include <viskores/cont/ArrayHandleIndex.h>
 #include <viskores/cont/ExecutionObjectBase.h>
@@ -163,7 +154,7 @@ struct VarientSizesExecObj : viskores::cont::ExecutionObjectBase
 
 struct TestVariantExecObjectPadding : viskores::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldOut a, FieldOut c, ExecObject varient);
+  using ControlSignature = void(FieldOut a, FieldOut c, ExecObject variant);
   // Using an output field as the domain is weird, but it works.
   using InputDomain = _1;
 
@@ -178,7 +169,7 @@ struct TestVariantExecObjectPadding : viskores::worklet::WorkletMapField
 
 struct TestVariantExecObjectNoPadding : viskores::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldOut a, FieldOut b, FieldOut c, ExecObject varient);
+  using ControlSignature = void(FieldOut a, FieldOut b, FieldOut c, ExecObject variant);
   // Using an output field as the domain is weird, but it works.
   using InputDomain = _1;
 
@@ -195,7 +186,7 @@ struct TestVariantExecObjectNoPadding : viskores::worklet::WorkletMapField
 
 struct TestVariantExecObjectLarger : viskores::worklet::WorkletMapField
 {
-  using ControlSignature = void(FieldOut c, FieldOut d, FieldOut e, ExecObject varient);
+  using ControlSignature = void(FieldOut c, FieldOut d, FieldOut e, ExecObject variant);
   // Using an output field as the domain is weird, but it works.
   using InputDomain = _1;
 

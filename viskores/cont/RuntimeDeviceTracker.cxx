@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/RuntimeDeviceTracker.h>
 
@@ -136,7 +127,7 @@ void RuntimeDeviceTracker::Reset()
   this->Internals->Reset();
 
   // We use this instead of calling CheckDevice/SetDeviceState so that
-  // when we use logging we get better messages stating we are reseting
+  // when we use logging we get better messages stating we are resetting
   // the devices.
   viskores::cont::RuntimeDeviceInformation runtimeDevice;
   for (viskores::Int8 i = 1; i < VISKORES_MAX_DEVICE_ADAPTER_ID; ++i)

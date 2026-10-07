@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/rendering/MapperGlyphVector.h>
 
@@ -160,7 +151,7 @@ void MapperGlyphVector::RenderCellsImpl(
   tracer.SetField(magnitudeField, magnitudeFieldRange);
   tracer.GetCamera() = RayCamera;
   tracer.SetColorMap(this->ColorMap);
-  tracer.Render(Rays);
+  tracer.Render(Rays, this->GetLightPosition());
 
   timer.Start();
   this->Canvas->WriteToCanvas(Rays, Rays.Buffers.at(0).Buffer, camera);

@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/filter/contour/ClipWithImplicitFunction.h>
 
@@ -144,7 +135,7 @@ void TestClipStructuredInvertedSphere()
   {
     VISKORES_TEST_ASSERT(
       test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-      "Wrong result for ClipWithImplicitFunction filter on sturctured quads data");
+      "Wrong result for ClipWithImplicitFunction filter on structured quads data");
   }
 }
 
@@ -179,7 +170,7 @@ void TestClipStructuredInvertedMultiPlane()
   for (int i = 0; i < 4; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                         "Wrong result for ClipWithImplicitFunction filter on sturctured data in "
+                         "Wrong result for ClipWithImplicitFunction filter on structured data in "
                          "TestClipStructuredInvertedMultiPlane");
   }
 }

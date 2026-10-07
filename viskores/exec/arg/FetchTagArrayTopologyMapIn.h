@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_exec_arg_FetchTagArrayTopologyMapIn_h
 #define viskores_exec_arg_FetchTagArrayTopologyMapIn_h
 
@@ -41,10 +32,12 @@ namespace arg
 
 /// \brief \c Fetch tag for getting array values determined by topology connections.
 ///
-/// \c FetchTagArrayTopologyMapIn is a tag used with the \c Fetch class to
-/// retrieve values from an array portal. The fetch uses indexing based on
-/// the topology structure used for the input domain.
-///
+/// Data is loaded from the "incident" topology in a topology map. For example,
+/// in a point-to-cell topology map, this fetch gets the field values for all
+/// points attached to the cell being visited. Its Load method returns a Vec-like
+/// object containing all the incident field values, whereas its Store method
+/// does nothing. This fetch is designed for use in topology maps and expects the
+/// input domain to be a cell set.
 struct FetchTagArrayTopologyMapIn
 {
 };
@@ -236,7 +229,7 @@ struct Fetch<viskores::exec::arg::FetchTagArrayTopologyMapIn,
                                                         ScatterAndMaskMode>& indices,
     const ExecObjectType& portal) -> viskores::Vec<typename ExecObjectType::ValueType, 6>
   {
-    // std::cout << "opimized fetch for point values" << std::endl;
+    // std::cout << "optimized fetch for point values" << std::endl;
     const auto& xgcidx = indices.GetIndicesIncident();
     const viskores::Id offset1 = (xgcidx.Planes[0] * xgcidx.NumberOfPointsPerPlane);
     const viskores::Id offset2 = (xgcidx.Planes[1] * xgcidx.NumberOfPointsPerPlane);

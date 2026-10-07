@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 // Copyright 2010, Takuya Akiba
 // All rights reserved.
@@ -78,7 +69,7 @@
 //   void RunParentTask(TaskType task);
 //
 //   // Run an child task in a new thread. The function may be blocking or
-//   // non-blocking, and 'data' is an abitrary object passed to the parent
+//   // non-blocking, and 'data' is an arbitrary object passed to the parent
 //   // task's operator() (See the TBB implementation for details).
 //   template <typename TaskType, typename ParentTaskThreadData>
 //   void RunChildTasks(ParentTaskThreadData data, TaskType left, TaskType right);

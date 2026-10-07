@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <complex>
 #include <viskores/cont/DataSetBuilderExplicit.h>
@@ -47,7 +38,7 @@ void TubeThatSpiral(viskores::FloatDefault radius,
   viskores::cont::DataSetBuilderExplicitIterative dsb;
   std::vector<viskores::Id> ids;
 
-  // The Archimedian spiral is defined by the equation r = a + b*theta.
+  // The Archimedean spiral is defined by the equation r = a + b*theta.
   // To extend to a 3D curve, use z = t, theta = t, r = a + b t.
   viskores::FloatDefault a = viskores::FloatDefault(0.2);
   viskores::FloatDefault b = viskores::FloatDefault(0.8);

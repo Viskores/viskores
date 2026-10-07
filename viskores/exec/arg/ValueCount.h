@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_exec_arg_ValueCount_h
 #define viskores_exec_arg_ValueCount_h
 
@@ -32,7 +23,8 @@ namespace arg
 /// \brief Aspect tag to use for getting the value count.
 ///
 /// The \c AspectTagValueCount aspect tag causes the \c Fetch class to obtain
-/// the number of values that map to the key.
+/// the number of values that map to the key of the current instance.
+/// This aspect is designed for use with reduce-by-key maps.
 ///
 struct AspectTagValueCount
 {

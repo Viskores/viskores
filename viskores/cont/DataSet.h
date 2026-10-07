@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_DataSet_h
 #define viskores_cont_DataSet_h
 
@@ -450,7 +441,7 @@ public:
   /// it is likely going to cause problems pulling the data back out. To get around this
   /// problem, you can call this method to convert the data to a form that is likely to
   /// be recognized. This conversion is likely but not guaranteed because not all types
-  /// are convertable to something recognizable.
+  /// are convertible to something recognizable.
   ///
   VISKORES_CONT void ConvertToExpected();
 

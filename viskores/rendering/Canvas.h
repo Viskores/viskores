@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_rendering_Canvas_h
 #define viskores_rendering_Canvas_h
@@ -108,7 +99,7 @@ public:
 
   /// @brief Change the size of the image.
   VISKORES_CONT
-  void ResizeBuffers(viskores::Id width, viskores::Id height);
+  virtual void ResizeBuffers(viskores::Id width, viskores::Id height);
 
   /// @brief Specify the background color.
   VISKORES_CONT

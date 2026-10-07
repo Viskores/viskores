@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/testing/MakeTestDataSet.h>
 #include <viskores/cont/testing/Testing.h>
@@ -35,7 +26,6 @@ void RenderTests()
   viskores::cont::testing::MakeTestDataSet maker;
 
   viskores::rendering::testing::RenderTestOptions testOptions;
-  testOptions.AllowedPixelErrorRatio = 0.002f;
   testOptions.Mapper = viskores::rendering::testing::MapperType::Connectivity;
   testOptions.AllowAnyDevice = false;
   testOptions.ColorTable = viskores::cont::ColorTable::Preset::Inferno;

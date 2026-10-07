@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/internal/Assume.h>
 
@@ -975,7 +966,7 @@ void Buffer::Enqueue(const viskores::cont::Token& token) const
 void Buffer::DeepCopyFrom(const viskores::cont::internal::Buffer& src) const
 {
   // A Token should not be declared within the scope of a lock. when the token goes out of scope
-  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // it will attempt to acquire the lock, which is undefined behavior of the thread already has
   // the lock.
   viskores::cont::Token token;
   {
@@ -1019,7 +1010,7 @@ void Buffer::DeepCopyFrom(const viskores::cont::internal::Buffer& src,
                           viskores::cont::DeviceAdapterId device) const
 {
   // A Token should not be declared within the scope of a lock. when the token goes out of scope
-  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // it will attempt to acquire the lock, which is undefined behavior of the thread already has
   // the lock.
   viskores::cont::Token token;
   {

@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_arg_TransportTagTopologyFieldIn_h
 #define viskores_cont_arg_TransportTagTopologyFieldIn_h
 
@@ -35,11 +26,9 @@ namespace arg
 
 /// \brief \c Transport tag for input arrays in topology maps.
 ///
-/// \c TransportTagTopologyFieldIn is a tag used with the \c Transport class to
-/// transport \c ArrayHandle objects for input data. The transport is templated
-/// on a topology element tag and expects a cell set input domain to check the
-/// size of the input array.
-///
+/// Similar to viskores::cont::arg::TransportTagArrayIn, except that the size is
+/// checked against the topology of a cell set for the input domain. The
+/// input-domain object is assumed to be a viskores::cont::CellSet.
 template <typename TopologyElementTag>
 struct TransportTagTopologyFieldIn
 {

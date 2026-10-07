@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 $# This file uses the pyexpander macro processing utility to build the
 $# FunctionInterface facilities that use a variable number of arguments.
 $# Information, documentation, and downloads for pyexpander can be found at:
@@ -1296,7 +1287,7 @@ static inline VISKORES_EXEC_CONT viskores::Vec<T, N> CopySign(const viskores::Ve
 ///@}
 
 ///@{
-/// Decompose floating poing value
+/// Decompose floating point value
 ///
 inline VISKORES_EXEC_CONT viskores::Float32 Frexp(viskores::Float32 x, viskores::Int32 *exponent)
 {

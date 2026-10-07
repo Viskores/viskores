@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_arg_TransportTagCellSetIn_h
 #define viskores_cont_arg_TransportTagCellSetIn_h
 
@@ -33,9 +24,9 @@ namespace arg
 
 /// \brief \c Transport tag for input arrays.
 ///
-/// \c TransportTagCellSetIn is a tag used with the \c Transport class to
-/// transport topology objects for input data.
-///
+/// Loads data from a `viskores::cont::CellSet` object. `TransportTagCellSetIn`
+/// is a templated class with two parameters: the "visit" topology and the
+/// "incident" topology. The returned execution object is a connectivity object.
 template <typename VisitTopology, typename IncidentTopology>
 struct TransportTagCellSetIn
 {

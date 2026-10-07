@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -71,7 +62,7 @@ namespace hierarchical_volumetric_branch_decomposer
 
 /// Template parameter is bool indicating whether we are processing up- or
 /// down best volumes and corresponding whether we need to use the low or
-/// high end of the edge. Note: We make this a template paramter so that
+/// high end of the edge. Note: We make this a template parameter so that
 /// the corresponding if statement can already be optimozed away during
 /// compile time.
 template <bool IsDown>
@@ -148,7 +139,7 @@ public:
         } // last in group
       }   // not the last one
     }     // if(this->IsDown)
-    else // Processing the Up arrays. This is essentiall the same, but we need to use the lower end of the edge instead
+    else // Processing the Up arrays. This is essentially the same, but we need to use the lower end of the edge instead
     {
       // if it's the last one
       if (actualSuperarcIndex == NumberActualSuperarcs - 1)

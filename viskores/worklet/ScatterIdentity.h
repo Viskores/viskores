@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_worklet_ScatterIdentity_h
 #define viskores_worklet_ScatterIdentity_h
 
@@ -40,7 +31,7 @@ struct ScatterIdentity : internal::ScatterBase
   /// @brief The type of array handle used to map output indices to input indices.
   ///
   /// For the case of `ScatterIdentity`, this is a
-  /// `viskores::cont::ArrayHandleIndex` to do a direct 1-to-1 maping.
+  /// `viskores::cont::ArrayHandleIndex` to do a direct 1-to-1 mapping.
   using OutputToInputMapType = viskores::cont::ArrayHandleIndex;
 
   /// @brief Provides the array that maps output indices to input indices.
@@ -65,7 +56,7 @@ struct ScatterIdentity : internal::ScatterBase
   ///
 
   /// For the case of `ScatterIdentity`, this is a
-  /// `viskores::cont::ArrayHandleConstant` to do a direct 1-to-1 maping (so
+  /// `viskores::cont::ArrayHandleConstant` to do a direct 1-to-1 mapping (so
   /// every visit index is 0).
 
   using VisitArrayType = viskores::cont::ArrayHandleConstant<viskores::IdComponent>;

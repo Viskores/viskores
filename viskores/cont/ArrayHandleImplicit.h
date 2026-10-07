@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_ArrayHandleImplicit_h
 #define viskores_cont_ArrayHandleImplicit_h
 
@@ -84,7 +75,7 @@ namespace cont
 ///
 /// It is sometimes the case that you want Viskores to operate on an array of
 /// implicit values. That is, rather than store the data in an actual array, it
-/// is gerenated on the fly by a function. This is handled in Viskores by creating
+/// is generated on the fly by a function. This is handled in Viskores by creating
 /// an ArrayHandle in Viskores with a StorageTagImplicit type of \c Storage. This
 /// tag itself is templated to specify an ArrayPortal that generates the
 /// desired values. An ArrayHandle created with this tag will raise an error on
@@ -204,7 +195,7 @@ public:
 
 /// make_ArrayHandleImplicit is convenience function to generate an
 /// ArrayHandleImplicit.  It takes a functor and the virtual length of the
-/// arry.
+/// array.
 
 template <typename FunctorType>
 VISKORES_CONT viskores::cont::ArrayHandleImplicit<FunctorType> make_ArrayHandleImplicit(

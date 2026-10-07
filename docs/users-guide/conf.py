@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -84,8 +75,8 @@ today_fmt = '%B %d, %Y'
 rst_prolog = '''
 .. |Viskores| replace:: Viskores
 .. |Veclike| replace:: ``Vec``-like
-.. |report-year| replace:: 2025
-.. |report-number| replace:: ORNL/TM-2025/4175
+.. |report-year| replace:: 2026
+.. |report-number| replace:: ORNL/TM-2026/4700
 '''
 
 breathe_projects = { 'viskores': '@doxygen_xml_output_dir@' }

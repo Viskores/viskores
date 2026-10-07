@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -81,7 +72,7 @@ namespace contourtree_distributed
 /// \brief Boundary Restricted Augmented Contour Tree (BRACT)
 ///
 /// A contour tree for boundary vertices with the interior abstracted.
-/// This is primarily a data storage class. The actual constuction of
+/// This is primarily a data storage class. The actual construction of
 /// the BoundaryTree performed by the BoundaryTreeMaker
 /// As a data store, this class primarily stores a set of arrays
 /// and provides convenience functions for interacting with the
@@ -274,7 +265,7 @@ std::string BoundaryTree::PrintGlobalDot(
     }
   } // per node
   resultStream << "\t}" << std::endl;
-  // Return the resulting strin
+  // Return the resulting string
   return resultStream.str();
 } //PrintGlobalDot
 

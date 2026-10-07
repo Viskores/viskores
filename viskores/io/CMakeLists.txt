@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 set(headers
   BOVDataSetReader.h
@@ -54,7 +45,6 @@ set(sources
   ImageReaderPNG.cxx
   ImageReaderPNM.cxx
   ImageUtils.cxx
-  ImageWriterBase.cxx
   ImageWriterPNG.cxx
   ImageWriterPNM.cxx
   PixelTypes.cxx
@@ -67,6 +57,10 @@ set(sources
   VTKStructuredPointsReader.cxx
   VTKUnstructuredGridReader.cxx
   VTKVisItFileReader.cxx
+  )
+
+set(device_sources
+  ImageWriterBase.cxx
   )
 
 if (Viskores_ENABLE_HDF5_IO)

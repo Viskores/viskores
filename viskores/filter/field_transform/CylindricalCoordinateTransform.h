@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_filter_field_transform_CylindricalCoordinateTransform_h
 #define viskores_filter_field_transform_CylindricalCoordinateTransform_h
@@ -45,7 +36,7 @@ public:
 
   /// @brief Establish a transformation from Cartesian to cylindrical coordinates.
   VISKORES_CONT void SetCartesianToCylindrical() { CartesianToCylindrical = true; }
-  /// @brief Establish a transformation from cylindrical to Cartesian coordiantes.
+  /// @brief Establish a transformation from cylindrical to Cartesian coordinates.
   VISKORES_CONT void SetCylindricalToCartesian() { CartesianToCylindrical = false; }
 
 private:

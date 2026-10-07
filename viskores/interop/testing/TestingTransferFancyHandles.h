@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_testing_TestingFancyArrayHandles_h
 #define viskores_cont_testing_TestingFancyArrayHandles_h
 
@@ -90,7 +81,7 @@ void validate(viskores::cont::ArrayHandle<T, U> handle, viskores::interop::Buffe
 
   viskores::Int64 retSize = static_cast<viskores::Int64>(returnedValues.size());
 
-  //since BufferState allows for re-use of a GL buffer that is slightly
+  //since BufferState allows for reuse of a GL buffer that is slightly
   //larger than the current array size, we should only check that the
   //buffer is not smaller than the array.
   //This GL buffer size is done to improve performance when transferring
@@ -129,7 +120,7 @@ void test_ArrayHandleCartesianProduct()
   viskores::interop::BufferState state;
   viskores::interop::TransferToOpenGL(cartesian, state);
   validate(cartesian, state);
-  viskores::interop::TransferToOpenGL(cartesian, state); //make sure we can do multiple trasfers
+  viskores::interop::TransferToOpenGL(cartesian, state); //make sure we can do multiple transfers
   validate(cartesian, state);
 
   //resize up
@@ -165,7 +156,7 @@ void test_ArrayHandleCast()
   viskores::interop::BufferState state;
   viskores::interop::TransferToOpenGL(castArray, state);
   validate(castArray, state);
-  viskores::interop::TransferToOpenGL(castArray, state); //make sure we can do multiple trasfers
+  viskores::interop::TransferToOpenGL(castArray, state); //make sure we can do multiple transfers
   validate(castArray, state);
 
   //resize down
@@ -204,7 +195,7 @@ void test_ArrayHandleConcatenate()
   viskores::interop::BufferState state;
   viskores::interop::TransferToOpenGL(concatenate, state);
   validate(concatenate, state);
-  viskores::interop::TransferToOpenGL(concatenate, state); //make sure we can do multiple trasfers
+  viskores::interop::TransferToOpenGL(concatenate, state); //make sure we can do multiple transfers
   validate(concatenate, state);
 
   //resize down

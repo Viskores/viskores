@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_filter_flow_internal_LagrangianStructureHelpers_h
 #define viskores_filter_flow_internal_LagrangianStructureHelpers_h
 
@@ -127,7 +118,7 @@ VISKORES_EXEC_CONT void Jacobi(viskores::Matrix<T, 2, 2> tensor, viskores::Vec<T
   viskores::Vec<T, 2> j1 = viskores::MatrixGetRow(tensor, 0);
   viskores::Vec<T, 2> j2 = viskores::MatrixGetRow(tensor, 1);
 
-  // Assume a symetric matrix
+  // Assume a symmetric matrix
   // a b
   // b c
   T a = j1[0];
@@ -150,7 +141,7 @@ VISKORES_EXEC_CONT void Jacobi(viskores::Matrix<T, 3, 3> tensor, viskores::Vec<T
   viskores::Vec<T, 3> j2 = viskores::MatrixGetRow(tensor, 1);
   viskores::Vec<T, 3> j3 = viskores::MatrixGetRow(tensor, 2);
 
-  // Assume a symetric matrix
+  // Assume a symmetric matrix
   // a b c
   // b d e
   // c e f

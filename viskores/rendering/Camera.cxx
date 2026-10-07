@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/rendering/Camera.h>
 
@@ -378,8 +369,9 @@ viskores::rendering::raytracing::Camera Camera::CreateRaytracingCamera(viskores:
   rayCamera.SetIsOrthogonalProjection(this->GetMode() == Mode::TwoD);
   rayCamera.SetCamera3D(this->Camera3D);
   rayCamera.SetCamera2D(this->Camera2D);
-  rayCamera.SetViewport(
-    this->ViewportLeft, this->ViewportRight, this->ViewportBottom, this->ViewportTop);
+  viskores::Float32 left, right, bottom, top;
+  this->GetRealViewport(width, height, left, right, bottom, top);
+  rayCamera.SetViewport(left, right, bottom, top);
   return rayCamera;
 }
 

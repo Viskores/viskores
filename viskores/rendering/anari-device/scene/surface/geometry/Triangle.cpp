@@ -101,7 +101,7 @@ void Triangle::finalize()
 
   // Get the connection array.
   // Note that ANARI provides the connection array as a series of triples
-  // whereas Viskores wants a flat array of indices. The easist way to do the
+  // whereas Viskores wants a flat array of indices. The easiest way to do the
   // conversion (while sharing pointers) is to use ArrayHandleRuntimeVec.
   viskores::cont::ArrayHandleRuntimeVec<viskores::Id> connectionArray(3);
   viskores::cont::ArrayCopyShallowIfPossible(this->m_index->dataAsViskoresArray(), connectionArray);
@@ -123,7 +123,9 @@ void Triangle::finalize()
 void Triangle::render(viskores::rendering::Canvas& canvas,
                       const viskores::rendering::Camera& camera,
                       const viskores::cont::Field& field,
-                      const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const
+                      const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+                      const viskores::IdComponent2& colorMapSize,
+                      const viskores::cont::ArrayHandle<viskores::Range>& fieldRanges) const
 {
   viskores::rendering::raytracing::RayTracer tracer;
   viskores::rendering::raytracing::TriangleExtractor triExtractor;
@@ -132,7 +134,6 @@ void Triangle::render(viskores::rendering::Canvas& canvas,
   viskores::cont::CoordinateSystem coords = data.GetCoordinateSystem();
 
   viskores::Bounds shapeBounds;
-  viskores::Range scalarRange = field.GetRange().ReadPortal().Get(0);
 
   triExtractor.ExtractCells(data.GetCellSet());
 
@@ -163,11 +164,11 @@ void Triangle::render(viskores::rendering::Canvas& canvas,
   viskores::rendering::raytracing::RayOperations::MapCanvasToRays(
     rays, camera.CreateRaytracingCamera(width, height), canvasRT->GetDepthBuffer());
 
-  tracer.SetField(field, scalarRange);
+  tracer.SetField(field, fieldRanges);
 
-  tracer.SetColorMap(colorMap);
+  tracer.SetColorMap(colorMap, colorMapSize);
   tracer.SetShadingOn(true);
-  tracer.Render(rays);
+  tracer.Render(rays, rayCamera.GetPosition());
 
   canvasRT->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
 }

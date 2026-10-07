@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/io/VTKStructuredPointsReader.h>
 
@@ -88,7 +79,7 @@ void VTKStructuredPointsReader::Read()
     }
 
     //Two ways the file can describe the dimensions. The proper way is by
-    //using the DIMENSIONS keyword, but VisIt written VTK files spicify data
+    //using the DIMENSIONS keyword, but VisIt written VTK files specify data
     //bounds instead, as a FIELD
     if (readSpacing && !visitBounds.empty())
     {

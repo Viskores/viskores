@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -159,7 +150,7 @@ namespace filter
 namespace scalar_topology
 {
 
-/// Facture class for augmenting the hierarchical contour tree to enable computations of measures, e.g., volumne
+/// Facture class for augmenting the hierarchical contour tree to enable computations of measures, e.g., volume
 class HierarchicalVolumetricBranchDecomposer
 { // class HierarchicalVolumetricBranchDecomposer
 public:
@@ -334,8 +325,8 @@ inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
 
   // and set up arrays for the best upwards, downwards superarcs at each supernode
   // initialize everything to NO_SUCH_ELEMENT for safety (we will test against this, so it's necessary)
-  // Set up temporary constant arrays for each group of arrays and initalize the arrays
-  // Initalize the arrays
+  // Set up temporary constant arrays for each group of arrays and initialize the arrays
+  // Initialize the arrays
   using viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
   this->UpVolume.AllocateAndFill(nSuperarcs, 0);
   this->DownVolume.AllocateAndFill(nSuperarcs, 0);
@@ -368,14 +359,14 @@ inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
     auto permutedUpVolume =
       viskores::cont::make_ArrayHandlePermutation(actualSuperarcs, this->UpVolume); // output
     auto permitedDownVolume =
-      viskores::cont::make_ArrayHandlePermutation(actualSuperarcs, this->DownVolume); // outout
+      viskores::cont::make_ArrayHandlePermutation(actualSuperarcs, this->DownVolume); // output
 
     this->Invoke(bestUpDownEdgeWorklet,             // the worklet
                  permutedHierarchicalTreeSuperarcs, // input
                  permutedDependetValues,            // input
                  permutedIntrinsicValues,           // input
                  permutedUpVolume,                  // output
-                 permitedDownVolume                 // outout
+                 permitedDownVolume                 // output
     );
   }
 

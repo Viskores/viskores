@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 set(headers
   Algorithm.h
@@ -216,6 +207,7 @@ set(device_sources
   ConvertNumComponentsToOffsets.cxx
   Field.cxx
   internal/ArrayCopyUnknown.cxx
+  internal/ArrayGetMonotonicity.cxx
   internal/ArrayRangeComputeUtils.cxx
   internal/Buffer.cxx
   internal/MapArrayPermutation.cxx
@@ -231,20 +223,20 @@ set(device_sources
 viskores_get_kit_name(kit_name kit_dir)
 
 # Some custom types included with Viskores
-viskores_option(Viskores_USE_DEFAULT_TYPES_FOR_VTK
+option(Viskores_USE_DEFAULT_TYPES_FOR_VTK
   "Compile Viskores algorithms for use with types from VTK."
   OFF
   )
 if (Viskores_USE_DEFAULT_TYPES_FOR_VTK)
   set(Viskores_DEFAULT_TYPES_HEADER "internal/DefaultTypesVTK.h.in")
-  viskores_option(Viskores_ADD_XGC_TO_DEFAULT_TYPES_VTK "Add XGC types to default VTK types." OFF)
+  option(Viskores_ADD_XGC_TO_DEFAULT_TYPES_VTK "Add XGC types to default VTK types." OFF)
   mark_as_advanced(Viskores_ADD_XGC_TO_DEFAULT_TYPES_VTK)
   if (Viskores_ADD_XGC_TO_DEFAULT_TYPES_VTK)
     set(VISKORES_ADD_XGC_DEFAULT_TYPES TRUE)
   endif()
 endif()
 
-viskores_option(Viskores_USE_DEFAULT_TYPES_FOR_ASCENT
+option(Viskores_USE_DEFAULT_TYPES_FOR_ASCENT
   "Compile Viskores algorithms for use with types from Ascent."
   OFF
   )
@@ -262,7 +254,7 @@ if (Viskores_USE_DEFAULT_TYPES_FOR_ASCENT)
   endif()
 endif()
 
-viskores_option(Viskores_USE_DEFAULT_TYPES_FOR_VISTLE
+option(Viskores_USE_DEFAULT_TYPES_FOR_VISTLE
   "Compile Viskores algorithms for use with types from Vistle."
   OFF
   )
@@ -314,11 +306,6 @@ viskores_library( NAME viskores_cont
               HEADERS ${headers}
               DEVICE_SOURCES ${device_sources}
             )
-
-target_sources(viskores_cont
-  PRIVATE
-    internal/Hints.h
-)
 
 add_subdirectory(internal)
 add_subdirectory(arg)

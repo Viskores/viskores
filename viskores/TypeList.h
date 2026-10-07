@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_TypeList_h
 #define viskores_TypeList_h
 
@@ -112,7 +103,7 @@ using TypeListScalarAll = viskores::List<viskores::Int8,
                                          viskores::Float32,
                                          viskores::Float64>;
 
-// A list that containes all the base arithmetric C types (i.e. char, int, float, etc.).
+// A list that contains all the base arithmetic C types (i.e. char, int, float, etc.).
 // The list contains C types that are functionally equivalent but considered different
 // types (e.g. it contains both `char` and `signed char`).
 using TypeListBaseC = viskores::ListAppend<

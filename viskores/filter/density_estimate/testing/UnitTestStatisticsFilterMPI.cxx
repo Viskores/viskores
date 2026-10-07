@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/DataSet.h>
@@ -267,7 +258,7 @@ void TestStatistics()
 } // TestFieldStatistics
 }
 
-//More deatiled tests can be found in the UnitTestStatisticsFilter
+//More detailed tests can be found in the UnitTestStatisticsFilter
 int UnitTestStatisticsFilterMPI(int argc, char* argv[])
 {
   viskoresdiy::mpi::environment env(argc, argv);

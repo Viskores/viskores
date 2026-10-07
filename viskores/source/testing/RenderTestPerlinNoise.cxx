@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/source/PerlinNoise.h>
 
@@ -46,8 +37,6 @@ void TestPerlinNoise()
 
   // CUDA seems to make the contour slightly different, so relax comparison options.
   viskores::rendering::testing::RenderTestOptions options;
-  options.AllowedPixelErrorRatio = 0.01f;
-  options.Threshold = 0.1f;
 
   viskores::rendering::testing::RenderTest(
     contours, "perlinnoise", "source/perlin-noise.png", options);

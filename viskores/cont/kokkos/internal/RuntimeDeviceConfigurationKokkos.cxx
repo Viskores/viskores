@@ -78,7 +78,7 @@ RuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagKokkos>::SetThreads(
   {
     VISKORES_LOG_S(
       viskores::cont::LogLevel::Warn,
-      "SetThreads was called but Kokkos was already initailized! Updates will not be applied.");
+      "SetThreads was called but Kokkos was already initialized! Updates will not be applied.");
     return RuntimeDeviceConfigReturnCode::NOT_APPLIED;
   }
   this->KokkosArguments.insert(this->KokkosArguments.begin(),
@@ -93,7 +93,7 @@ RuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagKokkos>::SetDeviceIns
   if (Kokkos::is_initialized())
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                   "SetDeviceInstance was called but Kokkos was already initailized! Updates will "
+                   "SetDeviceInstance was called but Kokkos was already initialized! Updates will "
                    "not be applied.");
     return RuntimeDeviceConfigReturnCode::NOT_APPLIED;
   }

@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayCopy.h>
@@ -301,7 +292,7 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
         d, ptr, NoopANARIDeleter, nullptr, arrays.CellIndex.GetNumberOfValues() - 1);
     }
 
-    // TODO "cell.data" (NOT SUPPORED YET)
+    // TODO "cell.data" (NOT SUPPORTED YET)
     // {
     //   auto* ptr = (float*)arrays.CellData.GetBuffers()[0].ReadPointerHost(*arrays.Token);
     //   this->Handles->UnstructuredParameters.CellData =

@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_exec_PointLocatorSparseGrid_h
 #define viskores_exec_PointLocatorSparseGrid_h
 
@@ -61,7 +52,7 @@ public:
   /// @brief Nearest neighbor search using a Uniform Grid
   ///
   /// Parallel search of nearesat neighbor for each point in the `queryPoints` in the set of
-  /// `coords`. Returns neareast neighbot in `nearestNeighborIds` and distances to nearest
+  /// `coords`. Returns neareast neighbor in `nearestNeighborIds` and distances to nearest
   /// neighbor in `distances`.
   ///
   /// \param queryPoint Point coordinates to query for nearest neighbor.

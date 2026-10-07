@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_filter_geometry_refinement_VertexClustering_h
 #define viskores_filter_geometry_refinement_VertexClustering_h
@@ -40,7 +31,7 @@ namespace geometry_refinement
 /// It then breaks this bounding volume into a user-specified number of
 /// spatial bins.  It then reads each triangle from the input and hashes its
 /// vertices into these bins. Then, if 2 or more vertices of
-/// the triangle fall in the same bin, the triangle is dicarded.  If the
+/// the triangle fall in the same bin, the triangle is discarded.  If the
 /// triangle is not discarded, it adds the triangle to the list of output
 /// triangles as a list of vertex identifiers.  (There is one vertex id per
 /// bin.)  After all the triangles have been read, the representative vertex

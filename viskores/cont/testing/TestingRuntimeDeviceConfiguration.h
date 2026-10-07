@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_testing_TestingRuntimeDeviceConfiguration_h
 #define viskores_cont_testing_TestingRuntimeDeviceConfiguration_h
 
@@ -24,8 +15,6 @@
 #include <viskores/cont/internal/RuntimeDeviceConfiguration.h>
 #include <viskores/cont/internal/RuntimeDeviceConfigurationOptions.h>
 #include <viskores/cont/testing/Testing.h>
-
-namespace internal = viskores::cont::internal;
 
 namespace viskores
 {
@@ -39,7 +28,8 @@ struct TestingRuntimeDeviceConfiguration
 {
 
   VISKORES_CONT
-  static internal::RuntimeDeviceConfigurationOptions DefaultInitializeConfigOptions()
+  static viskores::cont::internal::RuntimeDeviceConfigurationOptions
+  DefaultInitializeConfigOptions()
   {
     internal::RuntimeDeviceConfigurationOptions runtimeDeviceOptions{};
     runtimeDeviceOptions.ViskoresNumThreads.SetOption(8);

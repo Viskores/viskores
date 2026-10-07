@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_count_ArrayHandleRandomStandardNormal_h
 #define viskores_count_ArrayHandleRandomStandardNormal_h
 
@@ -57,7 +48,7 @@ struct BoxMuller
 /// values is technically infinite, but the probability of large positive or negative numbers
 /// becomes vanishingly small.
 ///
-/// This array uses the Box-Muller transform to pick random numbers in the stanard normal
+/// This array uses the Box-Muller transform to pick random numbers in the standard normal
 /// distribution.
 ///
 /// Note: In contrast to traditional random number generator,

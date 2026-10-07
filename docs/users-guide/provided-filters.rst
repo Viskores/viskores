@@ -13,76 +13,6 @@ More can be found in the namespaces under ``viskores::filter`` (and likewise the
    Common filter methods:
    SetActiveField, GetActiveField, SetUseCoordinateSystemAsField, GetUseCoordinateSystemAsField, SetActiveCoordinateSystem, GetActiveCoordinateSystem, SetOutputFieldName, GetOutputFieldName, Execute
 
-..
-   % These commands are used in the bottom of a description environment used for methods on filters. All should provide whichever ones make the most sense. All these commands take an optional argument that has a list of methods to supress (i.e. _not_ document) for those that are not relevant to the filter or should be documented in a different way.
-
-   % This has the base methods available on all filters.
-   \NewDocumentCommand{\commonfiltermethods}{O{}}{
-     \IfSubStr{#1}{Execute}{}{
-     \item[\textcode{Execute}]
-       Takes a data set, executes the filter on a device, and returns a data set that contains the result.
-     }
-     \IfSubStr{#1}{FieldsToPass}{}{
-     \item[\textcode{SetFieldsToPass}/\textcode{GetFieldsToPass}]
-       Specifies which fields to pass from input to output.
-       By default all fields are passed.
-       See Section~\ref{sec:FilterPassingFields} for more details.
-     }
-   }
-
-   \NewDocumentCommand{\commonfieldfiltermethods}{O{}}{
-     \IfSubStr{#1}{ActiveField}{}{
-     \item[\textcode{SetActiveField}/\textcode{GetActiveFieldName}]
-       Specifies the name of the field to use as input.
-     }
-     \IfSubStr{#1}{UseCoordinateSystemAsField}{}{
-     \item[\textcode{SetUseCoordinateSystemAsField}/\textcode{GetUseCoordinateSystemAsField}]
-       Specifies a Boolean flag that determines whether to use point coordinates as the input field.
-       Set to false by default.
-       When true, the values for the active field are ignored and the active coordinate system is used instead.
-     }
-     \IfSubStr{#1}{ActiveCoordinateSystem}{}{
-     \item[\textcode{SetActiveCoordinateSystem}/\textcode{GetActiveCoordinateSystemIndex}]
-       Specifies the index of which coordinate system to use as the input field.
-       The default index is 0, which is the first coordinate system.
-     }
-     \IfSubStr{#1}{OutputFieldName}{}{
-     \item[\textcode{SetOutputFieldName}/\textcode{GetOutputFieldName}]
-       Specifies the name of the output field generated.
-     }
-     \commonfiltermethods[#1]
-   }
-
-   % Obsolete in new filter structure (use \commonfiltermethods)
-   \NewDocumentCommand{\commondatasetfiltermethods}{O{}}{
-     \IfSubStr{#1}{ActiveCoordinateSystem}{}{
-     \item[\textcode{SetActiveCoordinateSystem}/\textcode{GetActiveCoordinateSystemIndex}]
-       Specifies the index of which coordinate system to use as when computing spatial locations in the mesh.
-       The default index is 0, which is the first coordinate system.
-     }
-     \commonfiltermethods[#1]
-   }
-
-   % Obsolete in new filter structure (use \commonfieldfiltermethods)
-   \NewDocumentCommand{\commondatasetwithfieldfiltermethods}{O{}}{
-     \IfSubStr{#1}{ActiveField}{}{
-     \item[\textcode{SetActiveField}/\textcode{GetActiveFieldName}]
-       Specifies the name of the field to use as input.
-     }
-     \IfSubStr{#1}{UseCoordinateSystemAsField}{}{
-     \item[\textcode{SetUseCoordinateSystemAsField}/\textcode{GetUseCoordinateSystemAsField}]
-       Specifies a Boolean flag that determines whether to use point coordinates as the input field.
-       Set to false by default.
-       When true, the values for the active field are ignored.
-     }
-     \IfSubStr{#1}{ActiveCoordinateSystem}{}{
-     \item[\textcode{SetActiveCoordinateSystem}/\textcode{GetActiveCoordinateSystemIndex}]
-       Specifies the index of which coordinate system to use as when computing spatial locations in the mesh.
-       The default index is 0, which is the first coordinate system.
-     }
-     \commonfiltermethods[#1]
-   }
-
 
 Cleaning Grids
 ==============================
@@ -292,7 +222,7 @@ Density Estimation
 .. index::
    double: density; filter
 
-Density estimation takes a collection of samples and estimates the density of the samples in each part of the domain (or estimate the probabilty that a sample would be at a location in the domain).
+Density estimation takes a collection of samples and estimates the density of the samples in each part of the domain (or estimate the probability that a sample would be at a location in the domain).
 The domain of samples could be a physical space, such as with particle density, or in an abstract place, such as with a histogram.
 The ``viskores::filter::density_estimate`` module contains filters that estimate density in a variety of ways.
 
@@ -313,7 +243,7 @@ The :class:`viskores::filter::density_estimate::Histogram` filter computes a his
 Particle Density
 ------------------------------
 
-|Viskores| provides multiple filters to take as input a collection of points and build a regular mesh containing an estimate of the density of particles in that space. These filters inhert from :class:`viskores::filter::density_estimate::ParticleDensityBase`.
+|Viskores| provides multiple filters to take as input a collection of points and build a regular mesh containing an estimate of the density of particles in that space. These filters inherit from :class:`viskores::filter::density_estimate::ParticleDensityBase`.
 
 .. doxygenclass:: viskores::filter::density_estimate::ParticleDensityBase
    :members:
@@ -346,7 +276,7 @@ The filter then sums up all the contributions of particles for each bin in the g
 Statistics
 ------------------------------
 
-Simple descriptive statics for data in field arrays can be computed with :class:`viskores::filter::density_estimate::Statistics`.
+Simple descriptive statistics for data in field arrays can be computed with :class:`viskores::filter::density_estimate::Statistics`.
 
 .. doxygenclass:: viskores::filter::density_estimate::Statistics
    :members:
@@ -500,7 +430,7 @@ Composite Vectors
    double: filter; composite vectors
 
 The :class:`viskores::filter::field_transform::CompositeVectors` filter allows you to group multiple scalar fields into a single vector field.
-This is convenient when importing data from a souce that stores vector components in separate arrays.
+This is convenient when importing data from a source that stores vector components in separate arrays.
 
 .. doxygenclass:: viskores::filter::field_transform::CompositeVectors
    :members:
@@ -626,7 +556,7 @@ Warp
    double: warp; filter
 
 The :class:`viskores::filter::field_transform::Warp` filter modifies points in a :class:`viskores::cont::DataSet` by moving points along scaled direction vectors.
-By default, the :class:`viskores::filter::field_transform::Warp` filter modifies the coordinate system and writes its results to the coordiante system.
+By default, the :class:`viskores::filter::field_transform::Warp` filter modifies the coordinate system and writes its results to the coordinate system.
 A vector field can be selected as directions, or a constant direction can be specified.
 A constant direction is particularly useful for generating a carpet plot.
 A scalar field can be selected to scale the displacement, and a constant scale factor adjustment can be specified.
@@ -685,7 +615,7 @@ Pathlines
 Individual pathlines are computed from an initial point location (seed) using a numerical method to integrate the point through the flow field.
 
 This filter requires two data sets as input, which represent the data for two sequential time steps.
-The "Previous" data set, which marks the data at the earlier time step, is passed into the filter throught the standard ``Execute`` method.
+The "Previous" data set, which marks the data at the earlier time step, is passed into the filter through the standard ``Execute`` method.
 The "Next" data set, which marks the data at the later time step, is specified as state to the filter using methods.
 
 .. doxygenclass:: viskores::filter::flow::Pathline
@@ -1144,6 +1074,7 @@ Histogram Sampling
 
 The :class:`viskores::filter::resampling::HistSampling` filter randomly samples the points of an input data set.
 The sampling is random but adaptive to preserve rare field value points.
+For a :class:`viskores::cont::PartitionedDataSet`, the histogram includes all partitions and MPI ranks.
 
 .. doxygenclass:: viskores::filter::resampling::HistSampling
    :members:

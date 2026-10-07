@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/CellClassification.h>
 #include <viskores/Particle.h>
@@ -204,7 +195,7 @@ void TestAMRStreamline(FilterType fType, bool useThreaded)
         VISKORES_TEST_ASSERT(dcells.IsType<viskores::cont::CellSetExplicit<>>(),
                              "Wrong cell type.");
         //The seed that goes through the inner is broken up into two polylines
-        //the begining, and then the end.
+        //the beginning, and then the end.
         VISKORES_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds + 1, "Wrong number of cells.");
         auto explicitCells = dcells.AsCellSet<viskores::cont::CellSetExplicit<>>();
         for (viskores::Id j = 0; j < numSeeds; j++)

@@ -7,15 +7,6 @@
 //============================================================================
 
 //
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <iostream>
 #include <random>
@@ -86,7 +77,7 @@ void TestUncertaintyGeneral(viskores::FloatDefault isoValue)
   filter_mc.SetMaxField("ensemble_max");
   viskores::cont::DataSet output_mc = filter_mc.Execute(input);
 
-  // Crossing Probablity field (closed form)
+  // Crossing Probability field (closed form)
   viskores::cont::Field CrossProb = output.GetField("CrossProbablity");
   viskores::cont::ArrayHandle<viskores::FloatDefault> crossProbArray;
   CrossProb.GetData().AsArrayHandle(crossProbArray);
@@ -107,7 +98,7 @@ void TestUncertaintyGeneral(viskores::FloatDefault isoValue)
   viskores::cont::ArrayHandle<viskores::FloatDefault>::ReadPortalType EntropyPortal =
     EntropyArray.ReadPortal();
 
-  // Crossing Probablity field (Marching Cube)
+  // Crossing Probability field (Marching Cube)
   viskores::cont::Field CrossProbMC = output_mc.GetField("CrossProbablityMC");
   viskores::cont::ArrayHandle<viskores::FloatDefault> crossProbMCArray;
   CrossProbMC.GetData().AsArrayHandle(crossProbMCArray);
@@ -129,7 +120,7 @@ void TestUncertaintyGeneral(viskores::FloatDefault isoValue)
     EntropyMCArray.ReadPortal();
 
 
-  // Comparision of Closed-form and Marching Cube
+  // Comparison of Closed-form and Marching Cube
   for (viskores::Id i = 0; i < crossProbArray.GetNumberOfValues(); ++i)
   {
     viskores::FloatDefault CrossProbValue = CrossPortal.Get(i);

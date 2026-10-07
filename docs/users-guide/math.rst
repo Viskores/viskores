@@ -363,9 +363,7 @@ passed into the :func:`viskores::NewtonsMethod`.
 
 .. doxygenfunction:: viskores::NewtonsMethod
 
-The :func:`viskores::NewtonsMethod` function returns a \viskores{NewtonsMethodResult} object.
-\textidentifier{NewtonsMethodResult} is a \textcode{struct} templated on the type and number of input values of the nonlinear system.
-\textidentifier{NewtonsMethodResult} contains the following items.
+The :func:`viskores::NewtonsMethod` function returns a :class:`viskores::NewtonsMethodResult` object.
 
 .. doxygenstruct:: viskores::NewtonsMethodResult
    :members:

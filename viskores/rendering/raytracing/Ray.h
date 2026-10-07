@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_rendering_raytracing_Ray_h
 #define viskores_rendering_raytracing_Ray_h
 
@@ -90,7 +81,8 @@ public:
   viskores::cont::ArrayHandle<Precision> NormalX; //ray Normal
   viskores::cont::ArrayHandle<Precision> NormalY;
   viskores::cont::ArrayHandle<Precision> NormalZ;
-  viskores::cont::ArrayHandle<Precision> Scalar; //scalar
+  viskores::cont::ArrayHandle<Precision> TextureR; // texture coordinates
+  viskores::cont::ArrayHandle<Precision> TextureS;
 
   viskores::cont::ArrayHandle<Precision> Distance; //distance to hit
 
@@ -139,7 +131,8 @@ public:
 
     U.Allocate(NumRays);
     V.Allocate(NumRays);
-    Scalar.Allocate(NumRays);
+    TextureR.Allocate(NumRays);
+    TextureS.Allocate(NumRays);
 
     NormalX.Allocate(NumRays);
     NormalY.Allocate(NumRays);
@@ -159,7 +152,8 @@ public:
     IntersectionZ.ReleaseResources();
     U.ReleaseResources();
     V.ReleaseResources();
-    Scalar.ReleaseResources();
+    TextureR.ReleaseResources();
+    TextureS.ReleaseResources();
 
     NormalX.ReleaseResources();
     NormalY.ReleaseResources();

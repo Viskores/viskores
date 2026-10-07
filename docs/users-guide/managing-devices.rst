@@ -57,7 +57,7 @@ It is good practice to check unknown types with this macro to prevent further un
 
    .. commonerrors::
       A device adapter tag is a class just like every other type in C++.
-      Thus it is possible to accidently use a type that is not a device adapter tag when one is expected as a template argument.
+      Thus it is possible to accidentally use a type that is not a device adapter tag when one is expected as a template argument.
       This leads to unexpected errors in strange parts of the code.
       To help identify these errors, it is good practice to use the :c:macro:`VISKORES_IS_DEVICE_ADAPTER_TAG` macro to verify the type is a valid device adapter tag.
       :numref:`ex:DeviceTemplateArg` uses this macro on line 4.

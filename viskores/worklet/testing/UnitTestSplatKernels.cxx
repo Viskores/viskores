@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #include <iostream>
 #include <vector>
 
@@ -25,7 +16,7 @@
 
 using Vector = viskores::Vec3f_64;
 
-// Simpson integradion rule
+// Simpson integration rule
 double SimpsonIntegration(const std::vector<double>& y, const std::vector<double>& x)
 {
   std::size_t n = x.size() - 1;
@@ -39,7 +30,7 @@ double SimpsonIntegration(const std::vector<double>& y, const std::vector<double
   return aux * val;
 }
 
-// Integrade a kernel in 3D
+// Integrate a kernel in 3D
 template <typename Kernel>
 double IntegralOfKernel(const Kernel& ker)
 {

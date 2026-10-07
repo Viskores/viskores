@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_internal_RuntimeDeviceConfiguration_h
 #define viskores_cont_internal_RuntimeDeviceConfiguration_h
 
@@ -41,10 +32,17 @@ enum class RuntimeDeviceConfigReturnCode
   NOT_APPLIED
 };
 
+/// @brief Superclass for all `RuntimeDeviceConfiguration` classes.
+///
+/// Every device adapter must provide a specialization of `RuntimeDeviceConfiguration`,
+/// and every specialization must inherit from this class.
 class VISKORES_CONT_EXPORT RuntimeDeviceConfigurationBase
 {
 public:
   VISKORES_CONT virtual ~RuntimeDeviceConfigurationBase() noexcept;
+
+  /// Returns a `viskores::cont::DeviceAdapterId` for the device that the runtime
+  /// configuration oversees.
   VISKORES_CONT virtual viskores::cont::DeviceAdapterId GetDevice() const = 0;
 
   /// Calls the various `Set*` methods in this class with the provided set of config
@@ -58,34 +56,52 @@ public:
                                 int& argc,
                                 char* argv[]);
 
-  /// The following public methods should be overriden in each individual device.
-  /// A method should return INVALID_FOR_DEVICE if the overriden device does not
-  /// support the particular set method.
+  /// Attempts to set the number of threads to use for this device.
+  /// Returns `INVALID_FOR_DEVICE` if the overridden device does not
+  /// support setting this configuration.
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const viskores::Id& value);
+
+  /// Attempts to set the device instance to use.
+  /// On systems that support multiple devices, the device to use in the
+  /// current system process can be selected.
+  /// Returns `INVALID_FOR_DEVICE` if the overridden device does not
+  /// support setting this configuration.
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(const viskores::Id& value);
 
-  /// The following public methods are overriden in each individual device and store the
-  /// values that were set via the above Set* methods for the given device.
+  /// Attempts to get the number of threads to use for this device.
+  /// Returns `INVALID_FOR_DEVICE` if the overridden device does not
+  /// support this parameter.
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(viskores::Id& value) const;
+
+  /// Attempts to get the device instance to use.
+  /// On systems that support multiple devices, the device to use in the
+  /// current system process can be selected.
+  /// Returns `INVALID_FOR_DEVICE` if the overridden device does not
+  /// support this parameter.
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetDeviceInstance(viskores::Id& value) const;
 
-  /// The following public methods should be overriden as needed for each individual device
-  /// as they describe various device parameters.
+  /// Provides the maximum value that can be used in `SetThreads`.
+  /// Returns `INVALID_FOR_DEVICE` if the overridden device does not
+  /// support this parameter.
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetMaxThreads(viskores::Id& value) const;
+
+  /// Provides the maximum value that can be used in `SetDeviceInstance`.
+  /// Returns `INVALID_FOR_DEVICE` if the overridden device does not
+  /// support this parameter.
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetMaxDevices(viskores::Id& value) const;
 
 protected:
-  /// An overriden method that can be used to perform extra command line argument parsing
+  /// An overridden method that can be used to perform extra command line argument parsing
   /// for cases where a specific device may use additional command line arguments. At the
   /// moment Kokkos is the only device that overrides this method.
   /// Note: This method assumes that viskores arguments have already been parsed and removed
   ///       from argv.
   VISKORES_CONT virtual void ParseExtraArguments(int& argc, char* argv[]);
 
-  /// An overriden method that can be used to perform extra initialization after Extra
+  /// An overridden method that can be used to perform extra initialization after Extra
   /// Arguments are parsed and the Initialized ConfigOptions are used to call the various
-  /// Set* methods at the end of Initialize. Particuarly useful when initializing
-  /// additional subystems (like Kokkos).
+  /// Set* methods at the end of Initialize. Particularly useful when initializing
+  /// additional subsystems (like Kokkos).
   VISKORES_CONT virtual void InitializeSubsystem();
 };
 

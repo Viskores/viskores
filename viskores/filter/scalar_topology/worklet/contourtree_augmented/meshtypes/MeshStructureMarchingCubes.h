@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -84,7 +75,7 @@ public:
   using EdgeBoundaryDetectionMasksPortalType =
     m3d_marchingcubes::EdgeBoundaryDetectionMasksType::ReadPortalType;
 
-  // Sort indicies types
+  // Sort indices types
   using SortIndicesPortalType = IdArrayType::ReadPortalType;
 
   // CubeVertexPermutations types
@@ -207,7 +198,7 @@ public:
         return SortIndicesPortal.Get(meshIndex + strides[2] + strides[1] + strides[0]);
       default:
         VISKORES_ASSERT(false);
-        // TODO/FIXME: Should probaly return an invalid value or throw an exception instead
+        // TODO/FIXME: Should probably return an invalid value or throw an exception instead
         return meshIndex; // Need to error out here
     }
   } // GetNeighbourIndex

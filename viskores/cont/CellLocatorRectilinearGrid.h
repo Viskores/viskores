@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_CellLocatorRectilinearGrid_h
 #define viskores_cont_CellLocatorRectilinearGrid_h
 
@@ -33,6 +24,7 @@ namespace cont
 /// For this cell locator to work, it has to be given a cell set of type
 /// `viskores::cont::CellSetStructured` and a coordinate system using a
 /// `viskores::cont::ArrayHandleCartesianProduct` for its data.
+/// Each active coordinate axis must be strictly monotonic, either increasing or decreasing.
 class VISKORES_CONT_EXPORT CellLocatorRectilinearGrid : public viskores::cont::CellLocatorBase
 {
   using Structured2DType = viskores::cont::CellSetStructured<2>;

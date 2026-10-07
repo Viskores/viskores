@@ -26,7 +26,7 @@ All instances of the worklet will have access to all the data in the :class:`vis
    The |Viskores| worklet invoking mechanism performs many safety checks to prevent race conditions across concurrently running worklets.
    Using a whole array within a worklet circumvents this guarantee of safety, so be careful when using whole arrays, especially when writing to whole arrays.
 
-A whole array is declared by adding a :class:`WholeArrayIn`, a :class:`WholeArrayInOut`, or a :class:`WholeArrayOut` to the \controlsignature of a worklet.
+A whole array is declared by adding a :class:`WholeArrayIn`, a :class:`WholeArrayInOut`, or a :class:`WholeArrayOut` to the ``ControlSignature`` of a worklet.
 The corresponding argument to the :class:`viskores::cont::Invoker` should be an :class:`viskores::cont::ArrayHandle`.
 The :class:`viskores::cont::ArrayHandle` must already be allocated in all cases, including when using :class:`WholeArrayOut`.
 When the data are passed to the operator of the worklet, it is passed as an array portal object.
@@ -77,7 +77,7 @@ However, the operations on the values in the atomic array allow you to perform a
 To use an array as an atomic array, first add the :class:`AtomicArrayInOut` tag to the worklet's ``ControlSignature``.
 The corresponding argument to the :class:`viskores::cont::Invoker` should be an :class:`viskores::cont::ArrayHandle`, which must already be allocated and initialized with values.
 
-When the data are passed to the operator of the worklet, it is passed in a \viskoresexec{AtomicArrayExecutionObject} structure.
+When the data are passed to the operator of the worklet, it is passed in a :class:`viskores::exec::AtomicArrayExecutionObject` structure.
 
 .. doxygenclass:: viskores::exec::AtomicArrayExecutionObject
    :members:

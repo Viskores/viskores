@@ -7,13 +7,6 @@
 //============================================================================
 
 //============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
 //  Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2019 UT-Battelle, LLC.
 //  Copyright 2019 Los Alamos National Security.
@@ -173,7 +166,7 @@ public:
   };
 
   // Traverses the active cells and mark the connected points as active,
-  // propogating the reference pointId.
+  // propagating the reference pointId.
   class WorkletMarkActivePoints : public viskores::worklet::WorkletVisitCellsWithPoints
   {
   public:
@@ -215,7 +208,7 @@ public:
       // There must be one valid point in each cell:
       VISKORES_ASSERT("Reference point not found." && refPtId != INVALID_ID);
 
-      // Propogate the reference point to other cell members
+      // Propagate the reference point to other cell members
       for (viskores::IdComponent p = 0; p < points.GetNumberOfComponents(); ++p)
       {
         const viskores::Id pointId = points[p];

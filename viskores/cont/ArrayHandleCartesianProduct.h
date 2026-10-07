@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_ArrayHandleCartesianProduct_h
 #define viskores_cont_ArrayHandleCartesianProduct_h
 
@@ -362,7 +353,7 @@ public:
                                                           ThirdHandleType>::Superclass));
 
   /// Construct an `ArrayHandleCartesianProduct` given arrays for the coordinates in
-  /// the x, y, and z diretions.
+  /// the x, y, and z directions.
   VISKORES_CONT
   ArrayHandleCartesianProduct(const FirstHandleType& firstArray,
                               const SecondHandleType& secondArray,

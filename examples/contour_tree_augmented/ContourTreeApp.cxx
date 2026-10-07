@@ -7,13 +7,6 @@
 //============================================================================
 
 //============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
 //  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
@@ -559,7 +552,7 @@ int main(int argc, char* argv[])
                       invalidNumDimensions && (rank == 0),
                       "The input mesh is " << nDims
                                            << "D. The input data must be either 2D or 3D.");
-    // If we found any errors in the setttings than finalize MPI and exit the execution
+    // If we found any errors in the settings than finalize MPI and exit the execution
     if (invalidNumDimensions)
     {
 #ifdef WITH_MPI
@@ -624,7 +617,7 @@ int main(int argc, char* argv[])
                       << nDims << "D. "
                       << "Contour tree using marching cubes is only supported for 3D data.");
 
-  // If we found any errors in the setttings than finalize MPI and exit the execution
+  // If we found any errors in the settings than finalize MPI and exit the execution
   if (invalidMCOption)
   {
 #ifdef WITH_MPI
@@ -723,7 +716,7 @@ int main(int argc, char* argv[])
   ////////////////////////////////////////////
   if (rank == 0 && computeBranchDecomposition && computeRegularStructure)
   {
-    // Time branch decompostion
+    // Time branch decomposition
     viskores::cont::Timer branchDecompTimer;
     branchDecompTimer.Start();
     // compute the volume for each hyperarc and superarc
@@ -760,12 +753,12 @@ int main(int argc, char* argv[])
                                                                          branchMaximum, // (output)
                                                                          branchSaddle,  // (output)
                                                                          branchParent); // (output)
-    // Record and log the branch decompostion timings
+    // Record and log the branch decomposition timings
     timingsStream << "    " << std::setw(38) << std::left << "Compute Volume Branch Decomposition"
                   << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
     VISKORES_LOG_S(viskores::cont::LogLevel::Info, timingsStream.str());
 
-    //----main branch decompostion end
+    //----main branch decomposition end
     //----Isovalue seleciton start
     if (numLevels > 0) // if compute isovalues
     {
@@ -779,7 +772,7 @@ int main(int argc, char* argv[])
       bool dataFieldIsSorted = false;
 #endif
 
-      // create explicit representation of the branch decompostion from the array representation
+      // create explicit representation of the branch decomposition from the array representation
       BranchType* branchDecompostionRoot =
         ctaug_ns::ProcessContourTree::ComputeBranchDecomposition<ValueType>(
           filter.GetContourTree().Superparents,
@@ -797,7 +790,7 @@ int main(int argc, char* argv[])
       branchDecompostionRoot->PrintBranchDecomposition(std::cout);
 #endif
 
-      // Simplify the contour tree of the branch decompostion
+      // Simplify the contour tree of the branch decomposition
       branchDecompostionRoot->SimplifyToSize(numComp, usePersistenceSorter);
 
       // Compute the relevant iso-values
@@ -902,7 +895,7 @@ int main(int argc, char* argv[])
                  std::endl
                    << ct.PrintHyperStructureStatistics(false) << std::endl);
 
-  // Flush ouput streams just to make sure everything has been logged (in particular when using MPI)
+  // Flush output streams just to make sure everything has been logged (in particular when using MPI)
   std::cout << std::flush;
   std::cerr << std::flush;
 

@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_rendering_ScalarRenderer_h
 #define viskores_rendering_ScalarRenderer_h
 
@@ -47,6 +38,8 @@ public:
   void SetWidth(viskores::Int32 width);
   void SetHeight(viskores::Int32 height);
   void SetDefaultValue(viskores::Float32 value);
+  void SetLightPosition(const viskores::Vec3f_32& lightPosition);
+  viskores::Vec3f_32 GetLightPosition() const;
 
   struct VISKORES_RENDERING_EXPORT Result
   {

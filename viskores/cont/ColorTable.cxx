@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #include <algorithm>
 #include <cctype>
 #include <memory>
@@ -43,7 +34,7 @@ struct MinDelta<viskores::Float64>
   static constexpr viskores::Int64 value = 2048L;
 };
 
-// Reperesents the following:
+// Represents the following:
 // T m = std::numeric_limits<T>::min();
 // EquivSizeIntT im;
 // std::memcpy(&im, &m, sizeof(T));

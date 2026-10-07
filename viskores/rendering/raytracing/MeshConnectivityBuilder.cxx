@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #include <viskores/rendering/raytracing/MeshConnectivityBuilder.h>
 
 #include <viskores/cont/Algorithm.h>
@@ -188,7 +179,7 @@ public:
 
         const viskores::Int32 icount1 = tables.ShapesFaceList(shape1Offset, 0);
         const viskores::Int32 icount2 = tables.ShapesFaceList(shape2Offset, 0);
-        //Check to see if we have the same number of idices
+        //Check to see if we have the same number of indices
         if (icount1 != icount2)
           continue;
 
@@ -554,7 +545,7 @@ VISKORES_CONT void GenerateFaceConnnectivity(
   faceOffsets = cellOffsets;
 
   // We are creating a spatial hash based on morton codes calculated
-  // from the centriod (point average)  of each face. Each centroid is
+  // from the centroid (point average)  of each face. Each centroid is
   // calculated in way (consistent order of floating point calcs) that
   // ensures that each face maps to the same morton code. It is possbilbe
   // that two non-connecting faces map to the same morton code,  but if
@@ -587,7 +578,7 @@ VISKORES_CONT void GenerateFaceConnnectivity(
   // Sort the "faces" (i.e., morton codes)
   viskores::cont::Algorithm::SortByKey(faceMortonCodes, cellFaceId);
 
-  // Allocate space for the final face-to-face conectivity
+  // Allocate space for the final face-to-face connectivity
   //faceConnectivity.PrepareForOutput(totalFaces, DeviceAdapter());
   faceConnectivity.Allocate(totalFaces);
 

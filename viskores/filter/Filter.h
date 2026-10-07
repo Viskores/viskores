@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_filter_Filter_h
 #define viskores_filter_Filter_h
 
@@ -400,6 +391,9 @@ public:
 protected:
   viskores::cont::Invoker Invoke;
 
+  VISKORES_CONT
+  virtual viskores::Id DetermineNumberOfThreads(const viskores::cont::PartitionedDataSet& input);
+
   /// @brief Create the output data set for `DoExecute`.
   ///
   /// This form of `CreateResult` will create an output data set with the same cell
@@ -758,7 +752,7 @@ protected:
   /// you cannot just create an intermediate `viskores::Vec` of the correct size. Typically,
   /// you must allocate the output array (for example, with
   /// `viskores::cont::ArrayHandleRuntimeVec`), and the worklet must iterate over the
-  /// components and store them in the prealocated output.
+  /// components and store them in the preallocated output.
   ///
   template <typename Functor, typename... Args>
   VISKORES_CONT void CastAndCallVariableVecField(
@@ -862,9 +856,6 @@ private:
     template <typename T>
     using type = viskores::Vec<T, VecSize>;
   };
-
-  VISKORES_CONT
-  virtual viskores::Id DetermineNumberOfThreads(const viskores::cont::PartitionedDataSet& input);
 
   void ResizeIfNeeded(size_t index_st);
 

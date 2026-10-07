@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 #
 function(viskores_extract_real_library library real_library)
@@ -324,7 +315,7 @@ if(Viskores_ENABLE_KOKKOS AND NOT TARGET viskores_kokkos)
   find_package(Kokkos 3.7 REQUIRED)
 
   # We must empty this property for every kokkos backend device since it
-  # contains a generator expresion which breaks some of our users builds.
+  # contains a generator expression which breaks some of our users builds.
   set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_COMPILE_DEFINITIONS "")
 
   if (CUDA IN_LIST Kokkos_DEVICES)

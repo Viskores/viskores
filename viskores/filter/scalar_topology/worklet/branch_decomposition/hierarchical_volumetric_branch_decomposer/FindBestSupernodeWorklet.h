@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -65,7 +56,7 @@ namespace scalar_topology
 namespace hierarchical_volumetric_branch_decomposer
 {
 
-// Note: We use a template bool paramter for the tiebreak role choice instead of a variable
+// Note: We use a template bool parameter for the tiebreak role choice instead of a variable
 // so that the if statement can be optimized at compile time and we have fewer tests inside
 // the worklet.
 template <bool tieBreakGreaterThan>

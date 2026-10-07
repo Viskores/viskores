@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_internal_RuntimeDeviceOption_h
 #define viskores_cont_internal_RuntimeDeviceOption_h
 
@@ -42,9 +33,8 @@ class VISKORES_CONT_EXPORT RuntimeDeviceOption
 {
 public:
   /// Constructs a RuntimeDeviceOption, sets the Source to NOT_SET
-  /// params:
-  ///   index - index location of this command line argument in an option::Option array
-  ///   envName - The environment variable name of this option
+  /// @param index Location of this command line argument in an option::Option array
+  /// @param envName The environment variable name of this option
   VISKORES_CONT RuntimeDeviceOption(const viskores::Id& index, const std::string& envName);
 
   VISKORES_CONT virtual ~RuntimeDeviceOption() noexcept;

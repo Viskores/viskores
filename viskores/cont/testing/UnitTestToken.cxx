@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/Token.h>
 
@@ -133,7 +124,7 @@ void TestBasicAttachDetatch()
   CHECK_OBJECT(object2, 1, 2);
   CHECK_OBJECT(object3, 1, 2);
 
-  std::cout << "  Detatch outer token" << std::endl;
+  std::cout << "  Detach outer token" << std::endl;
   outerToken.DetachFromAll();
 
   CHECK_OBJECT(object1, 0, 1);

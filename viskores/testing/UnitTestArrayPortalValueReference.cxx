@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/testing/Testing.h>
 
@@ -329,7 +320,7 @@ void DoTest()
 {
   // We are not testing on the default (exemplar) types because we want to test operators, and
   // many basic C types could fail on basic operations. Small integer types (such as unsigned
-  // bytes) get automatically promoted to larger types, so doing somthing like a += operation
+  // bytes) get automatically promoted to larger types, so doing something like a += operation
   // causes annoying compiler warnings. Float types are also problematic because comparison
   // operations like == can fail even when you expect the values to be the same.
   viskores::testing::Testing::TryTypes(

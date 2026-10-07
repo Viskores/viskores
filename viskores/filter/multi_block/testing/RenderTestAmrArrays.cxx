@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/MergePartitionedDataSet.h>
 #include <viskores/filter/entity_extraction/ExternalFaces.h>
@@ -60,7 +51,6 @@ void TestAmrArraysExecute(int dim, int numberOfLevels, int cellsPerDimension)
   //  result.PrintSummary(std::cout);
 
   viskores::rendering::testing::RenderTestOptions testOptions;
-  testOptions.AllowedPixelErrorRatio = 0.001f;
   testOptions.ColorTable = viskores::cont::ColorTable("inferno");
   testOptions.EnableAnnotations = false;
   viskores::rendering::testing::RenderTest(

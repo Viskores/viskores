@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_DataSetBuilderExplicit_h
 #define viskores_cont_DataSetBuilderExplicit_h
 
@@ -50,7 +41,7 @@ public:
   ///   `viskores::CELL_SHAPE_*` values identifying the shape of the corresponding cell.
   /// @param[in] numIndices An array containing for each cell the number of points incident
   ///   on that cell.
-  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  /// @param[in] connectivity An array specifying for each cell the indices of points
   ///   incident on each cell. Each cell has a short array of indices that reference points
   ///   in the @a coords array. The length of each of these short arrays is specified by
   ///   the @a numIndices array. These variable length arrays are tightly packed together
@@ -82,7 +73,7 @@ public:
   ///   `viskores::CELL_SHAPE_*` values identifying the shape of the corresponding cell.
   /// @param[in] numIndices An array containing for each cell the number of points incident
   ///   on that cell.
-  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  /// @param[in] connectivity An array specifying for each cell the indices of points
   ///   incident on each cell. Each cell has a short array of indices that reference points
   ///   in the @a coords array. The length of each of these short arrays is specified by
   ///   the @a numIndices array. These variable length arrays are tightly packed together
@@ -116,7 +107,7 @@ public:
   ///   `viskores::CELL_SHAPE_*` values identifying the shape of the corresponding cell.
   /// @param[in] numIndices An array containing for each cell the number of points incident
   ///   on that cell.
-  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  /// @param[in] connectivity An array specifying for each cell the indices of points
   ///   incident on each cell. Each cell has a short array of indices that reference points
   ///   in the @a coords array. The length of each of these short arrays is specified by
   ///   the @a numIndices array. These variable length arrays are tightly packed together
@@ -144,7 +135,7 @@ public:
   ///   `viskores::CELL_SHAPE_*` values identifying the shape of the corresponding cell.
   /// @param[in] numIndices An array containing for each cell the number of points incident
   ///   on that cell.
-  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  /// @param[in] connectivity An array specifying for each cell the indices of points
   ///   incident on each cell. Each cell has a short array of indices that reference points
   ///   in the @a coords array. The length of each of these short arrays is specified by
   ///   the @a numIndices array. These variable length arrays are tightly packed together
@@ -171,7 +162,7 @@ public:
   ///   `viskores::CELL_SHAPE_*` values identifying the shape of the corresponding cell.
   /// @param[in] numIndices An array containing for each cell the number of points incident
   ///   on that cell.
-  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  /// @param[in] connectivity An array specifying for each cell the indices of points
   ///   incident on each cell. Each cell has a short array of indices that reference points
   ///   in the @a coords array. The length of each of these short arrays is specified by
   ///   the @a numIndices array. These variable length arrays are tightly packed together
@@ -204,7 +195,7 @@ public:
   ///   `viskores::CellShapeTagTriangle` or `viskores::CellShapeTagHexahedron`. To specify a
   ///   cell shape determined at runtime, use `viskores::CellShapeTagGeneric`.
   /// @param[in] numberOfPointsPerCell The number of points that are incident to each cell.
-  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  /// @param[in] connectivity An array specifying for each cell the indices of points
   ///   incident on each cell. Each cell has a short array of indices that reference points
   ///   in the @a coords array. The length of each of these short arrays is specified by
   ///   @a numberOfPointsPerCell. These short arrays are tightly packed together
@@ -233,7 +224,7 @@ public:
   ///   `viskores::CellShapeTagTriangle` or `viskores::CellShapeTagHexahedron`. To specify a
   ///   cell shape determined at runtime, use `viskores::CellShapeTagGeneric`.
   /// @param[in] numberOfPointsPerCell The number of points that are incident to each cell.
-  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  /// @param[in] connectivity An array specifying for each cell the indices of points
   ///   incident on each cell. Each cell has a short array of indices that reference points
   ///   in the @a coords array. The length of each of these short arrays is specified by
   ///   @a numberOfPointsPerCell. These short arrays are tightly packed together

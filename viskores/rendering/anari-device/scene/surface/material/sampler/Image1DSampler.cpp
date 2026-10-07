@@ -9,6 +9,7 @@
 //=============================================================================
 
 #include "Image1DSampler.h"
+#include "array/ArrayConversion.h"
 // Viskores
 #include <viskores/TypeTraits.h>
 #include <viskores/cont/ArrayCopy.h>
@@ -16,127 +17,6 @@
 #include <viskores/cont/ArrayHandleConstant.h>
 // std
 #include <limits>
-
-namespace
-{
-
-template <typename T>
-constexpr T opaqueValue(viskores::TypeTraitsRealTag)
-{
-  return T(1);
-}
-template <typename T>
-constexpr T opaqueValue(viskores::TypeTraitsIntegerTag)
-{
-  return std::numeric_limits<T>::max();
-}
-template <typename T>
-constexpr T opaqueValue()
-{
-  return opaqueValue<T>(typename viskores::TypeTraits<T>::NumericTag{});
-}
-
-template <typename T>
-constexpr viskores::Float32 floatConvert(T anariValue, viskores::TypeTraitsRealTag)
-{
-  return static_cast<viskores::Float32>(anariValue);
-}
-template <typename T>
-constexpr viskores::Float32 floatConvert(T anariValue, viskores::TypeTraitsIntegerTag)
-{
-  return static_cast<viskores::Float32>(anariValue) /
-    static_cast<viskores::Float32>(std::numeric_limits<T>::max());
-}
-template <typename T>
-constexpr viskores::Float32 floatConvert(T anariValue)
-{
-  return floatConvert(anariValue, typename viskores::TypeTraits<T>::NumericTag{});
-}
-
-template <typename ComponentType>
-bool captureColorTableType(const viskores::cont::UnknownArrayHandle& colorArray,
-                           viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap)
-{
-  const viskores::Id numValues = colorArray.GetNumberOfValues();
-  std::array<viskores::cont::ArrayHandleStride<ComponentType>, 4> colorChannelArrays;
-  viskores::cont::ArrayHandleConstant<ComponentType> ones(opaqueValue<ComponentType>(), numValues);
-  switch (colorArray.GetNumberOfComponentsFlat())
-  {
-    case 1:
-      // Grayscale color
-      colorChannelArrays[0] = colorChannelArrays[1] = colorChannelArrays[2] =
-        colorArray.ExtractComponent<ComponentType>(0);
-      colorChannelArrays[3] = viskores::cont::ArrayExtractComponent(ones, 0);
-      break;
-    case 2:
-      // Grayscale + alpha
-      colorChannelArrays[0] = colorChannelArrays[1] = colorChannelArrays[2] =
-        colorArray.ExtractComponent<ComponentType>(0);
-      colorChannelArrays[3] = colorArray.ExtractComponent<ComponentType>(1);
-      break;
-    case 3:
-      // RGB
-      colorChannelArrays[0] = colorArray.ExtractComponent<ComponentType>(0);
-      colorChannelArrays[1] = colorArray.ExtractComponent<ComponentType>(1);
-      colorChannelArrays[2] = colorArray.ExtractComponent<ComponentType>(2);
-      colorChannelArrays[3] = viskores::cont::ArrayExtractComponent(ones, 0);
-      break;
-    case 4:
-      // RGBA
-      colorChannelArrays[0] = colorArray.ExtractComponent<ComponentType>(0);
-      colorChannelArrays[1] = colorArray.ExtractComponent<ComponentType>(1);
-      colorChannelArrays[2] = colorArray.ExtractComponent<ComponentType>(2);
-      colorChannelArrays[3] = colorArray.ExtractComponent<ComponentType>(3);
-      break;
-    default:
-      return false;
-  }
-  std::array<typename viskores::cont::ArrayHandleStride<ComponentType>::ReadPortalType, 4>
-    colorChannelPortals;
-  for (viskores::IdComponent channel = 0; channel < 4; ++channel)
-  {
-    colorChannelPortals[channel] = colorChannelArrays[channel].ReadPortal();
-  }
-  colorMap.Allocate(numValues);
-  viskores::cont::ArrayHandle<viskores::Vec4f_32>::WritePortalType colorMapPortal =
-    colorMap.WritePortal();
-  for (viskores::Id sample = 0; sample < numValues; ++sample)
-  {
-    colorMapPortal.Set(sample,
-                       { floatConvert(colorChannelPortals[0].Get(sample)),
-                         floatConvert(colorChannelPortals[1].Get(sample)),
-                         floatConvert(colorChannelPortals[2].Get(sample)),
-                         floatConvert(colorChannelPortals[3].Get(sample)) });
-  }
-  return true;
-}
-
-bool captureColorTable(const viskores::cont::UnknownArrayHandle& colorArray,
-                       viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap)
-{
-  if (colorArray.IsBaseComponentType<viskores::UInt8>())
-  {
-    return captureColorTableType<viskores::UInt8>(colorArray, colorMap);
-  }
-  else if (colorArray.IsBaseComponentType<viskores::UInt16>())
-  {
-    return captureColorTableType<viskores::UInt16>(colorArray, colorMap);
-  }
-  else if (colorArray.IsBaseComponentType<viskores::UInt32>())
-  {
-    return captureColorTableType<viskores::UInt32>(colorArray, colorMap);
-  }
-  else if (colorArray.IsBaseComponentType<viskores::Float32>())
-  {
-    return captureColorTableType<viskores::Float32>(colorArray, colorMap);
-  }
-  else
-  {
-    return false;
-  }
-}
-
-} // anonymous namespace
 namespace viskores_device
 {
 
@@ -154,7 +34,8 @@ void Image1DSampler::commitParameters()
 
   mat4 inTransform = this->getParam("inTransform", mat4(linalg::identity));
   this->m_inTransform = toViskoresMatrix(inTransform);
-  float4 inOffset = this->getParam("inOffset", float4(0.f, 0.f, 0.f, 0.f));
+  anari::math::float4 inOffset =
+    this->getParam("inOffset", anari::math::float4(0.f, 0.f, 0.f, 0.f));
   this->m_inOffset = { inOffset[0], inOffset[1], inOffset[2], inOffset[3] };
 
   this->m_colorArray = this->getParamObject<Array1D>("image");
@@ -170,19 +51,11 @@ void Image1DSampler::finalize()
 {
   this->Sampler::finalize();
 
-  bool colorMapFilled = false;
   if (this->m_colorArray)
   {
-    // TODO: This method does not properly handle SRGB.
-    colorMapFilled = captureColorTable(this->m_colorArray->dataAsViskoresArray(), this->m_colorMap);
-    if (!colorMapFilled)
-    {
-      this->reportMessage(ANARI_SEVERITY_WARNING,
-                          "color array provided for image1D sampling has unrecognized type");
-    }
+    this->m_colorMap = ANARIColorsToViskoresColors(*this->m_colorArray.get());
   }
-
-  if (!colorMapFilled)
+  else
   {
     this->reportMessage(ANARI_SEVERITY_WARNING,
                         "image1D sampling requested, but no color array given");
@@ -193,7 +66,7 @@ void Image1DSampler::finalize()
 
 bool Image1DSampler::getColors(const viskores::cont::DataSet& data,
                                viskores::cont::Field& field,
-                               viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const
+                               ColorMap& colorMap) const
 {
   if (!data.HasField(this->inAttribute()))
   {
@@ -220,7 +93,10 @@ bool Image1DSampler::getColors(const viskores::cont::DataSet& data,
   }
 
   field = viskores::cont::Field{ attribField.GetName(), attribField.GetAssociation(), attribArray };
-  colorMap = this->m_colorMap;
+  colorMap.colors = this->m_colorMap;
+  colorMap.size = { viskores::IdComponent(this->m_colorMap.GetNumberOfValues()), 1 };
+  colorMap.inFieldTransform = this->m_inTransform;
+  colorMap.inFieldOffset = this->m_inOffset;
   return true;
 }
 

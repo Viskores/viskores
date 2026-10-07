@@ -6,19 +6,12 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #include <viskores/filter/density_estimate/Histogram.h>
 
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/PartitionedDataSet.h>
+#include <viskores/cont/RuntimeDeviceTracker.h>
+#include <viskores/cont/serial/DeviceAdapterSerial.h>
 #include <viskores/cont/testing/Testing.h>
 
 #include <viskores/thirdparty/diy/environment.h>
@@ -92,10 +85,18 @@ void AddField(viskores::cont::DataSet& dataset,
 }
 }
 
-static void TestPartitionedDataSetHistogram()
+struct HistogramResult
 {
-  // init random seed.
-  std::srand(100);
+  viskores::cont::ArrayHandle<viskores::Id> Bins;
+  viskores::Float64 BinDelta;
+};
+
+static HistogramResult RunPartitionedDataSetHistogram(bool runMultiThreaded)
+{
+  uid = 1;
+
+  // Use the serial device so filter-level partition threading is enabled.
+  viskores::cont::ScopedRuntimeDeviceTracker tracker(viskores::cont::DeviceAdapterTagSerial{});
 
   viskores::cont::PartitionedDataSet mb;
 
@@ -113,6 +114,9 @@ static void TestPartitionedDataSetHistogram()
 
   viskores::filter::density_estimate::Histogram histogram;
   histogram.SetActiveField("double");
+  // Explicitly select each scheduler path so their shared results can be compared.
+  histogram.SetThreadsPerCPU(2);
+  histogram.SetRunMultiThreadedFilter(runMultiThreaded);
   auto result = histogram.Execute(mb);
   VISKORES_TEST_ASSERT(result.GetNumberOfPartitions() == 1, "Expecting 1 partition.");
 
@@ -134,6 +138,17 @@ static void TestPartitionedDataSetHistogram()
     std::cout << " " << binsPortal.Get(cc);
   }
   std::cout << std::endl;
+  return { bins, histogram.GetBinDelta() };
+}
+
+static void TestPartitionedDataSetHistogram()
+{
+  const auto sequential = RunPartitionedDataSetHistogram(false);
+  const auto threaded = RunPartitionedDataSetHistogram(true);
+  VISKORES_TEST_ASSERT(test_equal_ArrayHandles(sequential.Bins, threaded.Bins),
+                       "Sequential and threaded histograms differ");
+  VISKORES_TEST_ASSERT(test_equal(sequential.BinDelta, threaded.BinDelta),
+                       "Sequential and threaded bin deltas differ");
 }
 
 int UnitTestPartitionedDataSetHistogramFilter(int argc, char* argv[])

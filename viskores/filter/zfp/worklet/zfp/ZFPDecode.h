@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_worklet_zfp_decode_h
 #define viskores_worklet_zfp_decode_h
 
@@ -178,7 +169,7 @@ inline VISKORES_EXEC viskores::Int32 uint2int(viskores::UInt32 x)
   return static_cast<viskores::Int32>((x ^ 0xaaaaaaaau) - 0xaaaaaaaau);
 }
 
-// Note: I die a little inside everytime I write this sort of template
+// Note: I die a little inside every time I write this sort of template
 template <viskores::Int32 BlockSize,
           typename PortalType,
           template <int Size, typename Portal>

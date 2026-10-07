@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #include <viskores/cont/CellSetExplicit.h>
 
 #include <viskores/cont/ArrayHandle.h>
@@ -50,7 +41,7 @@ viskores::Id ArrayLength(const T (&)[Length])
   return static_cast<viskores::Id>(Length);
 }
 
-// all points are part of atleast 1 cell
+// all points are part of at least 1 cell
 viskores::cont::CellSetExplicit<> MakeTestCellSet1()
 {
   viskores::cont::CellSetExplicit<> cs;
@@ -108,7 +99,7 @@ void TestCellSetExplicit()
   viskores::cont::ArrayHandle<viskores::Id> result;
 
   std::cout << "----------------------------------------------------\n";
-  std::cout << "Testing Case 1 (all points are part of atleast 1 cell): \n";
+  std::cout << "Testing Case 1 (all points are part of at least 1 cell): \n";
   cellset = MakeTestCellSet1();
 
   std::cout << "\tTesting PointToCell\n";

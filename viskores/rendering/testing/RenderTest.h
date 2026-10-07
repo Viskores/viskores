@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_rendering_testing_RenderTest_h
 #define viskores_rendering_testing_RenderTest_h
 
@@ -25,6 +16,7 @@
 #include <viskores/rendering/testlib/viskores_rendering_testing_export.h>
 
 #include <viskores/Bounds.h>
+#include <viskores/Deprecated.h>
 #include <viskores/cont/DeviceAdapterTag.h>
 #include <viskores/cont/testing/MakeTestDataSet.h>
 #include <viskores/rendering/Actor.h>
@@ -70,10 +62,16 @@ enum struct MapperType
 struct RenderTestOptions
 {
   // Options for comparing images (i.e. test_equal_images)
-  viskores::IdComponent AverageRadius = 0;
+  viskores::IdComponent SSIMPatchRadius = 3;
+  /// @brief The SSIMTolerance is how far away from a perfect score is allowed.
+  /// A threshold of 0 requires exact images. Larger values allow more tolerance.
+  viskores::FloatDefault SSIMTolerance = 0.05f;
+  VISKORES_DEPRECATED(1.3, "Use SSIM compare parameters") viskores::IdComponent AverageRadius = 0;
+  VISKORES_DEPRECATED(1.3, "Use SSIM compare parameters")
   viskores::IdComponent PixelShiftRadius = 0;
+  VISKORES_DEPRECATED(1.3, "Use SSIM compare parameters")
   viskores::FloatDefault AllowedPixelErrorRatio = 0.00025f;
-  viskores::FloatDefault Threshold = 0.05f;
+  VISKORES_DEPRECATED(1.3, "Use SSIM compare parameters") viskores::FloatDefault Threshold = 0.05f;
 
   // Options that set up rendering
   CanvasType Canvas = CanvasType::RayTracer;

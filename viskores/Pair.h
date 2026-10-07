@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_Pair_h
 #define viskores_Pair_h
@@ -34,7 +25,7 @@ namespace viskores
 /// only in the control environment).
 ///
 template <typename T1, typename T2>
-struct Pair
+struct VISKORES_ALWAYS_EXPORT Pair
 {
   /// The type of the first object.
   ///

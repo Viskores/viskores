@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_io_internal_VTKDataSetCells_h
 #define viskores_io_internal_VTKDataSetCells_h
 
@@ -207,7 +198,7 @@ inline bool IsSingleShape(const viskores::cont::ArrayHandle<viskores::UInt8>& sh
   if (shapes.GetNumberOfValues() < 1)
   {
     // If the data has no cells, is it single shape? That would make sense, but having
-    // a single shape cell set requires you to slect a shape, and there are no cells to
+    // a single shape cell set requires you to select a shape, and there are no cells to
     // make that selection from. We could get around that, but it's easier just to treat
     // it as a general explicit grid.
     return false;

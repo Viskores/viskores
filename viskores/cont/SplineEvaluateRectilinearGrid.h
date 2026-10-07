@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_SplineEvaluateRectilinearGrid_h
 #define viskores_cont_SplineEvaluateRectilinearGrid_h
 
@@ -36,6 +27,7 @@ namespace cont
 /// means the data set must use `viskores::cont::ArrayHandleCartesianProduct` for its
 /// coordinate system. This evaluator will throw an error if the data set does not meet
 /// these requirements.
+/// Each active coordinate axis must be strictly monotonic, either increasing or decreasing.
 ///
 /// Right now, this evaluator only supports scalar fields on 3D uniform grids. The field to be
 /// evaluated is specified by name.

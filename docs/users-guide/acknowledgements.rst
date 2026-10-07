@@ -42,11 +42,11 @@ density filters in :secref:`provided-filters:Particle Density`.
 
 .. ArrayHandleRandomUniformBits.
 
-**James Kress** for his documentation on |Viskores|'s testing classes.
-
-.. todo:: Add reference to testing classes when available.
+**James Kress** for his documentation on |Viskores|'s testing classes in :chapref:`testing:Regression Testing`.
 
 **Manish Mathai** for his documentation of rendering features in :chapref:`rendering:Rendering`.
+
+**Vicente Bolea** for his documentation of distributed processing in :chapref:`distributed-systems:Distributed Systems`.
 
 AI was used to assist the writing of some parts of this documentation.
 

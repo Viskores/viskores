@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -128,7 +119,7 @@ public:
 
   // array of values being operated over (same size as supernode set)
   // keep both intrinsic & dependent values
-  // the intrinsic values are just stored but not modifid here
+  // the intrinsic values are just stored but not modified here
   const viskores::cont::ArrayHandle<SweepValueType>& IntrinsicValues;
   // the dependent values are what is being sweeped and are updated here
   const viskores::cont::ArrayHandle<SweepValueType>& DependentValues;
@@ -162,7 +153,7 @@ public:
   /// @param[in] hierarchicalTree the tree that to hypersweeps over
   /// @param[in] baseBlock the underlying mesh base block  to initialize from
   /// @param[in] localToGlobalIdRelabeler Id relabeler used to compute global indices from local mesh indices
-  /// @param[out] superarcRegularCounts   arrray for the output superarc regular counts
+  /// @param[out] superarcRegularCounts   array for the output superarc regular counts
   template <typename MeshType>
   void InitializeIntrinsicVertexCount(
     const HierarchicalContourTree<ContourTreeFieldType>& hierarchicalTree,
@@ -171,7 +162,7 @@ public:
     viskores::worklet::contourtree_augmented::IdArrayType& superarcRegularCounts);
 
   /// routine to do the local hypersweep using addition / subtraction
-  /// The funtion use the ComputeSuperarcDependentWeights, ComputeSuperarcTransferWeights,
+  /// The function use the ComputeSuperarcDependentWeights, ComputeSuperarcTransferWeights,
   /// and TransferWeights functions to carry out the local hyper sweep
   void LocalHyperSweep();
 
@@ -225,7 +216,7 @@ HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::HierarchicalHype
   , DependentValues(dependentValues)
   , NumOwnedRegularVertices(viskores::Id{ 0 })
 { // constructor
-  // Initalize arrays with 0s
+  // Initialize arrays with 0s
   this->ValuePrefixSum.AllocateAndFill(this->HierarchicalTree.Supernodes.GetNumberOfValues(), 0);
   this->TransferTarget.AllocateAndFill(this->HierarchicalTree.Supernodes.GetNumberOfValues(), 0);
   this->SortedTransferTarget.AllocateAndFill(this->HierarchicalTree.Supernodes.GetNumberOfValues(),
@@ -448,12 +439,12 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::
     viskores::cont::ArrayHandleView<viskores::worklet::contourtree_augmented::IdArrayType>
       dependentValuesView(this->DependentValues,   // subset DependentValues
                           firstSupernode,          // start at firstSupernode
-                          numSupernodesToProcess); // until lastSuperNode (not inclued)
+                          numSupernodesToProcess); // until lastSuperNode (not included)
     // Target array
     viskores::cont::ArrayHandleView<viskores::worklet::contourtree_augmented::IdArrayType>
       valuePrefixSumView(this->ValuePrefixSum,    // subset ValuePrefixSum
                          firstSupernode,          // start at firstSupernode
-                         numSupernodesToProcess); // until lastSuperNode (not inclued)
+                         numSupernodesToProcess); // until lastSuperNode (not included)
     // Compute the partial sum for DependentValues[firstSuperNode, lastSupernode) and write to ValuePrefixSum[firstSuperNode, lastSupernode)
     viskores::cont::Algorithm::ScanInclusive(dependentValuesView, // input
                                              valuePrefixSumView); // result of partial sum
@@ -619,7 +610,7 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::TransferWei
     viskores::cont::ArrayHandleView<viskores::worklet::contourtree_augmented::IdArrayType>
       valuePrefixSumView(this->ValuePrefixSum,    // subset ValuePrefixSum
                          firstSupernode,          // start at firstSupernode
-                         numSupernodesToProcess); // until lastSuperNode (not inclued)
+                         numSupernodesToProcess); // until lastSuperNode (not included)
     // For safety we store the values of our prefix sum in a temporary array
     // and then copy the values back into our valuePrefixSumView at the end
     viskores::worklet::contourtree_augmented::IdArrayType tempScanInclusiveTarget;

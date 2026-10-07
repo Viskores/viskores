@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_filter_flow_worklet_ParticleAdvectionWorklets_h
 #define viskores_filter_flow_worklet_ParticleAdvectionWorklets_h
@@ -140,7 +131,7 @@ public:
     viskores::cont::ArrayHandleIndex idxArray(numSeeds);
     // TODO: The particle advection sometimes behaves incorrectly on CUDA if the stack size
     // is not changed thusly. This is concerning as the compiler should be able to determine
-    // staticly the required stack depth. What is even more concerning is that the runtime
+    // statically the required stack depth. What is even more concerning is that the runtime
     // does not report a stack overflow. Rather, the worklet just silently reports the wrong
     // value. Until we determine the root cause, other problems may pop up.
 #ifdef VISKORES_CUDA
@@ -161,7 +152,7 @@ public:
     viskores::cont::Invoker invoker;
     invoker(worklet, idxArray, integrator, particlesObj);
 
-    // Finalize the analysis and clear intermittant arrays.
+    // Finalize the analysis and clear intermittent arrays.
     analysis.FinalizeAnalysis(particles);
   }
 };

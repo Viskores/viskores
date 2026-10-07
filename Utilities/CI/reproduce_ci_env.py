@@ -9,17 +9,6 @@
 ##============================================================================
 
 
-#=============================================================================
-#
-#  Copyright (c) Kitware, Inc.
-#  All rights reserved.
-#  See LICENSE.txt for details.
-#
-#  This software is distributed WITHOUT ANY WARRANTY; without even
-#  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-#  PURPOSE.  See the above copyright notice for more information.
-#
-#===============
 
 import enum
 import os
@@ -289,7 +278,7 @@ def run_container(ci_file_path, *args):
     cmd = ['exec', '-it', container_id, 'bash']
     subprocess_call_docker(cmd, cwd=src_dir)
   except subprocess.CalledProcessError:
-    print('Unable to attach an iteractive shell to : ', container_id)
+    print('Unable to attach an interactive shell to : ', container_id)
   pass
 
   try:

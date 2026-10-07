@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/ArrayHandleRecombineVec.h>
 
@@ -95,7 +86,7 @@ struct TestRecombineVecAsOutput
     invoke(PassThrough{}, baseArray, recombinedArray);
     VISKORES_TEST_ASSERT(test_equal_ArrayHandles(baseArray, outputArray));
 
-    // Try outputing to a recombine vec inside of another fancy ArrayHandle.
+    // Try outputting to a recombine vec inside of another fancy ArrayHandle.
     auto reverseOutput = viskores::cont::make_ArrayHandleReverse(recombinedArray);
     invoke(PassThrough{}, baseArray, reverseOutput);
     VISKORES_TEST_ASSERT(test_equal_ArrayHandles(baseArray, reverseOutput));

@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_interop_anari_testing_ANARITestCommon_h
 #define viskores_interop_anari_testing_ANARITestCommon_h
@@ -108,7 +99,8 @@ static void renderTestANARIImage(anari_cpp::Device d,
 
   image.AddPointField("color", colorArray);
 
-  VISKORES_TEST_ASSERT(test_equal_images(image, imgName));
+  VISKORES_TEST_ASSERT(
+    test_equal_images(imgName, colorArray, viskores::Id2{ fb.width, fb.height }));
 }
 
 } // namespace

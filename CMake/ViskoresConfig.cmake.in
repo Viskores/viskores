@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 # When this file is run by CMake through the find_package command, the
 # following targets will exist:
@@ -184,6 +175,6 @@ endif()
 include(ViskoresWrappers)
 include(ViskoresRenderingContexts)
 
-# Setup diy magic of chosing the appropriate mpi/no_mpi library to link against
+# Setup diy magic of choosing the appropriate mpi/no_mpi library to link against
 include(ViskoresDIYUtils)
 viskores_diy_init_target()

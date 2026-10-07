@@ -44,6 +44,8 @@ protected:
   viskores::Vec3f_32 m_direction;
   viskores::Vec3f_32 m_up;
   viskores::Vec4f_32 m_imageRegion;
+
+  viskores::Float32 imageRegionToViewport(viskores::Float32 value) const;
 };
 
 struct UnknownCamera : public Camera

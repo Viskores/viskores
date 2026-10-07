@@ -134,8 +134,6 @@ The following types of mask are provided by |Viskores|.
 The constructor of :class:`viskores::worklet::MaskSelect` takes a :class:`viskores::cont::UnknownArrayHandle` and is precompiled for a set of expected array types.
 However, if you have a custom array handle type like many of those in :chapref:`fancy-array-handles:Fancy Array Handles`, it is often more efficient to use :class:`viskores::worklet::MaskSelectTemplate`, which has a templated constructor to compile for a specific array handle type.
 
-.. todo:: Add chapref to \ref{chap:Storage} when available.
-
 .. doxygenclass:: viskores::worklet::MaskSelectTemplate
 
 To define a mask procedure, the worklet must provide a type definition named ``MaskType``.

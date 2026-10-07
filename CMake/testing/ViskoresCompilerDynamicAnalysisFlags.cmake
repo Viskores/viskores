@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 #-----------------------------------------------------------------------------
 # check if this is a sanitizer build. If so, set up the environment.
@@ -48,7 +39,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
 endif()
 
 if(VISKORES_COMPILER_IS_CLANG OR VISKORES_COMPILER_IS_GNU)
-  viskores_option(Viskores_ENABLE_SANITIZER "Build with sanitizer support." OFF)
+  option(Viskores_ENABLE_SANITIZER "Build with sanitizer support." OFF)
   mark_as_advanced(Viskores_ENABLE_SANITIZER)
 
   set(Viskores_USE_SANITIZER "address" CACHE STRING "The sanitizer to use")

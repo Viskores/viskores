@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_Range_h
 #define viskores_Range_h
@@ -38,9 +29,9 @@ namespace viskores
 ///
 struct Range
 {
-  /// The minumum value of the range (inclusive).
+  /// The minimum value of the range (inclusive).
   viskores::Float64 Min;
-  /// Tha maximum value of the range (inclusive).
+  /// The maximum value of the range (inclusive).
   viskores::Float64 Max;
 
   /// Construct a range with a given minimum and maximum. If no minimum or maximum is

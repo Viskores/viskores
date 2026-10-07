@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/io/FileUtils.h>
@@ -48,7 +39,7 @@ void TestGetWindowsPathSeperator()
   VISKORES_TEST_ASSERT(GetWindowsPathSeperator("some/test/path") == '/',
                        "/ should be the separator");
   VISKORES_TEST_ASSERT(GetWindowsPathSeperator("some\\test\\path") == '\\',
-                       "\\ should be the seperator");
+                       "\\ should be the separator");
   VISKORES_TEST_ASSERT(GetWindowsPathSeperator("some\\test/path") == '/',
                        "Always prefer / over \\");
   VISKORES_TEST_ASSERT(GetWindowsPathSeperator("some/test\\path") == '/',
@@ -145,11 +136,11 @@ void TestMergePaths()
                          "end\\in\\slash\\start\\slash",
                        "Should do correct slash merge");
   VISKORES_TEST_ASSERT(MergePaths("bad\\combo", "bad/combo") == "bad\\combo\\bad/combo",
-                       "Should use the prefix seperator");
+                       "Should use the prefix separator");
   VISKORES_TEST_ASSERT(MergePaths("bad\\combo", "/bad/combo") == "bad\\combo\\bad/combo",
-                       "Should use the prefix seperator");
+                       "Should use the prefix separator");
   VISKORES_TEST_ASSERT(MergePaths("bad/combo", "\\bad\\combo") == "bad/combo/bad\\combo",
-                       "Should use the prefix seperator");
+                       "Should use the prefix separator");
 #endif
 }
 

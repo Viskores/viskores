@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_arg_TransportTagKeyedValuesOut_h
 #define viskores_cont_arg_TransportTagKeyedValuesOut_h
 
@@ -29,10 +20,10 @@ namespace arg
 
 /// \brief \c Transport tag for input values in a reduce by key.
 ///
-/// \c TransportTagKeyedValuesOut is a tag used with the \c Transport class
-/// to transport \c ArrayHandle objects for output values. The values are
-/// rearranged and grouped based on the keys they are associated with.
-///
+/// `TransportTagKeyedValuesOut` is a tag used with the `Transport` class to
+/// transport `ArrayHandle` objects for output values. The values are rearranged
+/// and grouped based on the keys they are associated with, which come from the
+/// input domain, which is expected to be a `viskores::worklet::Keys` object.
 struct TransportTagKeyedValuesOut
 {
 };

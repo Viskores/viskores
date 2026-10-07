@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/rendering/testing/RenderTest.h>
 
@@ -213,6 +204,8 @@ void DoRenderTest(viskores::rendering::Canvas& canvas,
       break;
   }
   viskores::rendering::View& view = *viewPointer;
+  view.GetMapper().SetLightPosition(view.GetCamera().GetPosition() +
+                                    viskores::Vec3f_32(2, 2, 2) * view.GetCamera().GetViewUp());
 
   view.AddTextAnnotation(std::unique_ptr<viskores::rendering::TextAnnotationScreen>(
     new viskores::rendering::TextAnnotationScreen(options.Title,
@@ -222,12 +215,8 @@ void DoRenderTest(viskores::rendering::Canvas& canvas,
                                                   options.TitleAngle)));
   view.SetRenderAnnotationsEnabled(options.EnableAnnotations);
 
-  VISKORES_TEST_ASSERT(test_equal_images(view,
-                                         outputFile,
-                                         options.AverageRadius,
-                                         options.PixelShiftRadius,
-                                         options.AllowedPixelErrorRatio,
-                                         options.Threshold));
+  VISKORES_TEST_ASSERT(test_equal_images(
+    outputFile, view, SSIMCompareOptions{ options.SSIMTolerance, options.SSIMPatchRadius }));
 }
 
 void DoRenderTest(viskores::rendering::CanvasRayTracer& canvas,
@@ -269,7 +258,7 @@ void DoRenderTest(viskores::rendering::CanvasRayTracer& canvas,
   DoRenderTest(canvas, *mapper, dataSetsFields, outputFile, options);
 }
 
-} // annonymous namesapce
+} // anonymous namespace
 
 namespace viskores
 {

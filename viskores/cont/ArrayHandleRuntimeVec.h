@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_ArrayHandleRuntimeVec_h
 #define viskores_cont_ArrayHandleRuntimeVec_h
 
@@ -521,7 +512,7 @@ struct ArrayExtractComponentImpl<viskores::cont::StorageTagRuntimeVec>
     return viskores::cont::ArrayHandleStride<typename viskores::VecTraits<T>::BaseComponentType>(
       dest.GetBasicArray(),
       dest.GetNumberOfValues() / numComponents,
-      dest.GetStride() * numComponents,
+      static_cast<viskores::Id>(dest.GetStride()) * numComponents,
       dest.GetOffset() + (dest.GetStride() * (componentIndex / NUM_SUB_COMPONENTS)),
       dest.GetModulo(),
       dest.GetDivisor());

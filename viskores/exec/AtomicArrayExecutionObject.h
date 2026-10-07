@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_exec_AtomicArrayExecutionObject_h
 #define viskores_exec_AtomicArrayExecutionObject_h
 
@@ -145,7 +136,7 @@ public:
       viskores::AtomicLoad(reinterpret_cast<APIType*>(this->Data + index), order));
   }
 
-  /// @brief Peform an atomic addition with sequentially consistent memory
+  /// @brief Perform an atomic addition with sequentially consistent memory
   /// ordering.
   /// @param index The index of the array element that will be added to.
   /// @param value The addend of the atomic add operation.
@@ -171,7 +162,7 @@ public:
       reinterpret_cast<APIType*>(this->Data + index), static_cast<APIType>(value), order));
   }
 
-  /// @brief Peform an atomic store to memory while enforcing, at minimum, "release"
+  /// @brief Perform an atomic store to memory while enforcing, at minimum, "release"
   /// memory ordering.
   /// @param index The index of the array element that will be added to.
   /// @param value The value to write for the atomic store operation.

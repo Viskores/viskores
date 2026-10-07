@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_ArrayHandleStride_h
 #define viskores_cont_ArrayHandleStride_h
 
@@ -507,7 +498,7 @@ VISKORES_CONT inline void Storage<T, viskores::cont::StorageTagStride>::Fill(
     // The fill does not necessarily cover a contiguous region. We have to have a loop
     // to set it. But we are not allowed to write device code here. Instead, create
     // a stride array containing the fill value with a modulo of 1 so that this fill
-    // value repeates. Then feed this into a precompiled array copy that supports
+    // value repeats. Then feed this into a precompiled array copy that supports
     // stride arrays.
     const viskores::Id numFill = endIndex - startIndex;
     auto fillValueArray = viskores::cont::make_ArrayHandle({ fillValue });

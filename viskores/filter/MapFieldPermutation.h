@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_filter_MapFieldPermutation_h
 #define viskores_filter_MapFieldPermutation_h
@@ -34,7 +25,7 @@ namespace filter
 /// \brief Maps a field by permuting it by a given index array.
 ///
 /// This method will create a new field containing the data from the provided `inputField` but
-/// reorded by the given `permutation` index array. The value in the resulting field for index _i_
+/// reordered by the given `permutation` index array. The value in the resulting field for index _i_
 /// will be be a value from `inputField`, but comes from the index that comes from `permutation` at
 /// position _i_. The result is placed in `outputField`.
 ///
@@ -68,7 +59,7 @@ VISKORES_FILTER_CORE_EXPORT VISKORES_CONT bool MapFieldPermutation(
 /// \brief Maps a field by permuting it by a given index array.
 ///
 /// This method will create a new field containing the data from the provided `inputField` but
-/// reorded by the given `permutation` index array. The value in the resulting field for index _i_
+/// reordered by the given `permutation` index array. The value in the resulting field for index _i_
 /// will be be a value from `inputField`, but comes from the index that comes from `permutation` at
 /// position _i_.
 ///

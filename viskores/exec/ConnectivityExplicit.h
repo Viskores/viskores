@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_exec_ConnectivityExplicit_h
 #define viskores_exec_ConnectivityExplicit_h
 
@@ -60,13 +51,13 @@ public:
 
   /// @brief The tag representing the cell shape of the visited elements.
   ///
-  /// The tag type is allways `viskores::CellShapeTagGeneric` and its id is filled with the
+  /// The tag type is always `viskores::CellShapeTagGeneric` and its id is filled with the
   /// identifier for the appropriate shape.
   using CellShapeTag = viskores::CellShapeTagGeneric;
 
   /// @brief Returns a tagfor the cell shape associated with the element at the given index.
   ///
-  /// The tag type is allways `viskores::CellShapeTagGeneric` and its id is filled with the
+  /// The tag type is always `viskores::CellShapeTagGeneric` and its id is filled with the
   /// identifier for the appropriate shape.
   VISKORES_EXEC
   CellShapeTag GetCellShape(viskores::Id index) const

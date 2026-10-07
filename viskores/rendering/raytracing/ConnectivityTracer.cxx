@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #include <viskores/rendering/raytracing/ConnectivityTracer.h>
 
 #include <viskores/cont/DeviceAdapterAlgorithm.h>
@@ -221,7 +212,7 @@ void ConnectivityTracer::SetVolumeData(const viskores::cont::Field& scalarField,
   const bool isSupportedField = ScalarField.IsCellField() || ScalarField.IsPointField();
   if (!isSupportedField)
   {
-    throw viskores::cont::ErrorBadValue("Field not accociated with cell set or points");
+    throw viskores::cont::ErrorBadValue("Field not associated with cell set or points");
   }
   FieldAssocPoints = ScalarField.IsPointField();
 
@@ -248,7 +239,7 @@ void ConnectivityTracer::SetEnergyData(const viskores::cont::Field& absorption,
   bool isSupportedField = absorption.GetAssociation() == viskores::cont::Field::Association::Cells;
   if (!isSupportedField)
     throw viskores::cont::ErrorBadValue("Absorption Field '" + absorption.GetName() +
-                                        "' not accociated with cells");
+                                        "' not associated with cells");
   ScalarField = absorption;
   CellSet = cellSet;
   Coords = coords;
@@ -260,7 +251,7 @@ void ConnectivityTracer::SetEnergyData(const viskores::cont::Field& absorption,
   {
     if (emission.GetAssociation() != viskores::cont::Field::Association::Cells)
       throw viskores::cont::ErrorBadValue("Emission Field '" + emission.GetName() +
-                                          "' not accociated with cells");
+                                          "' not associated with cells");
     HasEmission = true;
     EmissionField = emission;
   }

@@ -171,7 +171,7 @@ viskores::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   }
   else
   {
-    // Mutiple ranks -> Some assembly required. Collect data
+    // Multiple ranks -> Some assembly required. Collect data
     // on rank 0, all other ranks return empty data sets
 
     // Communicate results to rank 0

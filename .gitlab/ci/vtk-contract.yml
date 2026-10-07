@@ -49,12 +49,12 @@ vtk_serial:
 vtk_cuda:
   extends:
     - .vtk_contract_base
-    - .ubuntu2404_cuda130
+    - .ubuntu2404_cuda133
     - .run_automatically
     - .uo_cpu_tags
   variables:
     CCACHE_RESHARE: "true"
     CMAKE_ARGS: "-DVTK_USE_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75"
   needs:
-    - job: ubuntu2404_gcc14_cuda130
+    - job: ubuntu2404_gcc14_cuda133
       artifacts: true

@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -80,9 +71,9 @@ class ClarifyBranchEndSupernodeTypeWorklet : public viskores::worklet::WorkletMa
 public:
   using ControlSignature = void(
     FieldIn lowerSuperarcId, // (input) lower end superarc ID
-    FieldIn lowerIntrinsic,  // (input) lower end superarc intrisic volume
+    FieldIn lowerIntrinsic,  // (input) lower end superarc intrinsic volume
     FieldIn upperSuperarcId, // (input) upper end superarc ID
-    FieldIn upperIntrinsic,  // (input) upper end superarc intrisic volume
+    FieldIn upperIntrinsic,  // (input) upper end superarc intrinsic volume
     FieldIn branchRoot,      // (input) branch root superarc ID
     FieldInOut isLowerLeaf,  // (input/output) bool, whether the lower end is a leaf
     FieldInOut isUpperLeaf   // (input/output) bool, whether the upper end is a leaf

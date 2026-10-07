@@ -6,15 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
 
 # -----------------------------------------------------------------------------
 function(viskores_test_install)
@@ -177,7 +168,7 @@ function(_test_install_make dir name)
   set(build_example_dir "${Viskores_BINARY_DIR}/CMakeFiles/_tmp_build/test_${name}_make/")
   set(source_example_dir "${CMAKE_CURRENT_SOURCE_DIR}/${dir}/")
 
-  # Create build dir if it doesnt exists
+  # Create build dir if it doesn't exists
   add_test(NAME ${build_name}_setup
            COMMAND ${CMAKE_COMMAND} -E make_directory ${build_example_dir})
 

@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_io_ImageWriterBase_h
 #define viskores_io_ImageWriterBase_h
 
@@ -34,10 +25,10 @@ namespace io
 /// are represented as a point field in a 2D uniform dataset.
 ///
 /// `ImageWriterBase` can be constructed from a file, canvas, or ArrayHandle.  It can
-/// also be empy constructed and filled in with a dataset later.
+/// also be empty constructed and filled in with a dataset later.
 ///
 /// `ImageWriterBase` implements virtual methods for writing files.  Ideally,
-/// these methods will be overriden in various subclasses to implement specific
+/// these methods will be overridden in various subclasses to implement specific
 /// functionality for writing data to specific image file-types.
 ///
 class VISKORES_IO_EXPORT ImageWriterBase

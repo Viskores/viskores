@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/TypeTraits.h>
 
@@ -73,7 +64,7 @@ private:
     using VT = typename viskores::VecTraits<T>::ComponentType;
     VT value = VT(2.001);
     VISKORES_TEST_ASSERT(test_equal(float(value), float(2.001)),
-                         "Real does not hold floaing point number.");
+                         "Real does not hold floating point number.");
   }
 };
 

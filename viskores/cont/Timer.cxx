@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/DeviceAdapter.h>
 #include <viskores/cont/DeviceAdapterList.h>
@@ -67,7 +58,7 @@ struct InitFunctor
   template <typename Device>
   VISKORES_CONT void operator()(Device, EnabledTimerImplTuple& timerImpls)
   {
-    //We don't use the runtime device tracker to very initializtion support
+    //We don't use the runtime device tracker to very initialization support
     //so that the following use case is supported:
     //
     // GetRuntimeDeviceTracker().Disable( openMP );

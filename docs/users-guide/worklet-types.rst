@@ -55,7 +55,8 @@ The following list describes each worklet type provided by |Viskores| and the su
 
 The remainder of this chapter provides details on how to create worklets of each type.
 
-.. todo:: Add link to new worklet types chapter when available (see below).
+Mechanisms to to define an operation pattern beyond these standard choices is a more advanced topic described in
+:chapref:`new-worklet-types:New Worklet Types`.
 
 
 ------------------------------
@@ -90,8 +91,6 @@ Field maps most commonly perform basic calculator arithmetic, as demonstrated in
 Although simple, the :class:`viskores::worklet::WorkletMapField` worklet type can be used (and abused) as a general parallel-for/scheduling mechanism.
 In particular, the :class:`WorkIndex` execution signature tag can be used to get a unique index, the ``WholeArray*`` tags can be used to get random access to arrays, and the :class:`ExecObject` control signature tag can be used to pass execution objects directly to the worklet.
 Whole arrays and execution objects are talked about in more detail in :chapref:`globals:Global Arrays and Topology` and :chapref:`execution-objects:Execution Objects`, respectively, in more detail, but here is a simple example that uses the random access of :class:`WholeArrayOut` to make a worklet that copies an array in reverse order.
-
-.. todo:: Fix reference to execution object chapter above.
 
 .. load-example:: RandomArrayAccess
    :file: GuideExampleUseWorkletMapField.cxx

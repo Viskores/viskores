@@ -7,13 +7,6 @@
 //============================================================================
 
 //============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//
 //  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
@@ -229,7 +222,7 @@ int main(int argc, char* argv[])
     }
   }
 
-  viskores::Id presimplifyThreshold = 0; // Do not presimplify the hierachical contour tree
+  viskores::Id presimplifyThreshold = 0; // Do not presimplify the hierarchical contour tree
   if (parser.hasOption("--presimplifyThreshold"))
   {
     presimplifyThreshold = std::stoi(parser.getOption("--presimplifyThreshold"));
@@ -1135,7 +1128,7 @@ int main(int argc, char* argv[])
                    << std::setw(42) << std::left << "    Total Time"
                    << ": " << currTime << " seconds");
 
-  // Flush ouput streams just to make sure everything has been logged (in particular when using MPI)
+  // Flush output streams just to make sure everything has been logged (in particular when using MPI)
   std::cout << std::flush;
   std::cerr << std::flush;
 

@@ -93,8 +93,6 @@ That calls a lambda function that invokes a worklet to create the output field.
 .. doxygenfunction:: viskores::filter::Filter::CastAndCallVariableVecField(const viskores::cont::UnknownArrayHandle&, Functor&&, Args&&...) const
 .. doxygenfunction:: viskores::filter::Filter::CastAndCallVariableVecField(const viskores::cont::Field&, Functor&&, Args&&...) const
 
-.. todo:: Fix reference to unknown array handle above.
-
 Finally, :func:`viskores::filter::Filter::CreateResultField` generates the output of the filter.
 Note that all fields need a unique name, which is the reason for the second argument to :func:`viskores::filter::Filter::CreateResult`.
 The :class:`viskores::filter::Filter` base class contains a pair of methods named :func:`viskores::filter::Filter::SetOutputFieldName` and :func:`viskores::filter::Filter::GetOutputFieldName` to allow users to specify the name of output fields.

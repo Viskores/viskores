@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/Particle.h>
 #include <viskores/cont/DataSet.h>
@@ -64,7 +55,7 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  //create seeds randomly placed withing the bounding box of the data.
+  //create seeds randomly placed within the bounding box of the data.
   viskores::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
   std::vector<viskores::Particle> seeds;
 

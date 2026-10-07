@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/ArrayHandleCompositeVector.h>
 #include <viskores/cont/ArrayHandleRandomStandardNormal.h>
@@ -58,7 +49,7 @@ void Test()
   ////
   //// BEGIN-EXAMPLE ArrayHandleRandomUniformBitsIteration
   ////
-  // Create a new insance of ArrayHandleRandomUniformBits
+  // Create a new instance of ArrayHandleRandomUniformBits
   // for each set of random bits.
   viskores::cont::ArrayHandleRandomUniformBits randomArray0(50, { 0 });
   viskores::cont::ArrayHandleRandomUniformBits randomArray1(50, { 1 });

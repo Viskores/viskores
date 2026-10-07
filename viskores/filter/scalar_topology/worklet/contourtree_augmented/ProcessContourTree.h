@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -911,7 +902,7 @@ public:
     Invoke(unmaskArrayWorklet, minValues);
     Invoke(unmaskArrayWorklet, maxValues);
 
-    // Thse arrays hold the changes hyperarcs in the min and max hypersweep respectively
+    // This arrays hold the changes hyperarcs in the min and max hypersweep respectively
     viskores::cont::ArrayHandle<viskores::Id> minHyperarcs, maxHyperarcs;
     viskores::cont::ArrayCopy(contourTree.Hyperarcs, minHyperarcs);
     viskores::cont::ArrayCopy(contourTree.Hyperarcs, maxHyperarcs);
@@ -1007,7 +998,7 @@ public:
       incorporateParentMaximumWorklet(maxOperator);
     Invoke(incorporateParentMaximumWorklet, maxParents, contourTree.Supernodes, maxValues);
 
-    // Initialise all directed superarcs in the contour tree. Those will correspond to subtrees whos height we need for the branch decomposition.
+    // Initialise all directed superarcs in the contour tree. Those will correspond to subtrees whose height we need for the branch decomposition.
     viskores::cont::ArrayHandle<viskores::worklet::contourtree_augmented::EdgeDataHeight> arcs;
     arcs.Allocate(contourTree.Superarcs.GetNumberOfValues() * 2 - 2);
 

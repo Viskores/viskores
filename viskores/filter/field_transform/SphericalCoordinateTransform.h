@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_filter_field_transform_SphericalCoordinateTransform_h
 #define viskores_filter_field_transform_SphericalCoordinateTransform_h
@@ -45,7 +36,7 @@ public:
 
   /// @brief Establish a transformation from Cartesian to spherical coordinates.
   VISKORES_CONT void SetCartesianToSpherical() { CartesianToSpherical = true; }
-  /// @brief Establish a transformation from spherical to Cartesian coordiantes.
+  /// @brief Establish a transformation from spherical to Cartesian coordinates.
   VISKORES_CONT void SetSphericalToCartesian() { CartesianToSpherical = false; }
 
 private:

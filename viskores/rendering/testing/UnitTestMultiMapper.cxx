@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/rendering/Actor.h>
 #include <viskores/rendering/Canvas.h>
@@ -56,6 +47,7 @@ void MultiMapperRender(const viskores::cont::DataSet& ds1,
   camera.Azimuth(45.0f);
   camera.Elevation(45.0f);
 
+  mapper1.SetLightPosition(camera.GetPosition() + viskores::Vec3f_32(2, 2, 2) * camera.GetViewUp());
   mapper1.SetCanvas(&canvas);
   mapper1.SetActiveColorTable(colorTable1);
   mapper1.SetCompositeBackground(false);
@@ -77,7 +69,7 @@ void MultiMapperRender(const viskores::cont::DataSet& ds1,
   mapper2.RenderCells(
     ds2.GetCellSet(), ds2.GetCoordinateSystem(), field2, colorTable2, camera, range2);
 
-  VISKORES_TEST_ASSERT(test_equal_images(canvas, outputFile));
+  VISKORES_TEST_ASSERT(test_equal_images(outputFile, canvas));
 }
 
 void RenderTests()

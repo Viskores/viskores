@@ -23,6 +23,22 @@ found in the below sub-sections.
    - Cherry-pick each of the relevant commits of the existing pull request using
      `git cherry-pick -x XXYYZZ`.
 
+## Automated backport
+
+Instead of performing step 4 above by hand, a merged pull request can be
+backported automatically:
+
+1. Apply a `backport <branch-name>` label to the pull request (e.g.
+   `backport release`), either before or after it merges.
+2. Once the pull request is merged, the `backport` GitHub Action
+   cherry-picks (`-x`) the merged commit(s) into a new pull request
+   targeting `<branch-name>`, cross-referencing the original pull request.
+3. If a commit fails to cherry-pick cleanly, the action still opens the
+   pull request with conflict markers left in place; push a resolution
+   commit directly to the backport branch.
+4. Proceed with the backport pull request as with any other pull request:
+   review, pass CI, and merge.
+
 ## HotFix for latest release and main branch only
 
 For hotfixes that applies to release and main branch, create a branch based

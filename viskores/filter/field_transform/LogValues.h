@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_filter_field_transform_LogValues_h
 #define viskores_filter_field_transform_LogValues_h
 
@@ -80,7 +71,7 @@ public:
   ///
   /// Before taking the logarithm, this filter will check the value to this minimum
   /// value and clamp it to the minimum value if it is lower. This is useful to
-  /// prevent values from approching negative infinity.
+  /// prevent values from approaching negative infinity.
   ///
   /// By default, no minimum value is used.
   viskores::FloatDefault GetMinValue() const { return this->MinValue; }

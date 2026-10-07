@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_Logging_h
 #define viskores_cont_Logging_h
 
@@ -58,7 +49,7 @@
 ///   contexts (linux only) on crashes.
 ///
 /// The main logging entry points are the macros VISKORES_LOG_S and VISKORES_LOG_F,
-/// which using C++ stream and printf syntax, repectively. Other variants exist,
+/// which using C++ stream and printf syntax, respectively. Other variants exist,
 /// including conditional logging and special-purpose logs for writing specific
 /// events, such as DynamicObject cast results and TryExecute failures.
 ///
@@ -84,7 +75,7 @@
 /// completely.
 ///
 /// The helper functions viskores::cont::GetHumanReadableSize and
-/// viskores::cont::GetSizeString assist in formating byte sizes to a more readable
+/// viskores::cont::GetSizeString assist in formatting byte sizes to a more readable
 /// format. Similarly, the viskores::cont::TypeToString template functions provide RTTI
 /// based type-name information. When logging is enabled, these use the logging
 /// backend to demangle symbol names on supported platforms.
@@ -517,7 +508,7 @@ inline VISKORES_CONT std::string TypeToString(const T&)
  *
  * \param level  Desired LogLevel value for the log message.
  * \param cond   When false this function is no-op.
- * \param file   The source file where the log entry was genearted.
+ * \param file   The source file where the log entry was generated.
  * \param line   The line in the source file where the log entry was generated.
  * \param format Printf like format string.
  */

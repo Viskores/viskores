@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_exec_arg_InputIndex_h
 #define viskores_exec_arg_InputIndex_h
 
@@ -30,9 +21,11 @@ namespace arg
 
 /// @brief Aspect tag to use for getting the work index.
 ///
-/// The `AspectTagInputIndex` aspect tag causes the \c Fetch class to ignore
+/// The `AspectTagInputIndex` aspect tag causes the `Fetch` class to ignore
 /// whatever data is in the associated execution object and return the index
 /// of the input element.
+/// The input index is often the same as the work index, but may be different
+/// if a scatter or mask is being used.
 ///
 struct AspectTagInputIndex
 {

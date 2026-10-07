@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <iostream>
 #include <viskores/cont/ArrayHandleRandomUniformReal.h>
@@ -70,8 +61,6 @@ void TestFiberUncertainUniform()
 
   viskores::Range rangeAxis1(15.0, 15.0);
   viskores::Range rangeAxis2(25.0, 25.0);
-
-  const viskores::FloatDefault delta = 0.05f;
 
   viskores::filter::uncertainty::FiberUncertainUniform closedFormFilter;
   closedFormFilter.SetRange1(rangeAxis1);

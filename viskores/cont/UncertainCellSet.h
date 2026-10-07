@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_cont_UncertainCellSet_h
 #define viskores_cont_UncertainCellSet_h
 
@@ -32,7 +23,7 @@ namespace cont
 /// except that it also contains a template parameter that provides a
 /// `viskores::List` of potential cell set types.
 ///
-/// These potental types come into play when the `CastAndCall` method is called
+/// These potential types come into play when the `CastAndCall` method is called
 /// (or the `UncertainCellSet` is used in the `viskores::cont::CastAndCall` function).
 /// In this case, the `CastAndCall` will search for `CellSet`s of types that match
 /// this list.

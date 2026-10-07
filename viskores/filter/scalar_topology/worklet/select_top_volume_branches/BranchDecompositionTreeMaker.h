@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -93,7 +84,7 @@ namespace filter
 namespace scalar_topology
 {
 
-/// Facture class for augmenting the hierarchical contour tree to enable computations of measures, e.g., volumne
+/// Facture class for augmenting the hierarchical contour tree to enable computations of measures, e.g., volume
 class BranchDecompositionTreeMaker
 { // class BranchDecompositionTreeMaker
 public:

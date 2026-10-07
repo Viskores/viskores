@@ -94,7 +94,7 @@ The second argument is a functor that will operate on the array once it is ident
 .. doxygenfunction:: viskores::filter::Filter::CastAndCallScalarField(const viskores::cont::Field&, Functor&&, Args&&...) const
 
 .. didyouknow::
-   If your filter requires a field containing :type:`viskores::Vec` valuess of a particular size (e.g. 3), you can use the convenience method :func:`viskores::filter::Filter::CastAndCallVecField`.
+   If your filter requires a field containing :type:`viskores::Vec` values of a particular size (e.g. 3), you can use the convenience method :func:`viskores::filter::Filter::CastAndCallVecField`.
    :func:`viskores::filter::Filter::CastAndCallVecField` works similarly to :func:`viskores::filter::Filter::CastAndCallScalarField` except that it takes a template parameter specifying the size of the :type:`viskores::Vec`.
    For example, ``viskores::filter::Filter::CastAndCallVecField<3>(inField, functor);``.
 

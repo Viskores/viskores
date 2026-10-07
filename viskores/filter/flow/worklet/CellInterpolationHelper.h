@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_filter_flow_worklet_CellInterpolationHelper_h
 #define viskores_filter_flow_worklet_CellInterpolationHelper_h
@@ -159,7 +150,7 @@ public:
       default:
       {
         // Code path not expected to execute in correct cases
-        // Supress unused variable warning
+        // Suppress unused variable warning
         cellShape = viskores::UInt8(0);
         numVerts = viskores::IdComponent(0);
       }
@@ -274,7 +265,7 @@ public:
   }
 
 private:
-  // Variables required for strucutred grids
+  // Variables required for structured grids
   viskores::Id3 CellDims;
   viskores::Id3 PointDims;
   bool Is3D = true;

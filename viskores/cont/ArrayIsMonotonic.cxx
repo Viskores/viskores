@@ -6,21 +6,14 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayIsMonotonic.h>
 #include <viskores/cont/Invoker.h>
 #include <viskores/cont/viskores_cont_export.h>
 #include <viskores/worklet/WorkletMapField.h>
+
+#include <viskores/BinaryOperators.h>
 
 namespace viskores
 {
@@ -62,8 +55,8 @@ struct MonotonicDecreasing : public viskores::worklet::WorkletMapField
       result = input.Get(idx) <= input.Get(idx - 1);
   }
 };
-} //anonymous namespace
 
+} //anonymous namespace
 
 VISKORES_CONT_EXPORT
 bool ArrayIsMonotonicIncreasing(const viskores::cont::UnknownArrayHandle& input)

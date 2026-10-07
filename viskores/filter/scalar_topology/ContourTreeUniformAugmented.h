@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -96,7 +87,7 @@ namespace scalar_topology
 /// computation of the augmented contour tree, i.e., the contour tree including
 /// all regular mesh vertices. Augmentation with regular vertices is used in
 /// practice to compute statistics (e.g., volume), to segment the input mesh,
-/// facilitate iso-value selection, enable localization of all verticies of a
+/// facilitate iso-value selection, enable localization of all vertices of a
 /// mesh in the tree among others.
 ///
 /// In addition to single-block computation, the filter also supports multi-block
@@ -153,7 +144,7 @@ public:
   ///@}
 
 private:
-  /// Output field "saddlePeak" wich is pairs of vertex ids indicating saddle and peak of contour
+  /// Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
   VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
     const viskores::cont::PartitionedDataSet& inData) override;

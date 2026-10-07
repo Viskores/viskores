@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_rendering_raytracing_Triangulator_h
 #define viskores_rendering_raytracing_Triangulator_h
 
@@ -259,7 +250,7 @@ public:
     void operator()(viskores::Id4& triangleIndices) const
     {
       // first field contains the id of the cell the
-      // trianlge belongs to
+      // triangle belongs to
       viskores::Id temp;
       if (triangleIndices[1] > triangleIndices[3])
       {

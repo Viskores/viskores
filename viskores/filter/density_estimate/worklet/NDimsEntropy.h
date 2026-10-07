@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 #ifndef viskores_worklet_NDimsEntropy_h
 #define viskores_worklet_NDimsEntropy_h
@@ -79,7 +70,7 @@ public:
       setBinInformationContentDispatcher(binWorklet);
     setBinInformationContentDispatcher.Invoke(freqs, informationContent);
 
-    ///// calculate entropy by summing up information conetent of all bins /////
+    ///// calculate entropy by summing up information content of all bins /////
     viskores::Float64 initEntropyValue = 0;
     viskores::Float64 entropy =
       viskores::cont::Algorithm::Reduce(informationContent, initEntropyValue, viskores::Sum());

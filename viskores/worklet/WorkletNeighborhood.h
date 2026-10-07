@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 #ifndef viskores_worklet_WorkletNeighborhood_h
 #define viskores_worklet_WorkletNeighborhood_h
 
@@ -56,7 +47,7 @@ public:
   /// information about where the local neighborhood is in relationship to the full mesh. It allows
   /// you to query whether the neighborhood of the current worklet call is completely inside the
   /// bounds of the mesh or if it extends beyond the mesh. This is important as when you are on a
-  /// boundary the neighboordhood will contain empty values for a certain subset of values, and in
+  /// boundary the neighborhood will contain empty values for a certain subset of values, and in
   /// this case the values returned will depend on the boundary behavior.
   ///
   struct Boundary : viskores::exec::arg::Boundary
