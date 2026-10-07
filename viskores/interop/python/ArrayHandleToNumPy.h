@@ -12,8 +12,6 @@
 #ifndef viskores_interop_python_ArrayHandleToNumPy_h
 #define viskores_interop_python_ArrayHandleToNumPy_h
 
-#include <viskores/interop/python/viskores_interop_python_export.h>
-
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 
@@ -175,8 +173,31 @@ inline bool TryAnyRuntimeVecArrayToNumPy(const viskores::cont::UnknownArrayHandl
 // Convert an UnknownArrayHandle to a NumPy ndarray. Zero-copy for
 // ArrayHandleBasic and ArrayHandleRuntimeVec; other storage types are
 // deep-copied to a basic array first.
-VISKORES_INTEROP_PYTHON_EXPORT
-nb::object ArrayHandleToNumPy(const viskores::cont::UnknownArrayHandle& array);
+inline nb::object ArrayHandleToNumPy(const viskores::cont::UnknownArrayHandle& array)
+{
+  if (!array.IsValid())
+  {
+    throw viskores::cont::ErrorBadValue("UnknownArrayHandle is empty (no underlying array).");
+  }
+
+  nb::object result;
+  if (TryAnyRuntimeVecArrayToNumPy(array, result))
+  {
+    return result;
+  }
+
+  // The storage type is not directly representable as a RuntimeVec. Deep-copy to
+  // a Viskores-allocated basic array so the zero-copy view path can succeed.
+  viskores::cont::UnknownArrayHandle copy = array.NewInstanceBasic();
+  copy.DeepCopyFrom(array);
+  if (TryAnyRuntimeVecArrayToNumPy(copy, result))
+  {
+    return result;
+  }
+
+  throw viskores::cont::ErrorBadValue(
+    "UnknownArrayHandle component type is not supported for NumPy conversion.");
+}
 
 } // namespace python
 } // namespace interop
