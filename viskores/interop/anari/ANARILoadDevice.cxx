@@ -12,6 +12,9 @@
 
 #include <viskores/rendering/anari-device/ViskoresDevice.h>
 
+#include <map>
+#include <mutex>
+
 namespace
 {
 
@@ -48,6 +51,32 @@ static void AnariStatusFunc(const void* viskoresNotUsed(userData),
   VISKORES_LOG_S(level, "[ANARI Object " << source << "] " << message);
 }
 
+// The ANARI spec requires an ANARILibrary to stay loaded until every device
+// created from it has been released. Since ANARILoadDevice only hands back the
+// device, the library handle is kept here and intentionally never unloaded.
+// Unloading during static destruction is not safe because devices may still be
+// alive (or be released by other static destructors) at that point.
+static anari_cpp::Library GetANARILibrary(const std::string& libraryName)
+{
+  static std::mutex libraryMutex;
+  static std::map<std::string, anari_cpp::Library> loadedLibraries;
+
+  std::lock_guard<std::mutex> lock(libraryMutex);
+  auto iter = loadedLibraries.find(libraryName);
+  if (iter != loadedLibraries.end())
+  {
+    return iter->second;
+  }
+
+  anari_cpp::Library library =
+    anari_cpp::loadLibrary(libraryName.c_str(), AnariStatusFunc, nullptr);
+  if (library != nullptr)
+  {
+    loadedLibraries[libraryName] = library;
+  }
+  return library;
+}
+
 } // anonymous namespace
 
 namespace viskores
@@ -70,8 +99,7 @@ anari_cpp::Device ANARILoadDevice(const std::string& libraryName)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
                    "Loading ANARI library named `" << libraryName << "`");
-    anari_cpp::Library library =
-      anari_cpp::loadLibrary(libraryName.c_str(), AnariStatusFunc, nullptr);
+    anari_cpp::Library library = GetANARILibrary(libraryName);
     if (library == nullptr)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
@@ -79,7 +107,6 @@ anari_cpp::Device ANARILoadDevice(const std::string& libraryName)
       return nullptr;
     }
     anari_cpp::Device device = anari_cpp::newDevice(library, "default");
-    anari_cpp::unloadLibrary(library);
     if (device == nullptr)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
