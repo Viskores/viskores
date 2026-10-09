@@ -13,7 +13,8 @@ set(libraries
   )
 
 set(unit_tests
-  UnitTestMAGICUncertainGaussianCorrelated.cxx
+  UnitTestContourUncertainGaussianCorrelated.cxx
+  UnitTestContourUncertainGaussianIndependent.cxx
   UnitTestContourUncertainUniform.cxx
   UnitTestFiberUncertainUniform.cxx
   )

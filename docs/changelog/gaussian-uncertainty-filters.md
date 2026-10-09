@@ -4,11 +4,11 @@ Viskores now provides filters to compute the positional uncertainty of
 isosurfaces when input scalar data are uncertain and assumed to follow a
 Gaussian distribution. Two filters are provided:
 
-`MAGICUncertainGaussianIndependent` computes isosurface crossing uncertainty
+`ContourUncertainGaussianIndependent` computes isosurface crossing uncertainty
 for data where the Gaussian distributions at each grid point are independent.
 The filter takes a mean field and a pointwise variance field as input.
 
-`MAGICUncertainGaussianCorrelated` extends the independent case by accounting
+`ContourUncertainGaussianCorrelated` extends the independent case by accounting
 for spatial correlation between neighboring grid points. It additionally takes
 per-axis edge covariance fields (RhoX, RhoY, RhoZ) and requires a structured
 3D grid as input.

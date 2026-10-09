@@ -6,8 +6,8 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-#ifndef viskores_filter_uncertainty_MAGICUncertainGaussianIndependent_h
-#define viskores_filter_uncertainty_MAGICUncertainGaussianIndependent_h
+#ifndef viskores_filter_uncertainty_ContourUncertainGaussianIndependent_h
+#define viskores_filter_uncertainty_ContourUncertainGaussianIndependent_h
 
 #include <viskores/filter/contour/AbstractContour.h>
 #include <viskores/filter/uncertainty/viskores_filter_uncertainty_export.h>
@@ -28,7 +28,7 @@ namespace uncertainty
 /// distribution at each point. The filter outputs expected isosurface vertex
 /// positions and a per-vertex crossing variance field.
 ///
-class VISKORES_FILTER_UNCERTAINTY_EXPORT MAGICUncertainGaussianIndependent
+class VISKORES_FILTER_UNCERTAINTY_EXPORT ContourUncertainGaussianIndependent
   : public viskores::filter::contour::AbstractContour
 {
 public:
@@ -122,4 +122,4 @@ protected:
 } // namespace filter
 } // namespace viskores
 
-#endif // viskores_filter_uncertainty_MAGICUncertainGaussianIndependent_h
+#endif // viskores_filter_uncertainty_ContourUncertainGaussianIndependent_h

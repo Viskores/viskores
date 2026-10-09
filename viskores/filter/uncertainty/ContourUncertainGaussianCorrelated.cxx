@@ -12,12 +12,12 @@
 //  Isosurface Uncertainty Visualization for Gaussian Uncertain Data with
 //  Spatial Correlation.
 
-#include <viskores/filter/uncertainty/MAGICUncertainGaussianCorrelated.h>
+#include <viskores/filter/uncertainty/ContourUncertainGaussianCorrelated.h>
 
 #include <viskores/cont/ArrayHandleRandomStandardNormal.h>
 #include <viskores/cont/CellSetStructured.h>
 #include <viskores/filter/contour/Contour.h>
-#include <viskores/filter/uncertainty/worklet/gaussian/MAGICUncertainGaussianCorrelated.h>
+#include <viskores/filter/uncertainty/worklet/gaussian/ContourUncertainGaussianCorrelated.h>
 #include <viskores/filter/uncertainty/worklet/gaussian/InterpolateFieldWorklet.h>
 
 namespace viskores
@@ -27,7 +27,7 @@ namespace filter
 namespace uncertainty
 {
 
-viskores::cont::DataSet MAGICUncertainGaussianCorrelated::DoExecute(
+viskores::cont::DataSet ContourUncertainGaussianCorrelated::DoExecute(
   const viskores::cont::DataSet& input)
 {
   // The correlated filter needs the grid resolution to decode edge axis
@@ -124,7 +124,7 @@ viskores::cont::DataSet MAGICUncertainGaussianCorrelated::DoExecute(
   else
   {
     throw viskores::cont::ErrorBadValue(
-      "Unsupported approach for MAGICUncertainGaussianCorrelated.");
+      "Unsupported approach for ContourUncertainGaussianCorrelated.");
   }
 
   // Reinterpolate point fields to the expected crossing positions.

@@ -8,16 +8,16 @@
 
 
 set(uncertainty_headers
-  MAGICUncertainGaussianCorrelated.h
-  MAGICUncertainGaussianIndependent.h
+  ContourUncertainGaussianCorrelated.h
+  ContourUncertainGaussianIndependent.h
   ContourUncertainUniform.h
   ContourUncertainUniformMonteCarlo.h
   FiberUncertainUniform.h
   )
 
 set(uncertainty_sources_device
-  MAGICUncertainGaussianCorrelated.cxx
-  MAGICUncertainGaussianIndependent.cxx
+  ContourUncertainGaussianCorrelated.cxx
+  ContourUncertainGaussianIndependent.cxx
   ContourUncertainUniform.cxx
   ContourUncertainUniformMonteCarlo.cxx
   FiberUncertainUniform.cxx

@@ -12,8 +12,8 @@
 //  Isosurface Uncertainty Visualization for Gaussian Uncertain Data with
 //  Spatial Correlation.
 
-#ifndef viskores_filter_uncertainty_MAGICUncertainGaussianCorrelated_h
-#define viskores_filter_uncertainty_MAGICUncertainGaussianCorrelated_h
+#ifndef viskores_filter_uncertainty_ContourUncertainGaussianCorrelated_h
+#define viskores_filter_uncertainty_ContourUncertainGaussianCorrelated_h
 
 #include <viskores/filter/contour/AbstractContour.h>
 #include <viskores/filter/uncertainty/viskores_filter_uncertainty_export.h>
@@ -35,7 +35,7 @@ namespace uncertainty
 /// axis. The input must be a structured 3D grid. The filter outputs the expected
 /// isosurface vertex positions and a per-vertex crossing variance field.
 ///
-class VISKORES_FILTER_UNCERTAINTY_EXPORT MAGICUncertainGaussianCorrelated
+class VISKORES_FILTER_UNCERTAINTY_EXPORT ContourUncertainGaussianCorrelated
   : public viskores::filter::contour::AbstractContour
 {
 public:
@@ -155,4 +155,4 @@ protected:
 } // namespace filter
 } // namespace viskores
 
-#endif // viskores_filter_uncertainty_MAGICUncertainGaussianCorrelated_h
+#endif // viskores_filter_uncertainty_ContourUncertainGaussianCorrelated_h

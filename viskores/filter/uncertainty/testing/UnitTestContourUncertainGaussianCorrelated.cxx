@@ -10,8 +10,8 @@
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
 #include <viskores/cont/testing/Testing.h>
-#include <viskores/filter/uncertainty/MAGICUncertainGaussianCorrelated.h>
-#include <viskores/filter/uncertainty/MAGICUncertainGaussianIndependent.h>
+#include <viskores/filter/uncertainty/ContourUncertainGaussianCorrelated.h>
+#include <viskores/filter/uncertainty/ContourUncertainGaussianIndependent.h>
 
 namespace
 {
@@ -54,14 +54,14 @@ viskores::cont::DataSet MakeGaussianCorrelatedTestDataSet(T rhoValue = static_ca
   return dataSet;
 }
 
-void TestMAGICUncertainGaussianCorrelated()
+void TestContourUncertainGaussianCorrelated()
 {
   // All-zero covariance fields reduce the correlated filter to the independent
   // case; the cross-check below exploits this.
   viskores::cont::DataSet input = MakeGaussianCorrelatedTestDataSet<viskores::FloatDefault>(0.0f);
   const viskores::FloatDefault isovalue = 50.0;
 
-  viskores::filter::uncertainty::MAGICUncertainGaussianCorrelated correlatedFilter;
+  viskores::filter::uncertainty::ContourUncertainGaussianCorrelated correlatedFilter;
   correlatedFilter.SetMeanField("mean");
   correlatedFilter.SetVarianceField("variance");
   correlatedFilter.SetRhoXField("rhoX");
@@ -71,7 +71,7 @@ void TestMAGICUncertainGaussianCorrelated()
   correlatedFilter.SetMergeDuplicatePoints(true);
   viskores::cont::DataSet correlatedOutput = correlatedFilter.Execute(input);
 
-  viskores::filter::uncertainty::MAGICUncertainGaussianIndependent independentFilter;
+  viskores::filter::uncertainty::ContourUncertainGaussianIndependent independentFilter;
   independentFilter.SetMeanField("mean");
   independentFilter.SetVarianceField("variance");
   independentFilter.SetIsoValue(isovalue);
@@ -141,7 +141,7 @@ void TestMAGICUncertainGaussianCorrelated()
 
 void TestClosedFormVsMonteCarlo()
 {
-  using Filter = viskores::filter::uncertainty::MAGICUncertainGaussianCorrelated;
+  using Filter = viskores::filter::uncertainty::ContourUncertainGaussianCorrelated;
 
   // Use non-zero rho (0.3) so that the correlated code path is exercised beyond
   // the trivial rho=0 case above.
@@ -247,13 +247,13 @@ void TestClosedFormVsMonteCarlo()
 
 void RunAllTests()
 {
-  TestMAGICUncertainGaussianCorrelated();
+  TestContourUncertainGaussianCorrelated();
   TestClosedFormVsMonteCarlo();
 }
 
 } // anonymous namespace
 
-int UnitTestMAGICUncertainGaussianCorrelated(int argc, char* argv[])
+int UnitTestContourUncertainGaussianCorrelated(int argc, char* argv[])
 {
   return viskores::cont::testing::Testing::Run(RunAllTests, argc, argv);
 }
