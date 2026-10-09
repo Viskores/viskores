@@ -27,13 +27,14 @@ namespace uncertainty
 
 /// @brief Visualize isosurface uncertainty for spatially correlated Gaussian data.
 ///
-/// This filter implements the spatially correlated form of the MAGIC algorithm.
+/// This filter dispatches to a spatially correlated MAGIC implementation.
 /// It extends the independent Gaussian filter by accounting for spatial correlation
 /// between neighboring grid points. In addition to the mean and pointwise variance
 /// fields, this filter accepts three per-axis edge covariance fields (`RhoX`, `RhoY`,
 /// `RhoZ`) that encode the covariance between adjacent points along each physical
 /// axis. The input must be a structured 3D grid. The filter outputs the expected
-/// isosurface vertex positions and a per-vertex crossing variance field.
+/// isosurface vertex positions and a per-vertex crossing variance field. Use
+/// @ref SetApproach to select the closed-form or Monte Carlo implementation.
 ///
 class VISKORES_FILTER_UNCERTAINTY_EXPORT ContourUncertainGaussianCorrelated
   : public viskores::filter::contour::AbstractContour

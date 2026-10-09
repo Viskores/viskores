@@ -21,12 +21,13 @@ namespace uncertainty
 
 /// @brief Visualize isosurface uncertainty for independently Gaussian distributed data.
 ///
-/// This filter implements the MAGIC algorithm for independent Gaussian data. It
+/// This filter dispatches to a MAGIC algorithm implementation for independent Gaussian data. It
 /// computes the positional uncertainty of isosurfaces as a function of uncertainty
 /// in the input scalar data, where the data at each grid point are assumed to follow
 /// an independent Gaussian distribution. The mean and variance fields define the
 /// distribution at each point. The filter outputs expected isosurface vertex
-/// positions and a per-vertex crossing variance field.
+/// positions and a per-vertex crossing variance field. Use @ref SetApproach to
+/// select the closed-form or Monte Carlo implementation.
 ///
 class VISKORES_FILTER_UNCERTAINTY_EXPORT ContourUncertainGaussianIndependent
   : public viskores::filter::contour::AbstractContour
