@@ -36,6 +36,11 @@ namespace anari
 /// the "viskores" library, the device will be loaded directly regardless of its
 /// location.
 ///
+/// The ANARI library backing the device is kept loaded for the remainder of
+/// the program, as the ANARI specification requires a library to outlive all
+/// devices created from it. Loading the same library name more than once
+/// reuses the already loaded library.
+///
 /// This method will also link the ANARI device's logging to the Viskores logging
 /// so the ANARI logging can be controlled through Viskores' configuration.
 ///
