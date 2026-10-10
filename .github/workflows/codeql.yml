@@ -73,15 +73,24 @@ jobs:
       - name: Configure and build (C++)
         if: matrix.build-mode == 'manual'
         run: |
-          cmake -S . -B build -GNinja \
+          CXXFLAGS=-Oz cmake -S . -B build -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
             -DViskores_ENABLE_TESTING=OFF \
             -DViskores_ENABLE_EXAMPLES=OFF \
             -DViskores_ENABLE_BENCHMARKS=OFF \
-            -DViskores_ENABLE_DOCUMENTATION=OFF
+            -DViskores_ENABLE_DOCUMENTATION=OFF \
+            -DViskores_ENABLE_RENDERING=OFF \
+            -DViskores_ENABLE_TUTORIALS=OFF \
+            -DViskores_ENABLE_PYTHON_BINDINGS=OFF \
+            -DViskores_ENABLE_ANARI=OFF \
+            -DViskores_ENABLE_HDF5_IO=OFF \
+            -DViskores_ENABLE_CPACK=OFF \
+            -DViskores_ENABLE_DEVELOPER_FLAGS=OFF
           cmake --build build -j"$(nproc)"
+          rm -rf ./build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3 # v4.37.6
         with:
           category: "/language:${{matrix.language}}"
+          ram: 10000

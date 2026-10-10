@@ -7,4 +7,6 @@
 ##============================================================================
 
 paths-ignore:
-  - docs/users-guide/conf.py
+  - "**/testing/**"
+  - docs/**
+  - viskores/thirdparty/**
