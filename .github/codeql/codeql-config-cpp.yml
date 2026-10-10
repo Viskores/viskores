@@ -10,3 +10,7 @@ paths-ignore:
   - "**/testing/**"
   - docs/**
   - viskores/thirdparty/**
+
+disable-default-queries: true
+queries:
+  - uses: ./.github/codeql/cpp-queries.qls
