@@ -21,3 +21,13 @@ add_test(
 set_tests_properties(PythonBindingsUnknownArrayHandleNumPy PROPERTIES
   ENVIRONMENT "PYTHONPATH=${Viskores_BINARY_DIR}/python_bindings"
 )
+
+add_test(
+  NAME PythonBindingsDataSet
+  COMMAND
+    "${Python_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/PythonBindingsDataSet.py"
+)
+set_tests_properties(PythonBindingsDataSet PROPERTIES
+  ENVIRONMENT "PYTHONPATH=${Viskores_BINARY_DIR}/python_bindings"
+)
