@@ -1,0 +1,21 @@
+- description: Reduced C++ query set for Viskores
+- query: Security/CWE/CWE-190/ComparisonWithWiderType.ql
+  from: codeql/cpp-queries
+- query: Security/CWE/CWE-191/UnsignedDifferenceExpressionComparedZero.ql
+  from: codeql/cpp-queries
+- query: Security/CWE/CWE-253/HResultBooleanConversion.ql
+  from: codeql/cpp-queries
+- query: Security/CWE/CWE-416/UseOfStringAfterLifetimeEnds.ql
+  from: codeql/cpp-queries
+- query: Security/CWE/CWE-416/UseOfUniquePointerAfterLifetimeEnds.ql
+  from: codeql/cpp-queries
+- query: Security/CWE/CWE-468/SuspiciousAddWithSizeof.ql
+  from: codeql/cpp-queries
+- query: Security/CWE/CWE-676/DangerousFunctionOverflow.ql
+  from: codeql/cpp-queries
+- query: Security/CWE/CWE-676/DangerousUseOfCin.ql
+  from: codeql/cpp-queries
+- query: Likely Bugs/Arithmetic/BadAdditionOverflowCheck.ql
+  from: codeql/cpp-queries
+- query: Likely Bugs/Arithmetic/IntMultToLong.ql
+  from: codeql/cpp-queries
