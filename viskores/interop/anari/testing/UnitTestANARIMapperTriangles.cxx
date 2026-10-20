@@ -136,10 +136,11 @@ viskores::Vec4f_32 RenderSurface(anari_cpp::Device d, anari_cpp::Surface surface
   anari_cpp::render(d, frame);
   anari_cpp::wait(d, frame);
 
-  const auto fb = anari_cpp::map<viskores::Vec4f_32>(d, frame, "channel.color");
-  VISKORES_TEST_ASSERT(fb.data != nullptr && fb.width == size && fb.height == size,
+  const auto frameBuffer = anari_cpp::map<viskores::Vec4f_32>(d, frame, "channel.color");
+  VISKORES_TEST_ASSERT(frameBuffer.data != nullptr && frameBuffer.width == size &&
+                         frameBuffer.height == size,
                        "Could not map the frame");
-  const auto middle = fb.data[(size / 2) * size + size / 2];
+  const auto middle = frameBuffer.data[(size / 2) * size + size / 2];
   anari_cpp::unmap(d, frame, "channel.color");
 
   anari_cpp::release(d, frame);
@@ -267,9 +268,10 @@ void DegenerateValueRangeTests()
   mapper.SetANARIColorMapValueRange(viskores::Vec2f_32(5.f, 5.f));
 
   const auto pixel = RenderSurface(d, mapper.GetANARISurface());
-  for (viskores::IdComponent c = 0; c < 4; ++c)
+  for (viskores::IdComponent componentIndex = 0; componentIndex < 4; ++componentIndex)
   {
-    VISKORES_TEST_ASSERT(std::isfinite(pixel[c]), "Degenerate value range gave pixel ", pixel);
+    VISKORES_TEST_ASSERT(
+      std::isfinite(pixel[componentIndex]), "Degenerate value range gave pixel ", pixel);
   }
   // The value sits in the middle of the widened range, so it gets the middle
   // (green) entry of the blue-green-red color map.

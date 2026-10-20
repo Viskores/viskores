@@ -191,9 +191,10 @@ void DegenerateValueRangeTests()
   mapper.SetANARIColorMapValueRange(viskores::Vec2f_32(5.f, 5.f));
 
   const auto pixel = RenderSurface(d, mapper.GetANARISurface(), point).first;
-  for (viskores::IdComponent c = 0; c < 4; ++c)
+  for (viskores::IdComponent componentIndex = 0; componentIndex < 4; ++componentIndex)
   {
-    VISKORES_TEST_ASSERT(std::isfinite(pixel[c]), "Degenerate value range gave pixel ", pixel);
+    VISKORES_TEST_ASSERT(
+      std::isfinite(pixel[componentIndex]), "Degenerate value range gave pixel ", pixel);
   }
   // The value sits in the middle of the widened range, so it gets the middle
   // (green) entry of the blue-green-red color map.
@@ -202,6 +203,42 @@ void DegenerateValueRangeTests()
                        pixel);
 
   anari_cpp::release(d, d);
+}
+
+// Exposes the shared color map transform. The in-tree device cannot invert a
+// transform for a range wider than about 1e7, so values near the Float32 limit
+// are checked on the transform itself rather than by rendering.
+struct ColorMapTransformProbe : viskores::interop::anari::ANARIMapperPoints
+{
+  using ANARIMapper::MakeColorMapInTransform;
+};
+
+viskores::Float32 ApplyColorMapTransform(const viskores::Vec2f_32& valueRange,
+                                         viskores::Float32 value)
+{
+  const auto transform = ColorMapTransformProbe::MakeColorMapInTransform(valueRange);
+  return anari_cpp::mul(transform, anari_cpp::float4(value, 0.f, 0.f, 1.f)).x;
+}
+
+void ColorMapTransformTests()
+{
+  // A normal range maps its ends to 0 and 1.
+  VISKORES_TEST_ASSERT(test_equal(ApplyColorMapTransform({ 2.f, 4.f }, 2.f), 0.f), "low end");
+  VISKORES_TEST_ASSERT(test_equal(ApplyColorMapTransform({ 2.f, 4.f }, 3.f), 0.5f), "mid range");
+  VISKORES_TEST_ASSERT(test_equal(ApplyColorMapTransform({ 2.f, 4.f }, 4.f), 1.f), "high end");
+
+  // A zero-width range maps its value to the middle, without overflowing even
+  // near the Float32 limit.
+  for (viskores::Float32 value : { 0.f, 5.f, -5.f, 3e38f, -3e38f })
+  {
+    const auto mapped = ApplyColorMapTransform({ value, value }, value);
+    VISKORES_TEST_ASSERT(test_equal(mapped, 0.5f),
+                         "Zero-width range at ",
+                         value,
+                         " mapped its value to ",
+                         mapped,
+                         " instead of 0.5");
+  }
 }
 
 void RenderTests()
@@ -261,6 +298,7 @@ void PointsTests()
   FieldTests();
   SinglePointTests();
   DegenerateValueRangeTests();
+  ColorMapTransformTests();
   RenderTests();
 }
 

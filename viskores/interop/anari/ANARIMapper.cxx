@@ -154,21 +154,27 @@ bool ANARIMapper::GroupIsEmpty() const
 
 anari_cpp::mat4 ANARIMapper::MakeColorMapInTransform(const viskores::Vec2f_32& valueRange)
 {
-  viskores::Float32 low = valueRange[0];
-  viskores::Float32 high = valueRange[1];
-  if (!std::isfinite(1.f / (high - low)))
+  const viskores::Float32 low = valueRange[0];
+  const viskores::Float32 high = valueRange[1];
+  const viskores::Float32 scale = 1.f / (high - low);
+  if (std::isfinite(scale))
   {
-    // Widen by at least the center's own magnitude so the new ends stay
-    // distinct in Float32 even for large values.
-    const viskores::Float32 center = 0.5f * low + 0.5f * high;
-    const viskores::Float32 halfWidth = std::max(0.5f, std::abs(center));
-    low = center - halfWidth;
-    high = center + halfWidth;
+    // (value - low) * scale
+    return anari_cpp::mul(anari_cpp::scaling_matrix(anari_cpp::float3(scale)),
+                          anari_cpp::translation_matrix(anari_cpp::float3(-low, 0.f, 0.f)));
   }
 
-  const auto scale = anari_cpp::scaling_matrix(anari_cpp::float3(1.f / (high - low)));
-  const auto translation = anari_cpp::translation_matrix(anari_cpp::float3(-low, 0.f, 0.f));
-  return anari_cpp::mul(scale, translation);
+  // The range is too narrow to invert. Widen it to center +/- halfWidth, with
+  // halfWidth at least the center's magnitude so the ends stay distinct in
+  // Float32, and map (value - center) * widenedScale + 0.5. This form never
+  // computes the widened ends, so it cannot overflow for large values.
+  const viskores::Float32 center = 0.5f * low + 0.5f * high;
+  const viskores::Float32 halfWidth = std::max(0.5f, std::abs(center));
+  const viskores::Float32 widenedScale = 0.5f / halfWidth;
+  return anari_cpp::mul(
+    anari_cpp::translation_matrix(anari_cpp::float3(0.5f, 0.f, 0.f)),
+    anari_cpp::mul(anari_cpp::scaling_matrix(anari_cpp::float3(widenedScale)),
+                   anari_cpp::translation_matrix(anari_cpp::float3(-center, 0.f, 0.f))));
 }
 
 std::string ANARIMapper::MakeObjectName(const char* suffix) const

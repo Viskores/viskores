@@ -156,7 +156,7 @@ void ANARIMapperTriangles::SetANARIColorMapValueRange(const viskores::Vec2f_32& 
   this->GetANARISurface();
   auto s = this->Handles->Sampler;
   auto d = this->GetDevice();
-  anari_cpp::setParameter(d, s, "inTransform", MakeColorMapInTransform(valueRange));
+  anari_cpp::setParameter(d, s, "inTransform", this->MakeColorMapInTransform(valueRange));
   anari_cpp::setParameter(d, s, "outTransform", anari_cpp::math::mat4(anari_cpp::identity));
   anari_cpp::setParameter(d, s, "inOffset", viskores::Vec4f_32(0.f, 0.f, 0.f, 0.f));
   anari_cpp::setParameter(d, s, "outOffset", viskores::Vec4f_32(0.f, 0.f, 0.f, 0.f));

@@ -90,7 +90,8 @@ const viskores::cont::Field& ANARIActor::GetField(viskores::IdComponent idx) con
   if (idx >= static_cast<viskores::IdComponent>(this->Data->Fields.size()))
   {
     throw viskores::cont::ErrorBadValue("ANARIActor field index " + std::to_string(idx) +
-                                        " is out of range 0-3");
+                                        " is out of range 0-" +
+                                        std::to_string(this->Data->Fields.size() - 1));
   }
   return this->Data->Fields[idx < 0 ? GetPrimaryFieldIndex() : idx];
 }
@@ -105,7 +106,8 @@ void ANARIActor::SetPrimaryFieldIndex(viskores::IdComponent idx)
   if (idx < 0 || idx >= static_cast<viskores::IdComponent>(this->Data->Fields.size()))
   {
     throw viskores::cont::ErrorBadValue("ANARIActor primary field index " + std::to_string(idx) +
-                                        " is out of range 0-3");
+                                        " is out of range 0-" +
+                                        std::to_string(this->Data->Fields.size() - 1));
   }
   this->Data->PrimaryField = idx;
 }
