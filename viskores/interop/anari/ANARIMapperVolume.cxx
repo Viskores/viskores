@@ -115,33 +115,33 @@ anari_cpp::Volume ANARIMapperVolume::GetANARIVolume()
   return this->Handles->Volume;
 }
 
-// For the moment, we use ospray conventions
-//    uint8_t VKL_TETRAHEDRON = 10;
-//    uint8_t VKL_HEXAHEDRON = 12;
-//    uint8_t VKL_WEDGE = 13;
-//    uint8_t VKL_PYRAMID = 14;
-//
+const UnstructuredVolumeParameters& ANARIMapperVolume::GetANARIUnstructuredParameters() const
+{
+  return this->Handles->UnstructuredParameters;
+}
+
+// ANARI's KHR_SPATIAL_FIELD_UNSTRUCTURED `cell.type` uses the VTK cell IDs:
+//    10 = tetrahedron, 12 = hexahedron, 13 = wedge, 14 = pyramid
+// Viskores' CELL_SHAPE_* values for these shapes are the same, so they pass through
+// unchanged. Every other shape is marked invalid (255).
+static_assert(viskores::CELL_SHAPE_TETRA == 10 && viskores::CELL_SHAPE_HEXAHEDRON == 12 &&
+                viskores::CELL_SHAPE_WEDGE == 13 && viskores::CELL_SHAPE_PYRAMID == 14,
+              "Viskores cell shape IDs must match ANARI cell.type values");
+
 struct ToAnariCellType
 {
   VISKORES_EXEC_CONT viskores::UInt8 operator()(viskores::UInt8 shape) const
   {
-    if (shape == viskores::CELL_SHAPE_TETRA)
+    switch (shape)
     {
-      return 10;
+      case viskores::CELL_SHAPE_TETRA:
+      case viskores::CELL_SHAPE_HEXAHEDRON:
+      case viskores::CELL_SHAPE_WEDGE:
+      case viskores::CELL_SHAPE_PYRAMID:
+        return shape;
+      default:
+        return viskores::UInt8(-1);
     }
-    else if (shape == viskores::CELL_SHAPE_HEXAHEDRON)
-    {
-      return 14;
-    }
-    else if (shape == viskores::CELL_SHAPE_WEDGE)
-    {
-      return 13;
-    }
-    else if (shape == viskores::CELL_SHAPE_PYRAMID)
-    {
-      return 12;
-    }
-    return uint8_t(-1);
   }
 };
 

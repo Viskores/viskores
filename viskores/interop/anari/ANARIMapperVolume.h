@@ -99,6 +99,14 @@ struct VISKORES_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
   anari_cpp::SpatialField GetANARISpatialField() override;
   anari_cpp::Volume GetANARIVolume() override;
 
+  /// @brief Get the raw ANARI arrays set on an unstructured spatial field.
+  ///
+  /// The handles are null until the spatial field has been constructed from an
+  /// actor with an unstructured cell set.
+  ///
+  /// @note Intended for testing only; this is not a stable interface.
+  const UnstructuredVolumeParameters& GetANARIUnstructuredParameters() const;
+
 private:
   /// @brief Do the work to construct the basic ANARI arrays for the ANARIGeometry.
   /// @param regenerate Force the position/radius arrays are regenerated.
