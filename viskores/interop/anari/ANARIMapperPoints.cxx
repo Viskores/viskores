@@ -138,10 +138,7 @@ void ANARIMapperPoints::SetANARIColorMapValueRange(const viskores::Vec2f_32& val
   if (s)
   {
     auto d = this->GetDevice();
-    auto scale =
-      anari_cpp::scaling_matrix(anari_cpp::float3(1.f / (valueRange[1] - valueRange[0])));
-    auto translation = anari_cpp::translation_matrix(anari_cpp::float3(-valueRange[0], 0, 0));
-    anari_cpp::setParameter(d, s, "inTransform", anari_cpp::mul(scale, translation));
+    anari_cpp::setParameter(d, s, "inTransform", MakeColorMapInTransform(valueRange));
     anari_cpp::commitParameters(d, s);
   }
 }

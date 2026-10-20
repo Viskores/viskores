@@ -9,6 +9,10 @@
 
 #include <viskores/interop/anari/ANARIActor.h>
 
+#include <viskores/cont/ErrorBadValue.h>
+
+#include <string>
+
 namespace viskores
 {
 namespace interop
@@ -83,6 +87,11 @@ const viskores::cont::CoordinateSystem& ANARIActor::GetCoordinateSystem() const
 
 const viskores::cont::Field& ANARIActor::GetField(viskores::IdComponent idx) const
 {
+  if (idx >= static_cast<viskores::IdComponent>(this->Data->Fields.size()))
+  {
+    throw viskores::cont::ErrorBadValue("ANARIActor field index " + std::to_string(idx) +
+                                        " is out of range 0-3");
+  }
   return this->Data->Fields[idx < 0 ? GetPrimaryFieldIndex() : idx];
 }
 
@@ -93,6 +102,11 @@ FieldSet ANARIActor::GetFieldSet() const
 
 void ANARIActor::SetPrimaryFieldIndex(viskores::IdComponent idx)
 {
+  if (idx < 0 || idx >= static_cast<viskores::IdComponent>(this->Data->Fields.size()))
+  {
+    throw viskores::cont::ErrorBadValue("ANARIActor primary field index " + std::to_string(idx) +
+                                        " is out of range 0-3");
+  }
   this->Data->PrimaryField = idx;
 }
 

@@ -77,10 +77,16 @@ struct VISKORES_ANARI_EXPORT ANARIActor
 
   const viskores::cont::UnknownCellSet& GetCellSet() const;
   const viskores::cont::CoordinateSystem& GetCoordinateSystem() const;
+  /// @brief Get field `idx` (0-3), or the primary field when `idx` is negative.
+  ///
+  /// Throws `viskores::cont::ErrorBadValue` if `idx` is greater than 3.
   const viskores::cont::Field& GetField(viskores::IdComponent idx = -1) const;
 
   FieldSet GetFieldSet() const;
 
+  /// @brief Set which of the four fields (0-3) mappers color by.
+  ///
+  /// Throws `viskores::cont::ErrorBadValue` if `idx` is outside 0-3.
   void SetPrimaryFieldIndex(viskores::IdComponent idx);
   viskores::IdComponent GetPrimaryFieldIndex() const;
 

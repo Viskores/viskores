@@ -9,6 +9,10 @@
 
 #include <viskores/interop/anari/ANARIMapper.h>
 
+// std
+#include <algorithm>
+#include <cmath>
+
 namespace viskores
 {
 namespace interop
@@ -146,6 +150,25 @@ anari_cpp::Instance ANARIMapper::GetANARIInstance()
 bool ANARIMapper::GroupIsEmpty() const
 {
   return !this->Valid;
+}
+
+anari_cpp::mat4 ANARIMapper::MakeColorMapInTransform(const viskores::Vec2f_32& valueRange)
+{
+  viskores::Float32 low = valueRange[0];
+  viskores::Float32 high = valueRange[1];
+  if (!std::isfinite(1.f / (high - low)))
+  {
+    // Widen by at least the center's own magnitude so the new ends stay
+    // distinct in Float32 even for large values.
+    const viskores::Float32 center = 0.5f * low + 0.5f * high;
+    const viskores::Float32 halfWidth = std::max(0.5f, std::abs(center));
+    low = center - halfWidth;
+    high = center + halfWidth;
+  }
+
+  const auto scale = anari_cpp::scaling_matrix(anari_cpp::float3(1.f / (high - low)));
+  const auto translation = anari_cpp::translation_matrix(anari_cpp::float3(-low, 0.f, 0.f));
+  return anari_cpp::mul(scale, translation);
 }
 
 std::string ANARIMapper::MakeObjectName(const char* suffix) const

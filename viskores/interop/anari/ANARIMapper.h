@@ -230,6 +230,13 @@ struct VISKORES_ANARI_EXPORT ANARIMapper
 
 protected:
   std::string MakeObjectName(const char* suffix) const;
+
+  /// @brief The image sampler `inTransform` that maps `valueRange` onto [0, 1].
+  ///
+  /// A range too narrow to invert, such as min equal to max, is widened
+  /// symmetrically about its center so the transform stays finite and the
+  /// center value maps to 0.5.
+  static anari_cpp::mat4 MakeColorMapInTransform(const viskores::Vec2f_32& valueRange);
   void RefreshGroup();
 
   viskores::cont::ColorTable& GetColorTable();

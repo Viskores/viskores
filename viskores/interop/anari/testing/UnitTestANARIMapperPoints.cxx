@@ -16,6 +16,7 @@
 #include <viskores/io/EncodePNG.h>
 #include <viskores/source/Tangle.h>
 // std
+#include <cmath>
 #include <cstdlib>
 #include <vector>
 
@@ -170,6 +171,39 @@ void SinglePointTests()
   anari_cpp::release(d, d);
 }
 
+// A color map value range with no width (min equals max) must still color the
+// points instead of producing an infinite sampler transform.
+void DegenerateValueRangeTests()
+{
+  auto d = loadANARIDevice();
+
+  const viskores::Vec3f_32 point(1.f, 2.f, 3.f);
+  auto dataSet = viskores::cont::DataSetBuilderExplicit::Create(
+    std::vector<viskores::Vec3f_32>{ point },
+    std::vector<viskores::UInt8>{ viskores::CELL_SHAPE_VERTEX },
+    std::vector<viskores::IdComponent>{ 1 },
+    std::vector<viskores::Id>{ 0 });
+  dataSet.AddPointField("values", std::vector<viskores::Float32>{ 5.f });
+
+  viskores::interop::anari::ANARIActor actor(dataSet, "values");
+  viskores::interop::anari::ANARIMapperPoints mapper(d, actor);
+  setColorMap(d, mapper);
+  mapper.SetANARIColorMapValueRange(viskores::Vec2f_32(5.f, 5.f));
+
+  const auto pixel = RenderSurface(d, mapper.GetANARISurface(), point).first;
+  for (viskores::IdComponent c = 0; c < 4; ++c)
+  {
+    VISKORES_TEST_ASSERT(std::isfinite(pixel[c]), "Degenerate value range gave pixel ", pixel);
+  }
+  // The value sits in the middle of the widened range, so it gets the middle
+  // (green) entry of the blue-green-red color map.
+  VISKORES_TEST_ASSERT(pixel[1] > pixel[0] && pixel[1] > pixel[2],
+                       "Degenerate value range did not map to the middle color: ",
+                       pixel);
+
+  anari_cpp::release(d, d);
+}
+
 void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
@@ -226,6 +260,7 @@ void PointsTests()
 {
   FieldTests();
   SinglePointTests();
+  DegenerateValueRangeTests();
   RenderTests();
 }
 

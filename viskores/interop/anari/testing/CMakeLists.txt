@@ -9,6 +9,7 @@
 
 viskores_unit_tests(
 SOURCES
+  UnitTestANARIActor.cxx
   UnitTestANARIArrayOwnership.cxx
   UnitTestANARIMapperGlyphs.cxx
   UnitTestANARIMapperPoints.cxx

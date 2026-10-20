@@ -16,6 +16,7 @@
 #include <viskores/io/EncodePNG.h>
 #include <viskores/source/Tangle.h>
 // std
+#include <cmath>
 #include <cstdlib>
 #include <vector>
 
@@ -105,14 +106,16 @@ void CheckPositions(anari_cpp::Device d,
   }
 }
 
-// Render a small frame of `surface` so the device reads every array it holds.
-void RenderSurface(anari_cpp::Device d, anari_cpp::Surface surface)
+// Render a small frame of `surface` so the device reads every array it holds,
+// and return the pixel at the middle of the image (on the quad, cell 1).
+viskores::Vec4f_32 RenderSurface(anari_cpp::Device d, anari_cpp::Surface surface)
 {
   auto world = anari_cpp::newObject<anari_cpp::World>(d);
   anari_cpp::setParameterArray1D(d, world, "surface", &surface, 1);
   anari_cpp::commitParameters(d, world);
 
   auto renderer = anari_cpp::newObject<anari_cpp::Renderer>(d, "default");
+  anari_cpp::setParameter(d, renderer, "background", viskores::Vec4f_32(0.f, 0.f, 0.f, 1.f));
   anari_cpp::commitParameters(d, renderer);
 
   auto camera = anari_cpp::newObject<anari_cpp::Camera>(d, "perspective");
@@ -122,7 +125,8 @@ void RenderSurface(anari_cpp::Device d, anari_cpp::Surface surface)
   anari_cpp::commitParameters(d, camera);
 
   auto frame = anari_cpp::newObject<anari_cpp::Frame>(d);
-  anari_cpp::setParameter(d, frame, "size", viskores::Vec2ui_32(64, 64));
+  constexpr viskores::UInt32 size = 64;
+  anari_cpp::setParameter(d, frame, "size", viskores::Vec2ui_32(size, size));
   anari_cpp::setParameter(d, frame, "channel.color", ANARI_FLOAT32_VEC4);
   anari_cpp::setParameter(d, frame, "world", world);
   anari_cpp::setParameter(d, frame, "camera", camera);
@@ -132,10 +136,18 @@ void RenderSurface(anari_cpp::Device d, anari_cpp::Surface surface)
   anari_cpp::render(d, frame);
   anari_cpp::wait(d, frame);
 
+  const auto fb = anari_cpp::map<viskores::Vec4f_32>(d, frame, "channel.color");
+  VISKORES_TEST_ASSERT(fb.data != nullptr && fb.width == size && fb.height == size,
+                       "Could not map the frame");
+  const auto middle = fb.data[(size / 2) * size + size / 2];
+  anari_cpp::unmap(d, frame, "channel.color");
+
   anari_cpp::release(d, frame);
   anari_cpp::release(d, camera);
   anari_cpp::release(d, renderer);
   anari_cpp::release(d, world);
+
+  return middle;
 }
 
 // A cell field becomes one primitive attribute value per triangle, taken from
@@ -241,6 +253,33 @@ void NormalsToggleTests()
   anari_cpp::release(d, d);
 }
 
+// A color map value range with no width (min equals max) must still color the
+// mesh instead of producing an infinite sampler transform.
+void DegenerateValueRangeTests()
+{
+  auto d = loadANARIDevice();
+  auto dataSet = MakeMixedCellDataSet();
+  dataSet.AddPointField("constant", std::vector<viskores::Float32>(6, 5.f));
+
+  viskores::interop::anari::ANARIActor actor(dataSet, "constant");
+  viskores::interop::anari::ANARIMapperTriangles mapper(d, actor);
+  setColorMap(d, mapper);
+  mapper.SetANARIColorMapValueRange(viskores::Vec2f_32(5.f, 5.f));
+
+  const auto pixel = RenderSurface(d, mapper.GetANARISurface());
+  for (viskores::IdComponent c = 0; c < 4; ++c)
+  {
+    VISKORES_TEST_ASSERT(std::isfinite(pixel[c]), "Degenerate value range gave pixel ", pixel);
+  }
+  // The value sits in the middle of the widened range, so it gets the middle
+  // (green) entry of the blue-green-red color map.
+  VISKORES_TEST_ASSERT(pixel[1] > pixel[0] && pixel[1] > pixel[2],
+                       "Degenerate value range did not map to the middle color: ",
+                       pixel);
+
+  anari_cpp::release(d, d);
+}
+
 void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
@@ -299,6 +338,7 @@ void TrianglesTests()
   CellFieldTests();
   MixedFieldTests();
   NormalsToggleTests();
+  DegenerateValueRangeTests();
   RenderTests();
 }
 
