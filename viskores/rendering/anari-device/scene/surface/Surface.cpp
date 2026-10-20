@@ -76,7 +76,10 @@ void Surface::finalize()
   // texture coordinates 0 and 1. As inTransform only scales and translates,
   // invert it per axis in closed form, in double precision. (Inverting the
   // Float32 matrix rejects scales below Float32 epsilon, so it fails for
-  // value ranges wider than about 8e6.)
+  // value ranges wider than about 8e6.) An axis is not invertible when its
+  // scale is zero or not finite, or its range is not finite (an infinite
+  // translation, or a tiny scale whose inverse overflows); it falls back to
+  // the range [0, 1].
   bool inverseValid = true;
   for (viskores::IdComponent dim = 0; dim < numTextureDims; ++dim)
   {
