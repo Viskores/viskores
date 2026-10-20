@@ -258,13 +258,14 @@ void UnsupportedInputTests()
     cells.SetPointDimensions(viskores::Id2(3, 3));
     std::vector<viskores::Vec3f_32> points;
     std::vector<viskores::Float32> values;
-    for (viskores::IdComponent j = 0; j < 3; ++j)
+    for (viskores::IdComponent rowIndex = 0; rowIndex < 3; ++rowIndex)
     {
-      for (viskores::IdComponent i = 0; i < 3; ++i)
+      for (viskores::IdComponent columnIndex = 0; columnIndex < 3; ++columnIndex)
       {
-        points.emplace_back(
-          static_cast<viskores::Float32>(i), static_cast<viskores::Float32>(j), 0.f);
-        values.push_back(static_cast<viskores::Float32>(i + j));
+        points.emplace_back(static_cast<viskores::Float32>(columnIndex),
+                            static_cast<viskores::Float32>(rowIndex),
+                            0.f);
+        values.push_back(static_cast<viskores::Float32>(columnIndex + rowIndex));
       }
     }
     viskores::cont::CoordinateSystem coords(
