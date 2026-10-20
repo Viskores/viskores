@@ -12,9 +12,11 @@
 #include <viskores/rendering/anari-device/ViskoresDevice.h>
 // viskores
 #include <viskores/CellShape.h>
+#include <viskores/cont/ArrayHandleUniformPointCoordinates.h>
 #include <viskores/cont/CellSetExplicit.h>
 #include <viskores/cont/CellSetSingleType.h>
 #include <viskores/cont/CellSetStructured.h>
+#include <viskores/cont/DataSetBuilderRectilinear.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/filter/contour/Contour.h>
@@ -189,6 +191,105 @@ viskores::cont::DataSet MakeStructuredDataSet()
   return dataSet;
 }
 
+void CheckStructuredGeometry(const viskores::interop::anari::ANARIMapperVolume& mVol,
+                             const viskores::Id3& expectedDims,
+                             const viskores::Vec3f_32& expectedOrigin,
+                             const viskores::Vec3f_32& expectedSpacing,
+                             const char* what)
+{
+  const auto& parameters = mVol.GetANARIStructuredParameters();
+  VISKORES_TEST_ASSERT(parameters.Data != nullptr, "No data array was sent to ANARI for ", what);
+  for (viskores::IdComponent axis = 0; axis < 3; ++axis)
+  {
+    VISKORES_TEST_ASSERT(parameters.Dims[axis] == expectedDims[axis],
+                         "Wrong dims[",
+                         axis,
+                         "] for ",
+                         what,
+                         ": expected ",
+                         expectedDims[axis],
+                         ", got ",
+                         parameters.Dims[axis]);
+    VISKORES_TEST_ASSERT(test_equal(parameters.Origin[axis], expectedOrigin[axis]),
+                         "Wrong origin[",
+                         axis,
+                         "] for ",
+                         what,
+                         ": expected ",
+                         expectedOrigin[axis],
+                         ", got ",
+                         parameters.Origin[axis]);
+    VISKORES_TEST_ASSERT(test_equal(parameters.Spacing[axis], expectedSpacing[axis]),
+                         "Wrong spacing[",
+                         axis,
+                         "] for ",
+                         what,
+                         ": expected ",
+                         expectedSpacing[axis],
+                         ", got ",
+                         parameters.Spacing[axis]);
+  }
+}
+
+void StructuredGeometryTests()
+{
+  auto d = loadANARIDevice();
+
+  const viskores::Id3 pointDims(3, 4, 5);
+  const viskores::Id3 cellDims(2, 3, 4);
+  const viskores::Vec3f origin(1.f, 2.f, 3.f);
+  const viskores::Vec3f spacing(0.5f, 1.f, 2.f);
+  auto dataSet = viskores::cont::DataSetBuilderUniform::Create(pointDims, origin, spacing);
+
+  // Point data: one sample at each point
+  {
+    std::vector<viskores::Float32> values(
+      static_cast<std::size_t>(pointDims[0] * pointDims[1] * pointDims[2]), 1.f);
+    dataSet.AddPointField("pointValues", values);
+    viskores::interop::anari::ANARIActor actor(
+      dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("pointValues"));
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    mVol.GetANARISpatialField();
+    CheckStructuredGeometry(
+      mVol, pointDims, viskores::Vec3f_32(1.f, 2.f, 3.f), viskores::Vec3f_32(spacing), "point data");
+  }
+
+  // Cell data: one sample at each cell center, half a spacing in from the first point
+  {
+    std::vector<viskores::Float32> values(
+      static_cast<std::size_t>(cellDims[0] * cellDims[1] * cellDims[2]), 1.f);
+    dataSet.AddCellField("cellValues", values);
+    viskores::interop::anari::ANARIActor actor(
+      dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("cellValues"));
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    mVol.GetANARISpatialField();
+    CheckStructuredGeometry(mVol,
+                            cellDims,
+                            viskores::Vec3f_32(1.25f, 2.5f, 4.f),
+                            viskores::Vec3f_32(spacing),
+                            "cell data");
+  }
+
+  // One cell along an axis: the cell data spacing still comes from the grid
+  {
+    auto thin = viskores::cont::DataSetBuilderUniform::Create(
+      viskores::Id3(2, 3, 3), viskores::Vec3f(0.f), viskores::Vec3f(0.25f));
+    const std::vector<viskores::Float32> values(4, 1.f);
+    thin.AddCellField("cellValues", values);
+    viskores::interop::anari::ANARIActor actor(
+      thin.GetCellSet(), thin.GetCoordinateSystem(), thin.GetField("cellValues"));
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    mVol.GetANARISpatialField();
+    CheckStructuredGeometry(mVol,
+                            viskores::Id3(1, 2, 2),
+                            viskores::Vec3f_32(0.125f),
+                            viskores::Vec3f_32(0.25f),
+                            "one cell along x");
+  }
+
+  anari_cpp::release(d, d);
+}
+
 void LeakTrackingStatusFunc(const void* userData,
                             ANARIDevice,
                             ANARIObject,
@@ -308,6 +409,37 @@ void UnsupportedInputTests()
       dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("vectors"));
     viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
     CheckRejected(mVol, "structured cells with a Vec3 point field");
+  }
+
+  // Structured cells with non-uniform (rectilinear) coordinates
+  {
+    auto dataSet = viskores::cont::DataSetBuilderRectilinear::Create(
+      std::vector<viskores::Float32>{ 0.f, 1.f, 3.f },
+      std::vector<viskores::Float32>{ 0.f, 1.f, 2.f },
+      std::vector<viskores::Float32>{ 0.f, 0.5f, 4.f });
+    const std::vector<viskores::Float32> values(27, 1.f);
+    dataSet.AddPointField("values", values);
+    viskores::interop::anari::ANARIActor actor(
+      dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("values"));
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    CheckRejected(mVol, "structured cells with rectilinear coordinates");
+  }
+
+  // Structured cells with a single point along an axis have no cells to sample
+  {
+    // DataSetBuilderUniform would build a 2D cell set here, so build the 3D one directly.
+    const viskores::Id3 dims(3, 3, 1);
+    viskores::cont::CellSetStructured<3> cells;
+    cells.SetPointDimensions(dims);
+    viskores::cont::CoordinateSystem coords(
+      "coords", viskores::cont::ArrayHandleUniformPointCoordinates(dims));
+    viskores::cont::Field field(
+      "values",
+      viskores::cont::Field::Association::Points,
+      viskores::cont::make_ArrayHandleMove(std::vector<viskores::Float32>(9, 1.f)));
+    viskores::interop::anari::ANARIActor actor(cells, coords, field);
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    CheckRejected(mVol, "structured cells with one point along z");
   }
 
   // Empty cell set
@@ -440,6 +572,7 @@ void VolumeTests()
 {
   UnstructuredCellTypeTests();
   UnstructuredIndexTypeTests();
+  StructuredGeometryTests();
   SwitchRepresentationTests();
   UnsupportedInputTests();
   RenderTests();

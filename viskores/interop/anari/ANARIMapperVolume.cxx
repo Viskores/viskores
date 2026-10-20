@@ -10,6 +10,7 @@
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayCopyDevice.h>
+#include <viskores/cont/ArrayHandleUniformPointCoordinates.h>
 #include <viskores/cont/Logging.h>
 #include <viskores/interop/anari/ANARIMapperVolume.h>
 
@@ -217,6 +218,9 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     actor.GetField().GetAssociation() == viskores::cont::Field::Association::Points;
   const bool isStructured = cells.CanConvert<viskores::cont::CellSetStructured<3>>();
   const bool isScalar = fieldArray.GetNumberOfComponentsFlat() == 1;
+  // structuredRegular places samples on a uniform grid, so only uniform coordinates map to it.
+  const bool isUniform =
+    coords.GetData().CanConvert<viskores::cont::ArrayHandleUniformPointCoordinates>();
 
   this->Handles->ReleaseArrays();
   anari_cpp::release(d, this->Handles->SpatialField);
@@ -232,6 +236,12 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   else if (!isScalar)
   {
     unsupportedReason = "the field is not scalar";
+  }
+  else if (isStructured && !isUniform)
+  {
+    // TODO: map rectilinear and curvilinear coordinates, for example by sending point data
+    // through the unstructured path as hexahedra.
+    unsupportedReason = "structured cell sets need uniform point coordinates";
   }
   else if (!isStructured && !isPointBased)
   {
@@ -284,16 +294,18 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     viskores::cont::ArrayHandle<viskores::Float32> data;
     viskores::cont::ArrayCopyShallowIfPossible(fieldArray, data);
 
-    auto bounds = coords.GetBounds();
-    viskores::Vec3f_32 bLower(bounds.X.Min, bounds.Y.Min, bounds.Z.Min);
-    viskores::Vec3f_32 bUpper(bounds.X.Max, bounds.Y.Max, bounds.Z.Max);
-    viskores::Vec3f_32 size = bUpper - bLower;
+    auto uniformCoords =
+      coords.GetData().AsArrayHandle<viskores::cont::ArrayHandleUniformPointCoordinates>();
+    viskores::Vec3f_32 origin(uniformCoords.GetOrigin());
+    viskores::Vec3f_32 spacing(uniformCoords.GetSpacing());
+    // Cell data samples sit at the cell centers, half a spacing in from the first point.
+    if (!isPointBased)
+      origin += 0.5f * spacing;
 
     viskores::Vec3ui_32 dims(pdims[0], pdims[1], pdims[2]);
-    auto spacing = size / (viskores::Vec3f_32(dims) - 1.f);
 
     std::memcpy(this->Handles->StructuredParameters.Dims, &dims, sizeof(dims));
-    std::memcpy(this->Handles->StructuredParameters.Origin, &bLower, sizeof(bLower));
+    std::memcpy(this->Handles->StructuredParameters.Origin, &origin, sizeof(origin));
     std::memcpy(this->Handles->StructuredParameters.Spacing, &spacing, sizeof(spacing));
     this->Handles->StructuredParameters.Data = MakeANARIArray3D(d, data, dims[0], dims[1], dims[2]);
 
