@@ -12,6 +12,8 @@
 
 #include "ANARITestCommon.h"
 
+#include <array>
+
 namespace
 {
 
@@ -135,6 +137,83 @@ anari_cpp::World CreateSphereWorld(anari_cpp::Device d, bool indexed)
   return world;
 }
 
+// Read the world's `bounds` property as { min corner, max corner }.
+std::array<viskores::Vec3f_32, 2> GetWorldBounds(anari_cpp::Device d, anari_cpp::World world)
+{
+  std::array<viskores::Vec3f_32, 2> bounds;
+  VISKORES_TEST_ASSERT(
+    anariGetProperty(
+      d, world, "bounds", ANARI_FLOAT32_BOX3, bounds.data(), sizeof(bounds), ANARI_WAIT),
+    "The device did not report the world bounds");
+  return bounds;
+}
+
+void CheckWorldBounds(anari_cpp::Device d,
+                      anari_cpp::World world,
+                      const viskores::Vec3f_32& expectedMin,
+                      const viskores::Vec3f_32& expectedMax)
+{
+  const auto bounds = GetWorldBounds(d, world);
+  VISKORES_TEST_ASSERT(test_equal(bounds[0], expectedMin),
+                       "World bounds minimum ",
+                       bounds[0],
+                       " does not include the sphere radius; expected ",
+                       expectedMin);
+  VISKORES_TEST_ASSERT(test_equal(bounds[1], expectedMax),
+                       "World bounds maximum ",
+                       bounds[1],
+                       " does not include the sphere radius; expected ",
+                       expectedMax);
+}
+
+// The world bounds cover each whole sphere, not just its center.
+void BoundsTests(anari_cpp::Device d)
+{
+  // Per-vertex radii. The expected corners are the extremes of center -/+
+  // radius over the spheres in CreateSpherePositions and CreateSphereRadii.
+  auto unindexedWorld = CreateSphereWorld(d, false);
+  CheckWorldBounds(d,
+                   unindexedWorld,
+                   viskores::Vec3f_32(-0.83f, -0.71f, -0.32f),
+                   viskores::Vec3f_32(0.79f, 0.59f, 1.02f));
+  anari_cpp::release(d, unindexedWorld);
+
+  // The index leaves out sphere 5, the one with the largest z.
+  auto indexedWorld = CreateSphereWorld(d, true);
+  CheckWorldBounds(d,
+                   indexedWorld,
+                   viskores::Vec3f_32(-0.83f, -0.71f, -0.32f),
+                   viskores::Vec3f_32(0.79f, 0.59f, 0.34f));
+  anari_cpp::release(d, indexedWorld);
+
+  // A single sphere with the global radius.
+  auto vertices = anari_cpp::newArray1D(d, ANARI_FLOAT32_VEC3, 1);
+  *anari_cpp::map<viskores::Vec3f_32>(d, vertices) = viskores::Vec3f_32(1.f, 2.f, 3.f);
+  anari_cpp::unmap(d, vertices);
+
+  auto geometry = anari_cpp::newObject<anari_cpp::Geometry>(d, "sphere");
+  anari_cpp::setAndReleaseParameter(d, geometry, "vertex.position", vertices);
+  anari_cpp::setParameter(d, geometry, "radius", 0.5f);
+  anari_cpp::commitParameters(d, geometry);
+
+  auto material = anari_cpp::newObject<anari_cpp::Material>(d, "matte");
+  anari_cpp::commitParameters(d, material);
+
+  auto surface = anari_cpp::newObject<anari_cpp::Surface>(d);
+  anari_cpp::setAndReleaseParameter(d, surface, "geometry", geometry);
+  anari_cpp::setAndReleaseParameter(d, surface, "material", material);
+  anari_cpp::commitParameters(d, surface);
+
+  auto singleWorld = anari_cpp::newObject<anari_cpp::World>(d);
+  anari_cpp::setParameterArray1D(d, singleWorld, "surface", &surface, 1);
+  anari_cpp::commitParameters(d, singleWorld);
+  anari_cpp::release(d, surface);
+
+  CheckWorldBounds(
+    d, singleWorld, viskores::Vec3f_32(0.5f, 1.5f, 2.5f), viskores::Vec3f_32(1.5f, 2.5f, 3.5f));
+  anari_cpp::release(d, singleWorld);
+}
+
 void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
@@ -181,6 +260,10 @@ void RenderTests()
                        "interop/anari/sphere-unindexed.png",
                        viskores::Vec2ui_32(512, 512));
   anari_cpp::release(d, unindexedWorld);
+
+  // Check bounds /////////////////////////////////////////////////////////////
+
+  BoundsTests(d);
 
   // Cleanup //////////////////////////////////////////////////////////////////
 

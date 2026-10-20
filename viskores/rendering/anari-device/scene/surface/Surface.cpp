@@ -115,7 +115,7 @@ void Surface::render(viskores::rendering::Canvas& canvas,
 
 viskores::Bounds Surface::bounds() const
 {
-  return this->geometry()->getDataSet().GetCoordinateSystem().GetBounds();
+  return this->geometry()->bounds();
 }
 
 bool Surface::isValid() const

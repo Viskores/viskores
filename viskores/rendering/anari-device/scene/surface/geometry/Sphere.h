@@ -23,6 +23,9 @@ struct Sphere : public Geometry
   void commitParameters() override;
   void finalize() override;
 
+  // The bounds of the coordinates padded by each sphere's radius.
+  viskores::Bounds bounds() const override;
+
   virtual void render(
     viskores::rendering::Canvas& canvas,
     const viskores::rendering::Camera& camera,
@@ -45,6 +48,7 @@ private:
 
   float m_globalRadius{ 0.f }; // fallback radius if m_vertexRadius not there.
   viskores::Range m_radiusRange;
+  viskores::Bounds m_bounds;
 };
 
 } // namespace viskores_device

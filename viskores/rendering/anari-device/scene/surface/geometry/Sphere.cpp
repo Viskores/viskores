@@ -13,6 +13,7 @@
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandleIndex.h>
 #include <viskores/cont/ArrayRangeCompute.h>
+#include <viskores/cont/Invoker.h>
 #include <viskores/filter/MapFieldPermutation.h>
 #include <viskores/rendering/CanvasRayTracer.h>
 #include <viskores/rendering/raytracing/Camera.h>
@@ -21,12 +22,72 @@
 #include <viskores/rendering/raytracing/RayTracer.h>
 #include <viskores/rendering/raytracing/SphereExtractor.h>
 #include <viskores/rendering/raytracing/SphereIntersector.h>
-
+#include <viskores/worklet/WorkletMapField.h>
 
 #include <numeric>
 
 namespace viskores_device
 {
+
+namespace
+{
+
+// The corners of the box around one sphere.
+struct SphereBoxCorners : viskores::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn center, FieldIn radius, FieldOut lower, FieldOut upper);
+
+  template <typename CenterType>
+  VISKORES_EXEC void operator()(const CenterType& center,
+                                viskores::Float32 radius,
+                                viskores::Vec3f_64& lower,
+                                viskores::Vec3f_64& upper) const
+  {
+    const viskores::Float64 r = viskores::Abs(static_cast<viskores::Float64>(radius));
+    lower = viskores::Vec3f_64(center) - viskores::Vec3f_64(r);
+    upper = viskores::Vec3f_64(center) + viskores::Vec3f_64(r);
+  }
+};
+
+viskores::Bounds SphereBounds(const viskores::cont::CoordinateSystem& coords,
+                              const viskores::cont::Field& radius)
+{
+  viskores::cont::ArrayHandle<viskores::Float32> radii;
+  viskores::cont::ArrayCopyShallowIfPossible(radius.GetData(), radii);
+
+  viskores::cont::ArrayHandle<viskores::Vec3f_64> lower;
+  viskores::cont::ArrayHandle<viskores::Vec3f_64> upper;
+  viskores::cont::Invoker invoke;
+  invoke(SphereBoxCorners{}, coords.GetDataAsMultiplexer(), radii, lower, upper);
+
+  const viskores::cont::ArrayHandle<viskores::Range> lowerRangeArray =
+    viskores::cont::ArrayRangeCompute(lower);
+  const viskores::cont::ArrayHandle<viskores::Range> upperRangeArray =
+    viskores::cont::ArrayRangeCompute(upper);
+  const auto lowerRanges = lowerRangeArray.ReadPortal();
+  const auto upperRanges = upperRangeArray.ReadPortal();
+  return viskores::Bounds(viskores::Range(lowerRanges.Get(0).Min, upperRanges.Get(0).Max),
+                          viskores::Range(lowerRanges.Get(1).Min, upperRanges.Get(1).Max),
+                          viskores::Range(lowerRanges.Get(2).Min, upperRanges.Get(2).Max));
+}
+
+viskores::Bounds SphereBounds(const viskores::cont::CoordinateSystem& coords,
+                              viskores::Float32 radius)
+{
+  viskores::Bounds bounds = coords.GetBounds();
+  if (!bounds.IsNonEmpty())
+  {
+    return bounds;
+  }
+  const viskores::Float64 r = viskores::Abs(static_cast<viskores::Float64>(radius));
+  for (viskores::Range* range : { &bounds.X, &bounds.Y, &bounds.Z })
+  {
+    *range = viskores::Range(range->Min - r, range->Max + r);
+  }
+  return bounds;
+}
+
+} // namespace
 
 Sphere::Sphere(ViskoresDeviceGlobalState* s)
   : Geometry(s)
@@ -50,6 +111,7 @@ void Sphere::commitParameters()
 void Sphere::finalize()
 {
   this->Geometry::finalize();
+  this->m_bounds = viskores::Bounds{};
 
   helium::ChangeObserverPtr<Array1D>& positionArray = this->m_vertexAttributes.getParam("position");
   if (!positionArray)
@@ -79,6 +141,12 @@ void Sphere::finalize()
   if (this->m_dataSet.HasField("radius"))
   {
     this->m_radiusRange = this->m_dataSet.GetField("radius").GetRange().ReadPortal().Get(0);
+    this->m_bounds =
+      SphereBounds(this->m_dataSet.GetCoordinateSystem(), this->m_dataSet.GetField("radius"));
+  }
+  else
+  {
+    this->m_bounds = SphereBounds(this->m_dataSet.GetCoordinateSystem(), this->m_globalRadius);
   }
 
   auto connIdx = viskores::cont::make_ArrayHandleIndex(numSpheres);
@@ -88,6 +156,11 @@ void Sphere::finalize()
   viskores::cont::CellSetSingleType<> cellSet;
   cellSet.Fill(static_cast<viskores::Id>(numSpheres), viskores::CELL_SHAPE_VERTEX, 1, conn);
   this->m_dataSet.SetCellSet(cellSet);
+}
+
+viskores::Bounds Sphere::bounds() const
+{
+  return this->m_bounds;
 }
 
 void Sphere::SetupIndexBased()

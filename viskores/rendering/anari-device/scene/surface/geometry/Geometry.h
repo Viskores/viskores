@@ -14,6 +14,7 @@
 #include "array/Array1D.h"
 #include "scene/surface/material/Material.h"
 
+#include <viskores/Bounds.h>
 #include <viskores/cont/DataSet.h>
 #include <viskores/rendering/Canvas.h>
 
@@ -34,6 +35,11 @@ struct Geometry : public Object
   // geometry objects and add them to `m_dataSet`.
   void commitParameters() override;
   void finalize() override;
+
+  // The region the rendered geometry covers. By default this is the bounds of
+  // the coordinates; geometry with extent around its coordinates (such as the
+  // radius of a sphere) pads it.
+  virtual viskores::Bounds bounds() const;
 
   virtual void render(viskores::rendering::Canvas& canvas,
                       const viskores::rendering::Camera& camera,

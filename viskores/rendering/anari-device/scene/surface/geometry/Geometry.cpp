@@ -58,6 +58,11 @@ void Geometry::finalize()
   this->m_primitiveAttributes.setFields(this->m_dataSet);
 }
 
+viskores::Bounds Geometry::bounds() const
+{
+  return this->m_dataSet.GetCoordinateSystem().GetBounds();
+}
+
 void Geometry::FieldArrayParameters::setAttributes(Geometry* self,
                                                    std::initializer_list<const char*>&& attributes)
 {
