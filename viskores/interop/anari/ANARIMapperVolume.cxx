@@ -300,7 +300,9 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     viskores::Vec3f_32 spacing(uniformCoords.GetSpacing());
     // Cell data samples sit at the cell centers, half a spacing in from the first point.
     if (!isPointBased)
+    {
       origin += 0.5f * spacing;
+    }
 
     viskores::Vec3ui_32 dims(pdims[0], pdims[1], pdims[2]);
 

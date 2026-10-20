@@ -12,6 +12,7 @@
 #include <viskores/rendering/anari-device/ViskoresDevice.h>
 // viskores
 #include <viskores/CellShape.h>
+#include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandleUniformPointCoordinates.h>
 #include <viskores/cont/CellSetExplicit.h>
 #include <viskores/cont/CellSetSingleType.h>
@@ -199,35 +200,25 @@ void CheckStructuredGeometry(const viskores::interop::anari::ANARIMapperVolume& 
 {
   const auto& parameters = mVol.GetANARIStructuredParameters();
   VISKORES_TEST_ASSERT(parameters.Data != nullptr, "No data array was sent to ANARI for ", what);
+  auto checkAxis = [what](const char* name, viskores::IdComponent axis, auto sent, auto expected)
+  {
+    VISKORES_TEST_ASSERT(test_equal(sent, expected),
+                         "Wrong ",
+                         name,
+                         "[",
+                         axis,
+                         "] for ",
+                         what,
+                         ": expected ",
+                         expected,
+                         ", got ",
+                         sent);
+  };
   for (viskores::IdComponent axis = 0; axis < 3; ++axis)
   {
-    VISKORES_TEST_ASSERT(parameters.Dims[axis] == expectedDims[axis],
-                         "Wrong dims[",
-                         axis,
-                         "] for ",
-                         what,
-                         ": expected ",
-                         expectedDims[axis],
-                         ", got ",
-                         parameters.Dims[axis]);
-    VISKORES_TEST_ASSERT(test_equal(parameters.Origin[axis], expectedOrigin[axis]),
-                         "Wrong origin[",
-                         axis,
-                         "] for ",
-                         what,
-                         ": expected ",
-                         expectedOrigin[axis],
-                         ", got ",
-                         parameters.Origin[axis]);
-    VISKORES_TEST_ASSERT(test_equal(parameters.Spacing[axis], expectedSpacing[axis]),
-                         "Wrong spacing[",
-                         axis,
-                         "] for ",
-                         what,
-                         ": expected ",
-                         expectedSpacing[axis],
-                         ", got ",
-                         parameters.Spacing[axis]);
+    checkAxis("dims", axis, viskores::Id(parameters.Dims[axis]), expectedDims[axis]);
+    checkAxis("origin", axis, parameters.Origin[axis], expectedOrigin[axis]);
+    checkAxis("spacing", axis, parameters.Spacing[axis], expectedSpacing[axis]);
   }
 }
 
@@ -250,8 +241,11 @@ void StructuredGeometryTests()
       dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("pointValues"));
     viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
     mVol.GetANARISpatialField();
-    CheckStructuredGeometry(
-      mVol, pointDims, viskores::Vec3f_32(1.f, 2.f, 3.f), viskores::Vec3f_32(spacing), "point data");
+    CheckStructuredGeometry(mVol,
+                            pointDims,
+                            viskores::Vec3f_32(1.f, 2.f, 3.f),
+                            viskores::Vec3f_32(spacing),
+                            "point data");
   }
 
   // Cell data: one sample at each cell center, half a spacing in from the first point
@@ -423,6 +417,18 @@ void UnsupportedInputTests()
       dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("values"));
     viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
     CheckRejected(mVol, "structured cells with rectilinear coordinates");
+  }
+
+  // Structured cells with explicit (curvilinear) coordinates
+  {
+    auto dataSet = MakeStructuredDataSet();
+    viskores::cont::ArrayHandle<viskores::Vec3f> points;
+    viskores::cont::ArrayCopy(dataSet.GetCoordinateSystem().GetData(), points);
+    viskores::interop::anari::ANARIActor actor(dataSet.GetCellSet(),
+                                               viskores::cont::CoordinateSystem("coords", points),
+                                               dataSet.GetField("values"));
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    CheckRejected(mVol, "structured cells with explicit coordinates");
   }
 
   // Structured cells with a single point along an axis have no cells to sample
