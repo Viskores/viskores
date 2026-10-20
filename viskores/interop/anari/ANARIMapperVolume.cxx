@@ -169,12 +169,13 @@ struct UnstructuredVolumeArrays
 template <typename CellSetType>
 bool CopyUnstructuredCells(const CellSetType& cellSet, UnstructuredVolumeArrays& arrays)
 {
-  const viskores::TopologyElementTagCell visit;
-  const viskores::TopologyElementTagPoint incident;
+  const viskores::TopologyElementTagCell visitCells;
+  const viskores::TopologyElementTagPoint incidentPoints;
   constexpr auto maxIndex = static_cast<viskores::Id>(std::numeric_limits<viskores::UInt32>::max());
 
-  auto connectivity = cellSet.GetConnectivityArray(visit, incident);
-  // The offsets sent as `cell.index` are all smaller than the connectivity size.
+  auto connectivity = cellSet.GetConnectivityArray(visitCells, incidentPoints);
+  // The offsets sent as `cell.index` are all smaller than the connectivity size. The
+  // final offset, which equals that size, may not fit, but it is not sent.
   if (connectivity.GetNumberOfValues() - 1 > maxIndex ||
       viskores::cont::Algorithm::Reduce(connectivity, viskores::Id(0), viskores::Maximum()) >
         maxIndex)
@@ -182,11 +183,13 @@ bool CopyUnstructuredCells(const CellSetType& cellSet, UnstructuredVolumeArrays&
     return false;
   }
 
-  viskores::cont::ArrayCopyDevice(viskores::cont::make_ArrayHandleTransform(
-                                    cellSet.GetShapesArray(visit, incident), ToAnariCellType{}),
-                                  arrays.CellType);
+  viskores::cont::ArrayCopyDevice(
+    viskores::cont::make_ArrayHandleTransform(cellSet.GetShapesArray(visitCells, incidentPoints),
+                                              ToAnariCellType{}),
+    arrays.CellType);
   viskores::cont::ArrayCopyDevice(connectivity, arrays.Index);
-  viskores::cont::ArrayCopyDevice(cellSet.GetOffsetsArray(visit, incident), arrays.CellIndex);
+  viskores::cont::ArrayCopyDevice(cellSet.GetOffsetsArray(visitCells, incidentPoints),
+                                  arrays.CellIndex);
   return true;
 }
 
@@ -302,10 +305,10 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     this->Handles->SpatialField =
       anari_cpp::newObject<anari_cpp::SpatialField>(this->GetDevice(), "unstructured");
 
-    // Vetrex Coordinates
+    // Vertex Coordinates
     viskores::cont::ArrayCopyShallowIfPossible(coords.GetData(), unstructuredArrays.VertexPosition);
 
-    // Vetrex Data
+    // Vertex Data
     viskores::cont::ArrayCopyShallowIfPossible(fieldArray, unstructuredArrays.VertexData);
 
     // "indexPrefixed"
