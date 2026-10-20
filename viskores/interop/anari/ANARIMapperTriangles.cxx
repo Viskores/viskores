@@ -10,6 +10,7 @@
 // viskores
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/Invoker.h>
+#include <viskores/cont/Logging.h>
 #include <viskores/filter/vector_analysis/SurfaceNormals.h>
 #include <viskores/interop/anari/ANARIMapperTriangles.h>
 #include <viskores/rendering/raytracing/TriangleExtractor.h>
@@ -83,6 +84,11 @@ anari_cpp::Array1D MakeIndexArray(anari_cpp::Device d,
     return MakeANARIArray1D(d, indices);
   }
 
+  VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                 "ANARIMapperTriangles: " << numPoints
+                                          << " points do not fit 32-bit indices; sending "
+                                             "ANARI_UINT64_VEC3 primitive.index, which some "
+                                             "devices do not support.");
   viskores::cont::ArrayHandle<viskores::Vec<viskores::UInt64, 3>> indices;
   invoke(ExtractTriangleIndices{}, triangles, indices);
   return MakeANARIArray1D(
@@ -288,7 +294,9 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
     viskores::cont::ArrayHandle<viskores::Vec3f_32> normals;
     viskores::cont::ArrayCopyShallowIfPossible(dataset.GetField("Normals").GetData(), normals);
     if (normals.GetNumberOfValues() == numPoints)
+    {
       params.Vertex.Normal = MakeANARIArray1D(d, normals);
+    }
   }
 
   // Point fields are shared as they are. Cell fields are gathered into one
@@ -300,12 +308,16 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
     const auto& field = fields[slot];
     const auto numValues = field.GetNumberOfValues();
     if (numValues == 0 || field.GetData().GetNumberOfComponentsFlat() != 1)
+    {
       continue;
+    }
 
     const bool isPointField = field.IsPointField() && numValues == numPoints;
     const bool isCellField = field.IsCellField() && numValues == numCells;
     if (!isPointField && !isCellField)
+    {
       continue;
+    }
 
     viskores::cont::ArrayHandle<viskores::Float32> values;
     viskores::cont::ArrayCopyShallowIfPossible(field.GetData(), values);
@@ -340,53 +352,55 @@ void ANARIMapperTriangles::UpdateGeometry()
     return;
 
   auto d = this->GetDevice();
-  auto g = this->Handles->Geometry;
+  auto geometry = this->Handles->Geometry;
   const auto& params = this->Handles->Parameters;
 
-  anari_cpp::unsetParameter(d, g, "vertex.position");
-  anari_cpp::unsetParameter(d, g, "vertex.normal");
-  anari_cpp::unsetParameter(d, g, "primitive.index");
-  for (std::size_t slot = 0; slot < 4; ++slot)
+  anari_cpp::unsetParameter(d, geometry, "vertex.position");
+  anari_cpp::unsetParameter(d, geometry, "vertex.normal");
+  anari_cpp::unsetParameter(d, geometry, "primitive.index");
+  for (std::size_t slot = 0; slot < params.AttributeName.size(); ++slot)
   {
-    anari_cpp::unsetParameter(d, g, VertexAttributeParameters[slot]);
-    anari_cpp::unsetParameter(d, g, PrimitiveAttributeParameters[slot]);
-    anari_cpp::unsetParameter(d, g, USDAttributeNameParameters[slot]);
+    anari_cpp::unsetParameter(d, geometry, VertexAttributeParameters[slot]);
+    anari_cpp::unsetParameter(d, geometry, PrimitiveAttributeParameters[slot]);
+    anari_cpp::unsetParameter(d, geometry, USDAttributeNameParameters[slot]);
   }
 
-  anari_cpp::setParameter(d, g, "name", this->MakeObjectName("geometry"));
+  anari_cpp::setParameter(d, geometry, "name", this->MakeObjectName("geometry"));
 
   if (params.Vertex.Position)
   {
-    anari_cpp::setParameter(d, g, "vertex.position", params.Vertex.Position);
-    anari_cpp::setParameter(d, g, "primitive.index", params.Primitive.Index);
+    anari_cpp::setParameter(d, geometry, "vertex.position", params.Vertex.Position);
+    anari_cpp::setParameter(d, geometry, "primitive.index", params.Primitive.Index);
 
     if (this->CalculateNormals && params.Vertex.Normal)
-      anari_cpp::setParameter(d, g, "vertex.normal", params.Vertex.Normal);
+    {
+      anari_cpp::setParameter(d, geometry, "vertex.normal", params.Vertex.Normal);
+    }
 
     if (this->GetMapFieldAsAttribute())
     {
-      for (std::size_t slot = 0; slot < 4; ++slot)
+      for (std::size_t slot = 0; slot < params.AttributeName.size(); ++slot)
       {
         if (params.Vertex.Attribute[slot])
         {
           anari_cpp::setParameter(
-            d, g, VertexAttributeParameters[slot], params.Vertex.Attribute[slot]);
+            d, geometry, VertexAttributeParameters[slot], params.Vertex.Attribute[slot]);
         }
         if (params.Primitive.Attribute[slot])
         {
           anari_cpp::setParameter(
-            d, g, PrimitiveAttributeParameters[slot], params.Primitive.Attribute[slot]);
+            d, geometry, PrimitiveAttributeParameters[slot], params.Primitive.Attribute[slot]);
         }
         if (!params.AttributeName[slot].empty())
         {
           anari_cpp::setParameter(
-            d, g, USDAttributeNameParameters[slot], params.AttributeName[slot]);
+            d, geometry, USDAttributeNameParameters[slot], params.AttributeName[slot]);
         }
       }
     }
   }
 
-  anari_cpp::commitParameters(d, g);
+  anari_cpp::commitParameters(d, geometry);
 }
 
 void ANARIMapperTriangles::UpdateMaterial()
@@ -430,7 +444,7 @@ void ANARIMapperTriangles::ANARIHandles::ReleaseArrays()
   params.Vertex.Position = nullptr;
   params.Vertex.Normal = nullptr;
   params.Primitive.Index = nullptr;
-  for (std::size_t slot = 0; slot < 4; ++slot)
+  for (std::size_t slot = 0; slot < params.AttributeName.size(); ++slot)
   {
     anari_cpp::release(this->Device, params.Vertex.Attribute[slot]);
     anari_cpp::release(this->Device, params.Primitive.Attribute[slot]);
