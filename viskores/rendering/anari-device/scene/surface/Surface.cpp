@@ -9,6 +9,9 @@
 //=============================================================================
 
 #include "Surface.h"
+// Viskores
+#include <viskores/Math.h>
+#include <viskores/Range.h>
 
 namespace viskores_device
 {
@@ -58,9 +61,6 @@ void Surface::finalize()
                   "coordinates (no rotations)");
   }
 
-  bool inverseValid;
-  Mat4f_32 inverseTransform = viskores::MatrixInverse(colorMap.inFieldTransform, inverseValid);
-
   viskores::IdComponent numTextureDims = this->m_field.GetData().GetNumberOfComponentsFlat();
   if (numTextureDims > 2)
   {
@@ -71,28 +71,34 @@ void Surface::finalize()
   this->m_fieldRanges.Allocate(numTextureDims);
   auto rangesPortal = this->m_fieldRanges.WritePortal();
 
-  if (inverseValid)
+  // The sampler maps a field value to the texture coordinate
+  // inTransform * value + inOffset. The field range is the values that map to
+  // texture coordinates 0 and 1. As inTransform only scales and translates,
+  // invert it per axis in closed form, in double precision. (Inverting the
+  // Float32 matrix rejects scales below Float32 epsilon, so it fails for
+  // value ranges wider than about 8e6.)
+  bool inverseValid = true;
+  for (viskores::IdComponent dim = 0; dim < numTextureDims; ++dim)
   {
-    auto transformRange = [&](viskores::Float32 x, viskores::IdComponent component)
+    const viskores::Float64 scale = colorMap.inFieldTransform(dim, dim);
+    const viskores::Float64 translate =
+      static_cast<viskores::Float64>(colorMap.inFieldTransform(dim, 3)) +
+      static_cast<viskores::Float64>(colorMap.inFieldOffset[dim]);
+    const viskores::Range range{ (0. - translate) / scale, (1. - translate) / scale };
+    if ((scale != 0) && viskores::IsFinite(scale) && viskores::IsFinite(range.Min) &&
+        viskores::IsFinite(range.Max))
     {
-      viskores::Vec4f_32 v = { 0, 0, 0, 1 };
-      v[component] = x;
-      viskores::Vec4f_32 transformed =
-        viskores::MatrixMultiply(inverseTransform, v) - colorMap.inFieldOffset;
-      return transformed[component] / transformed[3];
-    };
-    for (viskores::IdComponent dim = 0; dim < numTextureDims; ++dim)
-    {
-      rangesPortal.Set(dim, { transformRange(0, 0), transformRange(1, 0) });
+      rangesPortal.Set(dim, range);
     }
-  }
-  else
-  {
-    reportMessage(ANARI_SEVERITY_WARNING, "inTransform for sampler is not invertible");
-    for (viskores::IdComponent dim = 0; dim < numTextureDims; ++dim)
+    else
     {
+      inverseValid = false;
       rangesPortal.Set(dim, { 0, 1 });
     }
+  }
+  if (!inverseValid)
+  {
+    reportMessage(ANARI_SEVERITY_WARNING, "inTransform for sampler is not invertible");
   }
 }
 
