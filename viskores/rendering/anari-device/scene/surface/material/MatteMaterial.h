@@ -41,15 +41,18 @@ struct MatteMaterial : public Material
                  ColorMap& colorMap) const override;
 
 private:
+  // helium calls commitParameters() only for an object with parameters set, so
+  // a material committed without any keeps these defaults. They must match the
+  // ones commitParameters() uses.
   helium::ChangeObserverPtr<Sampler> m_sampler;
-  helium::Attribute m_colorAttribute;
-  viskores::Vec3f_32 m_color;
+  helium::Attribute m_colorAttribute{ helium::Attribute::NONE };
+  viskores::Vec3f_32 m_color{ 0.8f, 0.8f, 0.8f };
 
-  helium::Attribute m_opacityAttribute;
-  viskores::Float32 m_opacity;
+  helium::Attribute m_opacityAttribute{ helium::Attribute::NONE };
+  viskores::Float32 m_opacity{ 1.0f };
 
-  helium::AlphaMode m_alphaMode;
-  viskores::Float32 m_alphaCutoff;
+  helium::AlphaMode m_alphaMode{ helium::AlphaMode::OPAQUE };
+  viskores::Float32 m_alphaCutoff{ 0.5f };
 };
 
 } // namespace viskores_device
