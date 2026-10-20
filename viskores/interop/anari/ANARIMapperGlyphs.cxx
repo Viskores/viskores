@@ -168,12 +168,16 @@ void ANARIMapperGlyphs::SetActor(const ANARIActor& actor)
 void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
 {
   if (enabled == this->Offset)
+  {
     return;
+  }
 
   this->Offset = enabled;
   this->Current = false;
   if (this->Handles->Geometry)
+  {
     this->ConstructArrays(true);
+  }
 }
 
 anari_cpp::Geometry ANARIMapperGlyphs::GetANARIGeometry()

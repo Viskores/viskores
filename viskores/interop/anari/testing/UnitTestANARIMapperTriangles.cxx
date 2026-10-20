@@ -213,7 +213,8 @@ void NormalsToggleTests()
   mapper.SetCalculateNormals(true);
   VISKORES_TEST_ASSERT(params.Vertex.Normal != nullptr,
                        "Enabling normals after the surface exists did not add them");
-  const auto normals = ReadANARIArray<viskores::Vec3f_32>(d, params.Vertex.Normal, 6);
+  const std::size_t numPoints = 6;
+  const auto normals = ReadANARIArray<viskores::Vec3f_32>(d, params.Vertex.Normal, numPoints);
   for (const auto& normal : normals)
   {
     VISKORES_TEST_ASSERT(test_equal(viskores::Abs(normal[2]), 1.f),
@@ -227,6 +228,15 @@ void NormalsToggleTests()
                        "Disabling normals after the surface exists did not remove them");
   CheckPositions(d, params, dataSet);
   RenderSurface(d, surface);
+
+  // SetActor builds the arrays before any geometry exists; enabling normals
+  // then must still give the geometry normals once it is made.
+  viskores::interop::anari::ANARIMapperTriangles lateMapper(d);
+  lateMapper.SetActor(actor);
+  lateMapper.SetCalculateNormals(true);
+  lateMapper.GetANARIGeometry();
+  VISKORES_TEST_ASSERT(lateMapper.GetANARITrianglesParameters().Vertex.Normal != nullptr,
+                       "Enabling normals before the geometry exists did not add them");
 
   anari_cpp::release(d, d);
 }

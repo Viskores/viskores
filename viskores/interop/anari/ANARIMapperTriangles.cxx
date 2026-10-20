@@ -168,12 +168,16 @@ void ANARIMapperTriangles::SetANARIColorMapValueRange(const viskores::Vec2f_32& 
 void ANARIMapperTriangles::SetCalculateNormals(bool enabled)
 {
   if (enabled == this->CalculateNormals)
+  {
     return;
+  }
 
   this->CalculateNormals = enabled;
   this->Current = false;
   if (this->Handles->Geometry)
+  {
     this->ConstructArrays(true);
+  }
 }
 
 anari_cpp::Geometry ANARIMapperTriangles::GetANARIGeometry()
@@ -244,7 +248,9 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
     this->Current = false;
 
   if (this->Current)
+  {
     return;
+  }
 
   this->Current = true;
   this->Valid = false;

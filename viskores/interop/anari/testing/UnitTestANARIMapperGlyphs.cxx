@@ -52,7 +52,10 @@ void OffsetToggleTests()
   const auto checkFirstGlyph = [&](viskores::Float32 tipZ, viskores::Float32 tailZ)
   {
     VISKORES_TEST_ASSERT(params.NumPrimitives == 2, "Expected 2 glyphs");
-    const auto vertices = ReadANARIArray<viskores::Vec3f_32>(d, params.Vertex.Position, 8);
+    // Each glyph is two cones, so 4 vertices per glyph.
+    const std::size_t numVertices = 4 * 2;
+    const auto vertices =
+      ReadANARIArray<viskores::Vec3f_32>(d, params.Vertex.Position, numVertices);
     VISKORES_TEST_ASSERT(test_equal(vertices[0], viskores::Vec3f_32(0.f, 0.f, tipZ)),
                          "Wrong first vertex of glyph 0: ",
                          vertices[0]);
