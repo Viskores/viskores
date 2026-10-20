@@ -13,7 +13,6 @@
 #include <viskores/cont/Logging.h>
 #include <viskores/interop/anari/ANARIMapperPoints.h>
 // std
-#include <cstdint>
 #include <limits>
 // anari
 #include <anari/anari_cpp/ext/linalg.h>

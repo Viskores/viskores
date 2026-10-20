@@ -175,13 +175,15 @@ const char* CopyUnstructuredCells(const CellSetType& cellSet, UnstructuredVolume
   const viskores::TopologyElementTagCell visitCells;
   const viskores::TopologyElementTagPoint incidentPoints;
   constexpr auto maxIndex = static_cast<viskores::Id>(std::numeric_limits<viskores::UInt32>::max());
+  constexpr const char* tooLarge =
+    "the connectivity does not fit in the UInt32 indices ANARI requires";
 
   auto connectivity = cellSet.GetConnectivityArray(visitCells, incidentPoints);
   // The offsets sent as `cell.index` are all smaller than the connectivity size. The
   // final offset, which equals that size, may not fit, but it is not sent.
   if (connectivity.GetNumberOfValues() - 1 > maxIndex)
   {
-    return "the connectivity does not fit in the UInt32 indices ANARI requires";
+    return tooLarge;
   }
   const auto indexRange = viskores::cont::Algorithm::Reduce(
     connectivity, viskores::Id2(0, 0), viskores::MinAndMax<viskores::Id>());
@@ -191,7 +193,7 @@ const char* CopyUnstructuredCells(const CellSetType& cellSet, UnstructuredVolume
   }
   if (indexRange[1] > maxIndex)
   {
-    return "the connectivity does not fit in the UInt32 indices ANARI requires";
+    return tooLarge;
   }
 
   viskores::cont::ArrayCopyDevice(
@@ -251,7 +253,11 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   {
     unsupportedReason = "the field is not a point or cell field";
   }
-  else if (isPointBased && fieldArray.GetNumberOfValues() != cells.GetNumberOfPoints())
+  // A point field must match both the cell set, which sizes the structured `data`, and the
+  // coordinates, which become the unstructured `vertex.position` beside `vertex.data`.
+  else if (isPointBased &&
+           (fieldArray.GetNumberOfValues() != cells.GetNumberOfPoints() ||
+            fieldArray.GetNumberOfValues() != coords.GetNumberOfValues()))
   {
     unsupportedReason = "the point field does not have one value per point";
   }

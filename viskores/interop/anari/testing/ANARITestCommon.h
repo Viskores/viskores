@@ -131,6 +131,11 @@ private:
   std::string Text;
 };
 
+#undef VISKORES_ANARI_TEST_DUP
+#undef VISKORES_ANARI_TEST_DUP2
+#undef VISKORES_ANARI_TEST_FILENO
+#undef VISKORES_ANARI_TEST_CLOSE
+
 static anari_cpp::Device loadANARIDevice()
 {
   viskores::testing::FloatingPointExceptionTrapDisable();
