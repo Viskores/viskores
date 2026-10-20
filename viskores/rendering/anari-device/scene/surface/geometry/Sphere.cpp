@@ -11,6 +11,7 @@
 #include "Sphere.h"
 
 #include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/ArrayHandleConstant.h>
 #include <viskores/cont/ArrayHandleIndex.h>
 #include <viskores/cont/ArrayRangeCompute.h>
 #include <viskores/cont/Invoker.h>
@@ -49,12 +50,11 @@ struct SphereBoxCorners : viskores::worklet::WorkletMapField
   }
 };
 
+// The bounds of spheres around the coordinates, with a radius per coordinate.
+template <typename RadiusArrayType>
 viskores::Bounds SphereBounds(const viskores::cont::CoordinateSystem& coords,
-                              const viskores::cont::Field& radius)
+                              const RadiusArrayType& radii)
 {
-  viskores::cont::ArrayHandle<viskores::Float32> radii;
-  viskores::cont::ArrayCopyShallowIfPossible(radius.GetData(), radii);
-
   viskores::cont::ArrayHandle<viskores::Vec3f_64> lower;
   viskores::cont::ArrayHandle<viskores::Vec3f_64> upper;
   viskores::cont::Invoker invoke;
@@ -69,22 +69,6 @@ viskores::Bounds SphereBounds(const viskores::cont::CoordinateSystem& coords,
   return viskores::Bounds(viskores::Range(lowerRanges.Get(0).Min, upperRanges.Get(0).Max),
                           viskores::Range(lowerRanges.Get(1).Min, upperRanges.Get(1).Max),
                           viskores::Range(lowerRanges.Get(2).Min, upperRanges.Get(2).Max));
-}
-
-viskores::Bounds SphereBounds(const viskores::cont::CoordinateSystem& coords,
-                              viskores::Float32 radius)
-{
-  viskores::Bounds bounds = coords.GetBounds();
-  if (!bounds.IsNonEmpty())
-  {
-    return bounds;
-  }
-  const viskores::Float64 r = viskores::Abs(static_cast<viskores::Float64>(radius));
-  for (viskores::Range* range : { &bounds.X, &bounds.Y, &bounds.Z })
-  {
-    *range = viskores::Range(range->Min - r, range->Max + r);
-  }
-  return bounds;
 }
 
 } // namespace
@@ -141,12 +125,16 @@ void Sphere::finalize()
   if (this->m_dataSet.HasField("radius"))
   {
     this->m_radiusRange = this->m_dataSet.GetField("radius").GetRange().ReadPortal().Get(0);
-    this->m_bounds =
-      SphereBounds(this->m_dataSet.GetCoordinateSystem(), this->m_dataSet.GetField("radius"));
+    viskores::cont::ArrayHandle<viskores::Float32> radii;
+    viskores::cont::ArrayCopyShallowIfPossible(this->m_dataSet.GetField("radius").GetData(), radii);
+    this->m_bounds = SphereBounds(this->m_dataSet.GetCoordinateSystem(), radii);
   }
   else
   {
-    this->m_bounds = SphereBounds(this->m_dataSet.GetCoordinateSystem(), this->m_globalRadius);
+    this->m_bounds = SphereBounds(
+      this->m_dataSet.GetCoordinateSystem(),
+      viskores::cont::make_ArrayHandleConstant(
+        this->m_globalRadius, this->m_dataSet.GetCoordinateSystem().GetNumberOfValues()));
   }
 
   auto connIdx = viskores::cont::make_ArrayHandleIndex(numSpheres);

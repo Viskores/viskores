@@ -214,6 +214,85 @@ void BoundsTests(anari_cpp::Device d)
   anari_cpp::release(d, singleWorld);
 }
 
+// Render `world` with the default clipping range and return the middle pixel.
+viskores::Vec4f_32 RenderMiddlePixel(anari_cpp::Device d,
+                                     anari_cpp::World world,
+                                     const viskores::Vec3f_32& position,
+                                     const viskores::Vec3f_32& direction)
+{
+  auto renderer = anari_cpp::newObject<anari_cpp::Renderer>(d, "default");
+  anari_cpp::setParameter(d, renderer, "background", viskores::Vec4f_32(0.f, 0.f, 0.f, 1.f));
+  anari_cpp::commitParameters(d, renderer);
+
+  auto camera = anari_cpp::newObject<anari_cpp::Camera>(d, "perspective");
+  anari_cpp::setParameter(d, camera, "aspect", 1.f);
+  anari_cpp::setParameter(d, camera, "position", position);
+  anari_cpp::setParameter(d, camera, "direction", direction);
+  anari_cpp::setParameter(d, camera, "up", viskores::Vec3f_32(0.f, 0.f, 1.f));
+  anari_cpp::commitParameters(d, camera);
+
+  const viskores::Vec2ui_32 frameSize(64, 64);
+  auto frame = anari_cpp::newObject<anari_cpp::Frame>(d);
+  anari_cpp::setParameter(d, frame, "size", frameSize);
+  anari_cpp::setParameter(d, frame, "channel.color", ANARI_FLOAT32_VEC4);
+  anari_cpp::setParameter(d, frame, "world", world);
+  anari_cpp::setParameter(d, frame, "camera", camera);
+  anari_cpp::setParameter(d, frame, "renderer", renderer);
+  anari_cpp::commitParameters(d, frame);
+  anari_cpp::release(d, camera);
+  anari_cpp::release(d, renderer);
+
+  anari_cpp::render(d, frame);
+  anari_cpp::wait(d, frame);
+  const auto pixels = anari_cpp::map<viskores::Vec4f_32>(d, frame, "channel.color");
+  const viskores::Vec4f_32 middle =
+    pixels.data[(pixels.height / 2) * pixels.width + pixels.width / 2];
+  anari_cpp::unmap(d, frame, "channel.color");
+  anari_cpp::release(d, frame);
+  return middle;
+}
+
+// Spheres that are large compared with the spread of their centers stay in
+// front of the far plane, which the camera places from the world bounds.
+void LargeSpheresTests(anari_cpp::Device d)
+{
+  auto vertices = anari_cpp::newArray1D(d, ANARI_FLOAT32_VEC3, 2);
+  auto* positions = anari_cpp::map<viskores::Vec3f_32>(d, vertices);
+  positions[0] = viskores::Vec3f_32(0.f, 0.f, 0.f);
+  positions[1] = viskores::Vec3f_32(0.001f, 0.f, 0.f);
+  anari_cpp::unmap(d, vertices);
+
+  auto geometry = anari_cpp::newObject<anari_cpp::Geometry>(d, "sphere");
+  anari_cpp::setAndReleaseParameter(d, geometry, "vertex.position", vertices);
+  anari_cpp::setParameter(d, geometry, "radius", 0.5f);
+  anari_cpp::commitParameters(d, geometry);
+
+  auto material = anari_cpp::newObject<anari_cpp::Material>(d, "matte");
+  anari_cpp::setParameter(d, material, "color", viskores::Vec3f_32(1.f, 1.f, 1.f));
+  anari_cpp::commitParameters(d, material);
+
+  auto surface = anari_cpp::newObject<anari_cpp::Surface>(d);
+  anari_cpp::setAndReleaseParameter(d, surface, "geometry", geometry);
+  anari_cpp::setAndReleaseParameter(d, surface, "material", material);
+  anari_cpp::commitParameters(d, surface);
+
+  auto world = anari_cpp::newObject<anari_cpp::World>(d);
+  anari_cpp::setParameterArray1D(d, world, "surface", &surface, 1);
+  anari_cpp::commitParameters(d, world);
+  anari_cpp::release(d, surface);
+
+  // The near side of the spheres is 2.5 away; with bounds from the centers
+  // alone the far plane would be at 1000 * 0.001 = 1.
+  const auto middle = RenderMiddlePixel(
+    d, world, viskores::Vec3f_32(3.f, 0.f, 0.f), viskores::Vec3f_32(-1.f, 0.f, 0.f));
+  VISKORES_TEST_ASSERT(middle[0] > 0.1f,
+                       "Large spheres were not rendered: middle pixel ",
+                       middle,
+                       " is the black background");
+
+  anari_cpp::release(d, world);
+}
+
 void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
@@ -264,6 +343,7 @@ void RenderTests()
   // Check bounds /////////////////////////////////////////////////////////////
 
   BoundsTests(d);
+  LargeSpheresTests(d);
 
   // Cleanup //////////////////////////////////////////////////////////////////
 
