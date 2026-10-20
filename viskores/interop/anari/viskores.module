@@ -10,7 +10,6 @@ DEPENDS
 PRIVATE_DEPENDS
   anari_library_viskores
 TEST_DEPENDS
-  anari_library_viskores
   viskores_filter_vector_analysis
   viskores_filter_contour
   viskores_rendering_testing
