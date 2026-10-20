@@ -512,6 +512,67 @@ void UnsupportedInputTests()
     CheckRejected(mVol, "connectivity above UINT32_MAX");
   }
 
+  // Point field one value short of the point count
+  {
+    auto dataSet = MakeTwoTetrahedraDataSet();
+    viskores::interop::anari::ANARIActor actor(
+      dataSet.GetCellSet(),
+      dataSet.GetCoordinateSystem(),
+      viskores::cont::make_FieldPoint(
+        "values", viskores::cont::make_ArrayHandle<viskores::Float32>({ 0, 1, 2, 3 })));
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    CheckRejected(mVol, "an unstructured point field one value short");
+  }
+
+  // Structured point field one value short of the point count
+  {
+    auto dataSet = viskores::cont::DataSetBuilderUniform::Create(viskores::Id3(3, 3, 3));
+    const std::vector<viskores::Float32> values(26, 1.f);
+    viskores::interop::anari::ANARIActor actor(
+      dataSet.GetCellSet(),
+      dataSet.GetCoordinateSystem(),
+      viskores::cont::make_FieldPoint(
+        "values", viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On)));
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    CheckRejected(mVol, "a structured point field one value short");
+  }
+
+  // Structured cell field one value short of the cell count
+  {
+    auto dataSet = viskores::cont::DataSetBuilderUniform::Create(viskores::Id3(3, 3, 3));
+    const std::vector<viskores::Float32> values(7, 1.f);
+    viskores::interop::anari::ANARIActor actor(
+      dataSet.GetCellSet(),
+      dataSet.GetCoordinateSystem(),
+      viskores::cont::make_FieldCell(
+        "values", viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On)));
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    CheckRejected(mVol, "a structured cell field one value short");
+  }
+
+  // Connectivity with a negative point index, which would wrap to a large UInt32
+  {
+    const std::vector<viskores::Id> connectivity = { 0, 1, 2, -1 };
+    const std::vector<viskores::Vec3f_32> points = {
+      { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 }
+    };
+    const std::vector<viskores::Float32> values = { 0, 1, 2, 3 };
+
+    viskores::cont::CellSetSingleType<> cells;
+    cells.Fill(static_cast<viskores::Id>(points.size()),
+               viskores::CELL_SHAPE_TETRA,
+               4,
+               viskores::cont::make_ArrayHandle(connectivity, viskores::CopyFlag::On));
+    viskores::cont::CoordinateSystem coords(
+      "coords", viskores::cont::make_ArrayHandle(points, viskores::CopyFlag::On));
+    viskores::cont::Field field("values",
+                                viskores::cont::Field::Association::Points,
+                                viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On));
+    viskores::interop::anari::ANARIActor actor(cells, coords, field);
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    CheckRejected(mVol, "connectivity containing -1");
+  }
+
   // A valid actor replaced by an unsupported one leaves nothing behind
   {
     auto valid = MakeStructuredDataSet();

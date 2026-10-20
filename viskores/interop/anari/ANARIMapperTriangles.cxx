@@ -278,9 +278,20 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
   const auto numPoints = actor.GetCoordinateSystem().GetNumberOfValues();
   const auto numCells = cells.GetNumberOfCells();
 
-  auto d = this->GetDevice();
   auto& params = this->Handles->Parameters;
-  params.NumPrimitives = static_cast<unsigned int>(numTris);
+  using NumPrimitivesType = decltype(params.NumPrimitives);
+  if (static_cast<viskores::UInt64>(numTris) > std::numeric_limits<NumPrimitivesType>::max())
+  {
+    VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                   "ANARIMapperTriangles '" << this->GetName() << "' cannot map its actor: "
+                                            << numTris << " triangles are too many to count");
+    this->UpdateGeometry();
+    this->RefreshGroup();
+    return;
+  }
+
+  auto d = this->GetDevice();
+  params.NumPrimitives = static_cast<NumPrimitivesType>(numTris);
 
   viskores::cont::ArrayHandle<viskores::Vec3f_32> positions;
   viskores::cont::ArrayCopyShallowIfPossible(actor.GetCoordinateSystem().GetData(), positions);
@@ -300,25 +311,59 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
     {
       params.Vertex.Normal = MakeANARIArray1D(d, normals);
     }
+    else
+    {
+      VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                     "ANARIMapperTriangles: skipping normals, which have "
+                       << normals.GetNumberOfValues() << " values for " << numPoints << " points");
+    }
   }
 
   // Point fields are shared as they are. Cell fields are gathered into one
   // value per triangle. Fields with more than one component, another
-  // association, or the wrong number of values are skipped.
+  // association, or the wrong number of values are skipped with a warning.
   const auto fields = actor.GetFieldSet();
   for (std::size_t slot = 0; slot < fields.size(); ++slot)
   {
     const auto& field = fields[slot];
     const auto numValues = field.GetNumberOfValues();
-    if (numValues == 0 || field.GetData().GetNumberOfComponentsFlat() != 1)
+    if (numValues == 0)
     {
       continue;
     }
 
-    const bool isPointField = field.IsPointField() && numValues == numPoints;
-    const bool isCellField = field.IsCellField() && numValues == numCells;
+    const bool isPointField = field.IsPointField();
+    const bool isCellField = field.IsCellField();
+    const auto numComponents = field.GetData().GetNumberOfComponentsFlat();
+    if (numComponents != 1)
+    {
+      VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                     "ANARIMapperTriangles: skipping field '"
+                       << field.GetName() << "', which has " << numComponents
+                       << " components (only 1 is supported)");
+      continue;
+    }
     if (!isPointField && !isCellField)
     {
+      VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                     "ANARIMapperTriangles: skipping field '"
+                       << field.GetName() << "', which is not a point or cell field");
+      continue;
+    }
+    if (isPointField && numValues != numPoints)
+    {
+      VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                     "ANARIMapperTriangles: skipping field '" << field.GetName() << "', which has "
+                                                              << numValues << " values for "
+                                                              << numPoints << " points");
+      continue;
+    }
+    if (isCellField && numValues != numCells)
+    {
+      VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                     "ANARIMapperTriangles: skipping field '" << field.GetName() << "', which has "
+                                                              << numValues << " values for "
+                                                              << numCells << " cells");
       continue;
     }
 

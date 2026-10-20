@@ -12,12 +12,28 @@
 
 // viskores
 #include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/Logging.h>
 #include <viskores/interop/anari/ANARILoadDevice.h>
 #include <viskores/interop/anari/ANARIMapper.h>
 #include <viskores/rendering/testing/Testing.h>
 #include <viskores/testing/Testing.h>
 // std
+#include <cstdio>
+#include <string>
 #include <vector>
+#ifdef _WIN32
+#include <io.h>
+#define VISKORES_ANARI_TEST_DUP _dup
+#define VISKORES_ANARI_TEST_DUP2 _dup2
+#define VISKORES_ANARI_TEST_FILENO _fileno
+#define VISKORES_ANARI_TEST_CLOSE _close
+#else
+#include <unistd.h>
+#define VISKORES_ANARI_TEST_DUP dup
+#define VISKORES_ANARI_TEST_DUP2 dup2
+#define VISKORES_ANARI_TEST_FILENO fileno
+#define VISKORES_ANARI_TEST_CLOSE close
+#endif
 
 namespace
 {
@@ -53,6 +69,67 @@ std::vector<T> ReadANARIArray(anari_cpp::Device d, ANARIArray array, std::size_t
   anariUnmapArray(d, array);
   return result;
 }
+
+// Collects what is written to stderr, where Viskores logs its warnings, from
+// construction until `Stop()`. Warnings are logged to stderr meanwhile even if
+// the log level was set lower.
+class StderrCapture
+{
+public:
+  StderrCapture()
+    : SavedLevel(viskores::cont::GetStderrLogLevel())
+  {
+    if (static_cast<int>(this->SavedLevel) < static_cast<int>(viskores::cont::LogLevel::Warn))
+    {
+      viskores::cont::SetStderrLogLevel(viskores::cont::LogLevel::Warn);
+    }
+    std::fflush(stderr);
+    this->File = std::tmpfile();
+    VISKORES_TEST_ASSERT(this->File != nullptr, "Could not open a file to capture stderr");
+    this->SavedFd = VISKORES_ANARI_TEST_DUP(VISKORES_ANARI_TEST_FILENO(stderr));
+    VISKORES_ANARI_TEST_DUP2(VISKORES_ANARI_TEST_FILENO(this->File),
+                             VISKORES_ANARI_TEST_FILENO(stderr));
+  }
+
+  ~StderrCapture() { this->Stop(); }
+
+  StderrCapture(const StderrCapture&) = delete;
+  StderrCapture& operator=(const StderrCapture&) = delete;
+
+  // Restore stderr and return everything written to it while captured.
+  std::string Stop()
+  {
+    if (this->File == nullptr)
+    {
+      return this->Text;
+    }
+
+    std::fflush(stderr);
+    VISKORES_ANARI_TEST_DUP2(this->SavedFd, VISKORES_ANARI_TEST_FILENO(stderr));
+    VISKORES_ANARI_TEST_CLOSE(this->SavedFd);
+    viskores::cont::SetStderrLogLevel(this->SavedLevel);
+
+    std::rewind(this->File);
+    char buffer[1024];
+    std::size_t numRead;
+    while ((numRead = std::fread(buffer, 1, sizeof(buffer), this->File)) > 0)
+    {
+      this->Text.append(buffer, numRead);
+    }
+    std::fclose(this->File);
+    this->File = nullptr;
+
+    // Show the captured output too, so it still appears in the test log.
+    std::fputs(this->Text.c_str(), stderr);
+    return this->Text;
+  }
+
+private:
+  viskores::cont::LogLevel SavedLevel;
+  std::FILE* File = nullptr;
+  int SavedFd = -1;
+  std::string Text;
+};
 
 static anari_cpp::Device loadANARIDevice()
 {

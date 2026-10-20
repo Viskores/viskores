@@ -12,6 +12,9 @@
 #include <viskores/cont/ArrayHandleRuntimeVec.h>
 #include <viskores/cont/Logging.h>
 #include <viskores/interop/anari/ANARIMapperPoints.h>
+// std
+#include <cstdint>
+#include <limits>
 // anari
 #include <anari/anari_cpp/ext/linalg.h>
 
@@ -225,9 +228,20 @@ void ANARIMapperPoints::ConstructArrays(bool regenerate)
     return;
   }
 
-  auto d = this->GetDevice();
   auto& params = this->Handles->Parameters;
-  params.NumPrimitives = static_cast<viskores::UInt32>(numPoints);
+  using NumPrimitivesType = decltype(params.NumPrimitives);
+  if (static_cast<viskores::UInt64>(numPoints) > std::numeric_limits<NumPrimitivesType>::max())
+  {
+    VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                   "ANARIMapperPoints '" << this->GetName() << "' cannot map its actor: "
+                                         << numPoints << " points are too many to count");
+    this->UpdateGeometry();
+    this->RefreshGroup();
+    return;
+  }
+
+  auto d = this->GetDevice();
+  params.NumPrimitives = static_cast<NumPrimitivesType>(numPoints);
   params.Radius = DefaultRadius(coords.GetBounds());
 
   viskores::cont::ArrayHandle<viskores::Vec3f_32> positions;

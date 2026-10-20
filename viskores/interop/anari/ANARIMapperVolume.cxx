@@ -7,6 +7,7 @@
 //============================================================================
 
 
+#include <viskores/BinaryOperators.h>
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayCopyDevice.h>
@@ -165,10 +166,11 @@ struct UnstructuredVolumeArrays
 
 // Copy the cell types, connectivity and offsets of an unstructured cell set into the
 // arrays sent to ANARI. KHR_SPATIAL_FIELD_UNSTRUCTURED requires UInt32 `index` and
-// `cell.index`, so this returns false, and copies nothing, when the connectivity has a
-// point index or size that does not fit in UInt32.
+// `cell.index`, so this copies nothing and returns the reason when the connectivity has a
+// negative point index, or a point index or size that does not fit in UInt32. It
+// returns null when the cells were copied.
 template <typename CellSetType>
-bool CopyUnstructuredCells(const CellSetType& cellSet, UnstructuredVolumeArrays& arrays)
+const char* CopyUnstructuredCells(const CellSetType& cellSet, UnstructuredVolumeArrays& arrays)
 {
   const viskores::TopologyElementTagCell visitCells;
   const viskores::TopologyElementTagPoint incidentPoints;
@@ -177,11 +179,19 @@ bool CopyUnstructuredCells(const CellSetType& cellSet, UnstructuredVolumeArrays&
   auto connectivity = cellSet.GetConnectivityArray(visitCells, incidentPoints);
   // The offsets sent as `cell.index` are all smaller than the connectivity size. The
   // final offset, which equals that size, may not fit, but it is not sent.
-  if (connectivity.GetNumberOfValues() - 1 > maxIndex ||
-      viskores::cont::Algorithm::Reduce(connectivity, viskores::Id(0), viskores::Maximum()) >
-        maxIndex)
+  if (connectivity.GetNumberOfValues() - 1 > maxIndex)
   {
-    return false;
+    return "the connectivity does not fit in the UInt32 indices ANARI requires";
+  }
+  const auto indexRange = viskores::cont::Algorithm::Reduce(
+    connectivity, viskores::Id2(0, 0), viskores::MinAndMax<viskores::Id>());
+  if (indexRange[0] < 0)
+  {
+    return "the connectivity contains a negative point index";
+  }
+  if (indexRange[1] > maxIndex)
+  {
+    return "the connectivity does not fit in the UInt32 indices ANARI requires";
   }
 
   viskores::cont::ArrayCopyDevice(
@@ -191,7 +201,7 @@ bool CopyUnstructuredCells(const CellSetType& cellSet, UnstructuredVolumeArrays&
   viskores::cont::ArrayCopyDevice(connectivity, arrays.Index);
   viskores::cont::ArrayCopyDevice(cellSet.GetOffsetsArray(visitCells, incidentPoints),
                                   arrays.CellIndex);
-  return true;
+  return nullptr;
 }
 
 } // namespace
@@ -212,10 +222,10 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   const auto& actor = this->GetActor();
   const auto& coords = actor.GetCoordinateSystem();
   const auto& cells = actor.GetCellSet();
-  const auto& fieldArray = actor.GetField().GetData();
+  const auto& field = actor.GetField();
+  const auto& fieldArray = field.GetData();
 
-  const bool isPointBased =
-    actor.GetField().GetAssociation() == viskores::cont::Field::Association::Points;
+  const bool isPointBased = field.IsPointField();
   const bool isStructured = cells.CanConvert<viskores::cont::CellSetStructured<3>>();
   const bool isScalar = fieldArray.GetNumberOfComponentsFlat() == 1;
   // structuredRegular places samples on a uniform grid, so only uniform coordinates map to it.
@@ -237,6 +247,18 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   {
     unsupportedReason = "the field is not scalar";
   }
+  else if (!isPointBased && !field.IsCellField())
+  {
+    unsupportedReason = "the field is not a point or cell field";
+  }
+  else if (isPointBased && fieldArray.GetNumberOfValues() != cells.GetNumberOfPoints())
+  {
+    unsupportedReason = "the point field does not have one value per point";
+  }
+  else if (!isPointBased && fieldArray.GetNumberOfValues() != cells.GetNumberOfCells())
+  {
+    unsupportedReason = "the cell field does not have one value per cell";
+  }
   else if (isStructured && !isUniform)
   {
     // TODO: map rectilinear and curvilinear coordinates, for example by sending point data
@@ -254,15 +276,11 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   }
   else if (!isStructured)
   {
-    const bool copied = cells.IsType<viskores::cont::CellSetSingleType<>>()
+    unsupportedReason = cells.IsType<viskores::cont::CellSetSingleType<>>()
       ? CopyUnstructuredCells(cells.AsCellSet<viskores::cont::CellSetSingleType<>>(),
                               unstructuredArrays)
       : CopyUnstructuredCells(cells.AsCellSet<viskores::cont::CellSetExplicit<>>(),
                               unstructuredArrays);
-    if (!copied)
-    {
-      unsupportedReason = "the connectivity does not fit in the UInt32 indices ANARI requires";
-    }
   }
 
   if (unsupportedReason)

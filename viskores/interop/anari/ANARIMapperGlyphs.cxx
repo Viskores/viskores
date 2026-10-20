@@ -16,6 +16,8 @@
 #include <viskores/filter/field_conversion/CellAverage.h>
 #include <viskores/interop/anari/ANARIMapperGlyphs.h>
 #include <viskores/worklet/WorkletMapField.h>
+// std
+#include <limits>
 
 namespace viskores
 {
@@ -281,7 +283,12 @@ void ANARIMapperGlyphs::ConstructArrays(bool regenerate)
   const char* unsupportedReason = nullptr;
   if (numGlyphs > 0)
   {
-    if (field.GetData().GetNumberOfComponentsFlat() != 3)
+    using NumPrimitivesType = decltype(this->Handles->Parameters.NumPrimitives);
+    if (static_cast<viskores::UInt64>(numGlyphs) > std::numeric_limits<NumPrimitivesType>::max())
+    {
+      unsupportedReason = "its field has too many values to count as glyphs";
+    }
+    else if (field.GetData().GetNumberOfComponentsFlat() != 3)
     {
       unsupportedReason = "its field does not have 3 components";
     }
@@ -330,7 +337,8 @@ void ANARIMapperGlyphs::ConstructArrays(bool regenerate)
   auto d = this->GetDevice();
   this->Handles->Parameters.Vertex.Position = MakeANARIArray1D(d, arrays.Vertices);
   this->Handles->Parameters.Vertex.Radius = MakeANARIArray1D(d, arrays.Radii);
-  this->Handles->Parameters.NumPrimitives = numGlyphs;
+  this->Handles->Parameters.NumPrimitives =
+    static_cast<decltype(this->Handles->Parameters.NumPrimitives)>(numGlyphs);
 
   this->UpdateGeometry();
 
