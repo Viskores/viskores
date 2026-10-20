@@ -17,6 +17,7 @@ namespace
 {
 
 constexpr viskores::UInt32 ImageSize = 32;
+const viskores::Vec4f_32 Background(0.3f, 0.3f, 0.3f, 1.f);
 
 // A triangle covering the middle of the image, drawn with `material`.
 anari_cpp::World CreateTriangleWorld(anari_cpp::Device d, anari_cpp::Material material)
@@ -48,7 +49,7 @@ anari_cpp::World CreateTriangleWorld(anari_cpp::Device d, anari_cpp::Material ma
 std::vector<viskores::Vec4f_32> RenderPixels(anari_cpp::Device d, anari_cpp::World world)
 {
   auto renderer = anari_cpp::newObject<anari_cpp::Renderer>(d, "default");
-  anari_cpp::setParameter(d, renderer, "background", viskores::Vec4f_32(0.3f, 0.3f, 0.3f, 1.f));
+  anari_cpp::setParameter(d, renderer, "background", Background);
   anari_cpp::commitParameters(d, renderer);
 
   auto camera = anari_cpp::newObject<anari_cpp::Camera>(d, "perspective");
@@ -101,7 +102,7 @@ void DefaultParametersTest()
 
   // The triangle must show up for the comparison below to mean anything.
   const auto& center = expected[(ImageSize / 2) * ImageSize + ImageSize / 2];
-  VISKORES_TEST_ASSERT(!test_equal(center, viskores::Vec4f_32(0.3f, 0.3f, 0.3f, 1.f)),
+  VISKORES_TEST_ASSERT(!test_equal(center, Background),
                        "The triangle does not cover the center of the image");
 
   auto defaultMaterial = anari_cpp::newObject<anari_cpp::Material>(d, "matte");
@@ -110,15 +111,15 @@ void DefaultParametersTest()
   anari_cpp::release(d, defaultMaterial);
 
   VISKORES_TEST_ASSERT(pixels.size() == expected.size(), "Images differ in size");
-  for (std::size_t i = 0; i < pixels.size(); ++i)
+  for (std::size_t pixelIndex = 0; pixelIndex < pixels.size(); ++pixelIndex)
   {
-    VISKORES_TEST_ASSERT(test_equal(pixels[i], expected[i]),
+    VISKORES_TEST_ASSERT(test_equal(pixels[pixelIndex], expected[pixelIndex]),
                          "Pixel ",
-                         i,
+                         pixelIndex,
                          " of the matte material without parameters is ",
-                         pixels[i],
+                         pixels[pixelIndex],
                          "; expected the default color ",
-                         expected[i]);
+                         expected[pixelIndex]);
   }
 
   anari_cpp::release(d, d);
