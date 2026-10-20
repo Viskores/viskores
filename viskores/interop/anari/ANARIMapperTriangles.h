@@ -21,20 +21,27 @@ namespace anari
 
 /// @brief Raw ANARI arrays and parameter values set on the `ANARIGeometry`.
 ///
+/// Attribute slot `N` holds actor field `N`: a point field goes in
+/// `Vertex.Attribute[N]` and a cell field in `Primitive.Attribute[N]`, so at
+/// most one of the two is set for each slot.
 struct TrianglesParameters
 {
   struct VertexData
   {
     anari_cpp::Array1D Position{ nullptr };
     anari_cpp::Array1D Normal{ nullptr };
-    std::array<anari_cpp::Array1D, 4> Attribute;
-    std::array<std::string, 4> AttributeName;
+    std::array<anari_cpp::Array1D, 4> Attribute{};
   } Vertex{};
 
   struct PrimitiveData
   {
     anari_cpp::Array1D Index{ nullptr };
+    std::array<anari_cpp::Array1D, 4> Attribute{};
   } Primitive{};
+
+  /// Name of the field in each attribute slot, whether it is a vertex or a
+  /// primitive attribute.
+  std::array<std::string, 4> AttributeName;
 
   unsigned int NumPrimitives{ 0 };
 };
@@ -85,6 +92,13 @@ struct VISKORES_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
 
   anari_cpp::Geometry GetANARIGeometry() override;
   anari_cpp::Surface GetANARISurface() override;
+
+  /// @brief Get the raw ANARI arrays and values set on the triangle geometry.
+  ///
+  /// The handles are null until the geometry has been constructed.
+  ///
+  /// @note Intended for testing only; this is not a stable interface.
+  const TrianglesParameters& GetANARITrianglesParameters() const;
 
 private:
   bool NeedToGenerateData() const;

@@ -9,12 +9,14 @@
 
 // viskores
 #include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/Invoker.h>
 #include <viskores/filter/vector_analysis/SurfaceNormals.h>
 #include <viskores/interop/anari/ANARIMapperTriangles.h>
 #include <viskores/rendering/raytracing/TriangleExtractor.h>
 #include <viskores/worklet/WorkletMapField.h>
 // std
-#include <numeric>
+#include <cstdint>
+#include <limits>
 // anari
 #include <anari/anari_cpp/ext/linalg.h>
 
@@ -27,276 +29,80 @@ namespace anari
 
 // Worklets ///////////////////////////////////////////////////////////////////
 
-class ExtractTriangleFields : public viskores::worklet::WorkletMapField
+namespace
+{
+
+/// Copy the point IDs of each triangle, components 1-3 of the `Id4` that
+/// `TriangleExtractor` produces, into a `primitive.index` vector.
+class ExtractTriangleIndices : public viskores::worklet::WorkletMapField
 {
 public:
-  bool PopulateField1{ false };
-  bool PopulateField2{ false };
-  bool PopulateField3{ false };
-  bool PopulateField4{ false };
-  viskores::Range Field1Range;
-  viskores::Range Field2Range;
-  viskores::Range Field3Range;
-  viskores::Range Field4Range;
+  using ControlSignature = void(FieldIn triangles, FieldOut indices);
+  using ExecutionSignature = void(_1, _2);
 
-  VISKORES_CONT
-  ExtractTriangleFields(bool emptyField1,
-                        bool emptyField2,
-                        bool emptyField3,
-                        bool emptyField4,
-                        viskores::Range field1Range,
-                        viskores::Range field2Range,
-                        viskores::Range field3Range,
-                        viskores::Range field4Range)
-    : PopulateField1(!emptyField1)
-    , PopulateField2(!emptyField2)
-    , PopulateField3(!emptyField3)
-    , PopulateField4(!emptyField4)
-    , Field1Range(field1Range)
-    , Field2Range(field2Range)
-    , Field3Range(field3Range)
-    , Field4Range(field4Range)
+  template <typename IndexVecType>
+  VISKORES_EXEC void operator()(const viskores::Id4& triangle, IndexVecType& index) const
   {
-  }
-
-  using ControlSignature = void(FieldIn,
-                                WholeArrayIn,  // [in] field1
-                                WholeArrayIn,  // [in] field2
-                                WholeArrayIn,  // [in] field3
-                                WholeArrayIn,  // [in] field4
-                                WholeArrayOut, // [out] field1
-                                WholeArrayOut, // [out] field2
-                                WholeArrayOut, // [out] field3
-                                WholeArrayOut  // [out] field4
-  );
-  using ExecutionSignature = void(InputIndex,
-                                  _1, // [in] indices
-                                  _2, // [in] field1
-                                  _3, // [in] field2
-                                  _4, // [in] field3
-                                  _5, // [in] field4
-                                  _6, // [out] field1
-                                  _7, // [out] field2
-                                  _8, // [out] field3
-                                  _9  // [out] field4
-  );
-
-  template <typename FieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id idx,
-                                const viskores::Id4 indices,
-                                const FieldPortalType& field1,
-                                const FieldPortalType& field2,
-                                const FieldPortalType& field3,
-                                const FieldPortalType& field4,
-                                OutFieldPortalType& outF1,
-                                OutFieldPortalType& outF2,
-                                OutFieldPortalType& outF3,
-                                OutFieldPortalType& outF4) const
-  {
-    const auto i0 = indices[1];
-    const auto i1 = indices[2];
-    const auto i2 = indices[3];
-    if (this->PopulateField1)
-    {
-      outF1.Set(3 * idx + 0, static_cast<viskores::Float32>(field1.Get(i0)));
-      outF1.Set(3 * idx + 1, static_cast<viskores::Float32>(field1.Get(i1)));
-      outF1.Set(3 * idx + 2, static_cast<viskores::Float32>(field1.Get(i2)));
-    }
-    if (this->PopulateField2)
-    {
-      outF2.Set(3 * idx + 0, static_cast<viskores::Float32>(field2.Get(i0)));
-      outF2.Set(3 * idx + 1, static_cast<viskores::Float32>(field2.Get(i1)));
-      outF2.Set(3 * idx + 2, static_cast<viskores::Float32>(field2.Get(i2)));
-    }
-    if (this->PopulateField3)
-    {
-      outF3.Set(3 * idx + 0, static_cast<viskores::Float32>(field3.Get(i0)));
-      outF3.Set(3 * idx + 1, static_cast<viskores::Float32>(field3.Get(i1)));
-      outF3.Set(3 * idx + 2, static_cast<viskores::Float32>(field3.Get(i2)));
-    }
-    if (this->PopulateField4)
-    {
-      outF4.Set(3 * idx + 0, static_cast<viskores::Float32>(field4.Get(i0)));
-      outF4.Set(3 * idx + 1, static_cast<viskores::Float32>(field4.Get(i1)));
-      outF4.Set(3 * idx + 2, static_cast<viskores::Float32>(field4.Get(i2)));
-    }
+    using ComponentType = typename IndexVecType::ComponentType;
+    index = IndexVecType(static_cast<ComponentType>(triangle[1]),
+                         static_cast<ComponentType>(triangle[2]),
+                         static_cast<ComponentType>(triangle[3]));
   }
 };
 
-class ExtractTriangleVerticesAndNormals : public viskores::worklet::WorkletMapField
+/// Give each triangle the value of its cell, which `TriangleExtractor` stores
+/// in component 0 of the triangle's `Id4`.
+class GatherTriangleCellValues : public viskores::worklet::WorkletMapField
 {
 public:
-  bool ExtractNormals{ false };
+  using ControlSignature = void(FieldIn triangles, WholeArrayIn cellValues, FieldOut values);
+  using ExecutionSignature = void(_1, _2, _3);
 
-  VISKORES_CONT
-  ExtractTriangleVerticesAndNormals(bool withNormals)
-    : ExtractNormals(withNormals)
+  template <typename CellValuesPortalType>
+  VISKORES_EXEC void operator()(const viskores::Id4& triangle,
+                                const CellValuesPortalType& cellValues,
+                                viskores::Float32& value) const
   {
-  }
-
-  using ControlSignature = void(FieldIn,
-                                WholeArrayIn,  // [in] points
-                                WholeArrayIn,  // [in] normals
-                                WholeArrayOut, // [out] points
-                                WholeArrayOut  // [out] normals
-  );
-  using ExecutionSignature = void(InputIndex,
-                                  _1, // [in] indices
-                                  _2, // [in] points
-                                  _3, // [in] normals
-                                  _4, // [out] points
-                                  _5  // [out] normals
-  );
-
-  template <typename PointPortalType,
-            typename NormalPortalType,
-            typename OutPointsPortalType,
-            typename OutNormalsPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id idx,
-                                const viskores::Id4 indices,
-                                const PointPortalType& points,
-                                const NormalPortalType& normals,
-                                OutPointsPortalType& outP,
-                                OutNormalsPortalType& outN) const
-  {
-    const auto i0 = indices[1];
-    const auto i1 = indices[2];
-    const auto i2 = indices[3];
-    outP.Set(3 * idx + 0, static_cast<viskores::Vec3f_32>(points.Get(i0)));
-    outP.Set(3 * idx + 1, static_cast<viskores::Vec3f_32>(points.Get(i1)));
-    outP.Set(3 * idx + 2, static_cast<viskores::Vec3f_32>(points.Get(i2)));
-    if (this->ExtractNormals)
-    {
-      outN.Set(3 * idx + 0, static_cast<viskores::Vec3f_32>(normals.Get(i0)));
-      outN.Set(3 * idx + 1, static_cast<viskores::Vec3f_32>(normals.Get(i1)));
-      outN.Set(3 * idx + 2, static_cast<viskores::Vec3f_32>(normals.Get(i2)));
-    }
+    value = cellValues.Get(triangle[0]);
   }
 };
 
 // Helper functions ///////////////////////////////////////////////////////////
 
-namespace
+/// Make the `primitive.index` array, with 32-bit indices unless the points
+/// need more.
+anari_cpp::Array1D MakeIndexArray(anari_cpp::Device d,
+                                  const viskores::cont::ArrayHandle<viskores::Id4>& triangles,
+                                  viskores::Id numPoints)
 {
+  viskores::cont::Invoker invoke;
+  if (static_cast<viskores::UInt64>(numPoints) <= std::numeric_limits<viskores::UInt32>::max())
+  {
+    viskores::cont::ArrayHandle<viskores::Vec3ui_32> indices;
+    invoke(ExtractTriangleIndices{}, triangles, indices);
+    return MakeANARIArray1D(d, indices);
+  }
 
-struct TriangleArrays
-{
-  viskores::cont::ArrayHandle<viskores::Vec3f_32> Vertices;
-  viskores::cont::ArrayHandle<viskores::Vec3f_32> Normals;
-};
+  viskores::cont::ArrayHandle<viskores::Vec<viskores::UInt64, 3>> indices;
+  invoke(ExtractTriangleIndices{}, triangles, indices);
+  return MakeANARIArray1D(
+    d, indices, ANARI_UINT64_VEC3, static_cast<std::uint64_t>(indices.GetNumberOfValues()));
+}
 
-struct TriangleFieldArrays
-{
-  viskores::cont::ArrayHandle<viskores::Float32> Field1;
-  std::string Field1Name;
-  viskores::cont::ArrayHandle<viskores::Float32> Field2;
-  std::string Field2Name;
-  viskores::cont::ArrayHandle<viskores::Float32> Field3;
-  std::string Field3Name;
-  viskores::cont::ArrayHandle<viskores::Float32> Field4;
-  std::string Field4Name;
-};
+constexpr const char* VertexAttributeParameters[4] = { "vertex.attribute0",
+                                                       "vertex.attribute1",
+                                                       "vertex.attribute2",
+                                                       "vertex.attribute3" };
+constexpr const char* PrimitiveAttributeParameters[4] = { "primitive.attribute0",
+                                                          "primitive.attribute1",
+                                                          "primitive.attribute2",
+                                                          "primitive.attribute3" };
+constexpr const char* USDAttributeNameParameters[4] = { "usd::attribute0.name",
+                                                        "usd::attribute1.name",
+                                                        "usd::attribute2.name",
+                                                        "usd::attribute3.name" };
 
 } // namespace
-
-static TriangleFieldArrays UnpackFields(viskores::cont::ArrayHandle<viskores::Id4> tris,
-                                        FieldSet fields,
-                                        viskores::Range range)
-{
-  TriangleFieldArrays retval;
-
-  const auto numTris = tris.GetNumberOfValues();
-
-  auto isFieldEmpty = [](const viskores::cont::Field& f) -> bool
-  { return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1; };
-
-  const bool emptyField1 = isFieldEmpty(fields[0]);
-  const bool emptyField2 = isFieldEmpty(fields[1]);
-  const bool emptyField3 = isFieldEmpty(fields[2]);
-  const bool emptyField4 = isFieldEmpty(fields[3]);
-
-  viskores::cont::ArrayHandle<viskores::Float32> floatField1;
-  viskores::cont::ArrayHandle<viskores::Float32> floatField2;
-  viskores::cont::ArrayHandle<viskores::Float32> floatField3;
-  viskores::cont::ArrayHandle<viskores::Float32> floatField4;
-
-  if (!emptyField1)
-    viskores::cont::ArrayCopyShallowIfPossible(fields[0].GetData(), floatField1);
-  if (!emptyField2)
-    viskores::cont::ArrayCopyShallowIfPossible(fields[1].GetData(), floatField2);
-  if (!emptyField3)
-    viskores::cont::ArrayCopyShallowIfPossible(fields[2].GetData(), floatField3);
-  if (!emptyField4)
-    viskores::cont::ArrayCopyShallowIfPossible(fields[3].GetData(), floatField4);
-
-  viskores::Range field1Range = range;
-  viskores::Range field2Range = range;
-  viskores::Range field3Range = range;
-  viskores::Range field4Range = range;
-
-  if (!emptyField1)
-  {
-    retval.Field1.Allocate(numTris * 3);
-    retval.Field1Name = fields[0].GetName();
-  }
-  if (!emptyField2)
-  {
-    retval.Field2.Allocate(numTris * 3);
-    retval.Field2Name = fields[1].GetName();
-  }
-  if (!emptyField3)
-  {
-    retval.Field3.Allocate(numTris * 3);
-    retval.Field3Name = fields[2].GetName();
-  }
-  if (!emptyField4)
-  {
-    retval.Field4.Allocate(numTris * 3);
-    retval.Field4Name = fields[3].GetName();
-  }
-
-  ExtractTriangleFields fieldsWorklet(emptyField1,
-                                      emptyField2,
-                                      emptyField3,
-                                      emptyField4,
-                                      field1Range,
-                                      field2Range,
-                                      field3Range,
-                                      field4Range);
-  viskores::worklet::DispatcherMapField<ExtractTriangleFields>(fieldsWorklet)
-    .Invoke(tris,
-            floatField1,
-            floatField2,
-            floatField3,
-            floatField4,
-            retval.Field1,
-            retval.Field2,
-            retval.Field3,
-            retval.Field4);
-
-  return retval;
-}
-
-static TriangleArrays UnpackTriangles(viskores::cont::ArrayHandle<viskores::Id4> tris,
-                                      viskores::cont::CoordinateSystem coords,
-                                      viskores::cont::ArrayHandle<viskores::Vec3f_32> normals)
-{
-  TriangleArrays retval;
-
-  const auto numTris = tris.GetNumberOfValues();
-
-  bool extractNormals = normals.GetNumberOfValues() != 0;
-
-  retval.Vertices.Allocate(numTris * 3);
-  if (extractNormals)
-    retval.Normals.Allocate(numTris * 3);
-
-  ExtractTriangleVerticesAndNormals worklet(extractNormals);
-  viskores::worklet::DispatcherMapField<ExtractTriangleVerticesAndNormals>(worklet).Invoke(
-    tris, coords, normals, retval.Vertices, retval.Normals);
-
-  return retval;
-}
 
 // ANARIMapperTriangles definitions ///////////////////////////////////////////
 
@@ -308,8 +114,6 @@ ANARIMapperTriangles::ANARIMapperTriangles(anari_cpp::Device device,
 {
   this->Handles = std::make_shared<ANARIMapperTriangles::ANARIHandles>();
   this->Handles->Device = device;
-  auto& attributes = this->Handles->Parameters.Vertex.Attribute;
-  std::fill(attributes.begin(), attributes.end(), nullptr);
   anari_cpp::retain(device, device);
 }
 
@@ -417,6 +221,11 @@ anari_cpp::Surface ANARIMapperTriangles::GetANARISurface()
   return this->Handles->Surface;
 }
 
+const TrianglesParameters& ANARIMapperTriangles::GetANARITrianglesParameters() const
+{
+  return this->Handles->Parameters;
+}
+
 bool ANARIMapperTriangles::NeedToGenerateData() const
 {
   const bool haveNormals = this->Handles->Parameters.Vertex.Normal != nullptr;
@@ -455,66 +264,67 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
     return;
   }
 
-  viskores::cont::ArrayHandle<viskores::Vec3f_32> inNormals;
+  auto tris = triExtractor.GetTriangles();
+  const auto numTris = tris.GetNumberOfValues();
+  const auto numPoints = actor.GetCoordinateSystem().GetNumberOfValues();
+  const auto numCells = cells.GetNumberOfCells();
+
+  auto d = this->GetDevice();
+  auto& params = this->Handles->Parameters;
+  params.NumPrimitives = static_cast<unsigned int>(numTris);
+
+  viskores::cont::ArrayHandle<viskores::Vec3f_32> positions;
+  viskores::cont::ArrayCopyShallowIfPossible(actor.GetCoordinateSystem().GetData(), positions);
+  params.Vertex.Position = MakeANARIArray1D(d, positions);
+
+  // NOTE: the USD device requires indices, even though they are optional in ANARI.
+  params.Primitive.Index = MakeIndexArray(d, tris, numPoints);
 
   if (this->CalculateNormals)
   {
     viskores::filter::vector_analysis::SurfaceNormals normalsFilter;
     normalsFilter.SetOutputFieldName("Normals");
     auto dataset = normalsFilter.Execute(actor.MakeDataSet());
-    auto field = dataset.GetField("Normals");
-    auto fieldArray = field.GetData();
-    viskores::cont::ArrayCopyShallowIfPossible(fieldArray, inNormals);
+    viskores::cont::ArrayHandle<viskores::Vec3f_32> normals;
+    viskores::cont::ArrayCopyShallowIfPossible(dataset.GetField("Normals").GetData(), normals);
+    if (normals.GetNumberOfValues() == numPoints)
+      params.Vertex.Normal = MakeANARIArray1D(d, normals);
   }
 
-  auto tris = triExtractor.GetTriangles();
+  // Point fields are shared as they are. Cell fields are gathered into one
+  // value per triangle. Fields with more than one component, another
+  // association, or the wrong number of values are skipped.
+  const auto fields = actor.GetFieldSet();
+  for (std::size_t slot = 0; slot < fields.size(); ++slot)
+  {
+    const auto& field = fields[slot];
+    const auto numValues = field.GetNumberOfValues();
+    if (numValues == 0 || field.GetData().GetNumberOfComponentsFlat() != 1)
+      continue;
 
-  auto arrays = UnpackTriangles(tris, actor.GetCoordinateSystem(), inNormals);
-  auto fieldArrays = UnpackFields(tris, actor.GetFieldSet(), this->GetColorTable().GetRange());
+    const bool isPointField = field.IsPointField() && numValues == numPoints;
+    const bool isCellField = field.IsCellField() && numValues == numCells;
+    if (!isPointField && !isCellField)
+      continue;
+
+    viskores::cont::ArrayHandle<viskores::Float32> values;
+    viskores::cont::ArrayCopyShallowIfPossible(field.GetData(), values);
+
+    if (isPointField)
+    {
+      params.Vertex.Attribute[slot] = MakeANARIArray1D(d, values);
+    }
+    else
+    {
+      viskores::cont::ArrayHandle<viskores::Float32> triangleValues;
+      viskores::cont::Invoker invoke;
+      invoke(GatherTriangleCellValues{}, tris, values, triangleValues);
+      params.Primitive.Attribute[slot] = MakeANARIArray1D(d, triangleValues);
+    }
+    params.AttributeName[slot] = field.GetName();
+  }
 
   this->PrimaryField = actor.GetPrimaryFieldIndex();
-
-  auto numVerts = arrays.Vertices.GetNumberOfValues();
-
-  auto d = this->GetDevice();
-  this->Handles->Parameters.NumPrimitives = numVerts / 3;
-  this->Handles->Parameters.Vertex.Position = MakeANARIArray1D(d, arrays.Vertices);
-
-  if (fieldArrays.Field1.GetNumberOfValues() != 0)
-  {
-    this->Handles->Parameters.Vertex.Attribute[0] = MakeANARIArray1D(d, fieldArrays.Field1);
-    this->Handles->Parameters.Vertex.AttributeName[0] = fieldArrays.Field1Name;
-  }
-  if (fieldArrays.Field2.GetNumberOfValues() != 0)
-  {
-    this->Handles->Parameters.Vertex.Attribute[1] = MakeANARIArray1D(d, fieldArrays.Field2);
-    this->Handles->Parameters.Vertex.AttributeName[1] = fieldArrays.Field2Name;
-  }
-  if (fieldArrays.Field3.GetNumberOfValues() != 0)
-  {
-    this->Handles->Parameters.Vertex.Attribute[2] = MakeANARIArray1D(d, fieldArrays.Field3);
-    this->Handles->Parameters.Vertex.AttributeName[2] = fieldArrays.Field3Name;
-  }
-  if (fieldArrays.Field4.GetNumberOfValues() != 0)
-  {
-    this->Handles->Parameters.Vertex.Attribute[3] = MakeANARIArray1D(d, fieldArrays.Field4);
-    this->Handles->Parameters.Vertex.AttributeName[3] = fieldArrays.Field4Name;
-  }
-  if (this->CalculateNormals)
-  {
-    this->Handles->Parameters.Vertex.Normal = MakeANARIArray1D(d, arrays.Normals);
-  }
-
-  // NOTE: usd device requires indices, but shouldn't
-  {
-    auto indexArray =
-      anari_cpp::newArray1D(d, ANARI_UINT32_VEC3, this->Handles->Parameters.NumPrimitives);
-    auto* begin = anari_cpp::map<unsigned int>(d, indexArray);
-    auto* end = begin + numVerts;
-    std::iota(begin, end, 0);
-    anari_cpp::unmap(d, indexArray);
-    this->Handles->Parameters.Primitive.Index = indexArray;
-  }
 
   this->UpdateGeometry();
   this->UpdateMaterial();
@@ -530,88 +340,53 @@ void ANARIMapperTriangles::UpdateGeometry()
     return;
 
   auto d = this->GetDevice();
+  auto g = this->Handles->Geometry;
+  const auto& params = this->Handles->Parameters;
 
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.position");
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.attribute0");
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.attribute1");
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.attribute2");
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.attribute3");
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.normal");
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "primitive.index");
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute0.name");
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute1.name");
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute2.name");
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute3.name");
-
-  anari_cpp::setParameter(d, this->Handles->Geometry, "name", this->MakeObjectName("geometry"));
-
-  if (this->Handles->Parameters.Vertex.Position)
+  anari_cpp::unsetParameter(d, g, "vertex.position");
+  anari_cpp::unsetParameter(d, g, "vertex.normal");
+  anari_cpp::unsetParameter(d, g, "primitive.index");
+  for (std::size_t slot = 0; slot < 4; ++slot)
   {
-    anari_cpp::setParameter(
-      d, this->Handles->Geometry, "vertex.position", this->Handles->Parameters.Vertex.Position);
-    if (this->GetMapFieldAsAttribute())
-    {
-      // Attributes //
-
-      anari_cpp::setParameter(d,
-                              this->Handles->Geometry,
-                              "vertex.attribute0",
-                              this->Handles->Parameters.Vertex.Attribute[0]);
-      anari_cpp::setParameter(d,
-                              this->Handles->Geometry,
-                              "vertex.attribute1",
-                              this->Handles->Parameters.Vertex.Attribute[1]);
-      anari_cpp::setParameter(d,
-                              this->Handles->Geometry,
-                              "vertex.attribute2",
-                              this->Handles->Parameters.Vertex.Attribute[2]);
-      anari_cpp::setParameter(d,
-                              this->Handles->Geometry,
-                              "vertex.attribute3",
-                              this->Handles->Parameters.Vertex.Attribute[3]);
-
-      // Attribute names for USD //
-
-      if (!this->Handles->Parameters.Vertex.AttributeName[0].empty())
-      {
-        anari_cpp::setParameter(d,
-                                this->Handles->Geometry,
-                                "usd::attribute0.name",
-                                this->Handles->Parameters.Vertex.AttributeName[0]);
-      }
-      if (!this->Handles->Parameters.Vertex.AttributeName[1].empty())
-      {
-        anari_cpp::setParameter(d,
-                                this->Handles->Geometry,
-                                "usd::attribute1.name",
-                                this->Handles->Parameters.Vertex.AttributeName[1]);
-      }
-      if (!this->Handles->Parameters.Vertex.AttributeName[2].empty())
-      {
-        anari_cpp::setParameter(d,
-                                this->Handles->Geometry,
-                                "usd::attribute2.name",
-                                this->Handles->Parameters.Vertex.AttributeName[2]);
-      }
-      if (!this->Handles->Parameters.Vertex.AttributeName[3].empty())
-      {
-        anari_cpp::setParameter(d,
-                                this->Handles->Geometry,
-                                "usd::attribute3.name",
-                                this->Handles->Parameters.Vertex.AttributeName[3]);
-      }
-    }
-
-    if (CalculateNormals)
-    {
-      anari_cpp::setParameter(
-        d, this->Handles->Geometry, "vertex.normal", this->Handles->Parameters.Vertex.Normal);
-    }
-    anari_cpp::setParameter(
-      d, this->Handles->Geometry, "primitive.index", this->Handles->Parameters.Primitive.Index);
+    anari_cpp::unsetParameter(d, g, VertexAttributeParameters[slot]);
+    anari_cpp::unsetParameter(d, g, PrimitiveAttributeParameters[slot]);
+    anari_cpp::unsetParameter(d, g, USDAttributeNameParameters[slot]);
   }
 
-  anari_cpp::commitParameters(d, this->Handles->Geometry);
+  anari_cpp::setParameter(d, g, "name", this->MakeObjectName("geometry"));
+
+  if (params.Vertex.Position)
+  {
+    anari_cpp::setParameter(d, g, "vertex.position", params.Vertex.Position);
+    anari_cpp::setParameter(d, g, "primitive.index", params.Primitive.Index);
+
+    if (this->CalculateNormals && params.Vertex.Normal)
+      anari_cpp::setParameter(d, g, "vertex.normal", params.Vertex.Normal);
+
+    if (this->GetMapFieldAsAttribute())
+    {
+      for (std::size_t slot = 0; slot < 4; ++slot)
+      {
+        if (params.Vertex.Attribute[slot])
+        {
+          anari_cpp::setParameter(
+            d, g, VertexAttributeParameters[slot], params.Vertex.Attribute[slot]);
+        }
+        if (params.Primitive.Attribute[slot])
+        {
+          anari_cpp::setParameter(
+            d, g, PrimitiveAttributeParameters[slot], params.Primitive.Attribute[slot]);
+        }
+        if (!params.AttributeName[slot].empty())
+        {
+          anari_cpp::setParameter(
+            d, g, USDAttributeNameParameters[slot], params.AttributeName[slot]);
+        }
+      }
+    }
+  }
+
+  anari_cpp::commitParameters(d, g);
 }
 
 void ANARIMapperTriangles::UpdateMaterial()
@@ -621,8 +396,10 @@ void ANARIMapperTriangles::UpdateMaterial()
 
   auto d = this->GetDevice();
   auto s = this->Handles->Sampler;
-  auto a = this->Handles->Parameters.Vertex.Attribute[PrimaryField];
-  if (s && a && this->GetMapFieldAsAttribute())
+  const auto& params = this->Handles->Parameters;
+  const bool haveAttribute =
+    params.Vertex.Attribute[PrimaryField] || params.Primitive.Attribute[PrimaryField];
+  if (s && haveAttribute && this->GetMapFieldAsAttribute())
   {
     anari_cpp::setParameter(d, s, "inAttribute", AnariMaterialInputString(PrimaryField));
     anari_cpp::commitParameters(d, s);
@@ -646,20 +423,22 @@ ANARIMapperTriangles::ANARIHandles::~ANARIHandles()
 
 void ANARIMapperTriangles::ANARIHandles::ReleaseArrays()
 {
-  anari_cpp::release(this->Device, this->Parameters.Vertex.Position);
-  anari_cpp::release(this->Device, this->Parameters.Vertex.Normal);
-  anari_cpp::release(this->Device, this->Parameters.Vertex.Attribute[0]);
-  anari_cpp::release(this->Device, this->Parameters.Vertex.Attribute[1]);
-  anari_cpp::release(this->Device, this->Parameters.Vertex.Attribute[2]);
-  anari_cpp::release(this->Device, this->Parameters.Vertex.Attribute[3]);
-  anari_cpp::release(this->Device, this->Parameters.Primitive.Index);
-  this->Parameters.Vertex.Position = nullptr;
-  this->Parameters.Vertex.Normal = nullptr;
-  this->Parameters.Vertex.Attribute[0] = nullptr;
-  this->Parameters.Vertex.Attribute[1] = nullptr;
-  this->Parameters.Vertex.Attribute[2] = nullptr;
-  this->Parameters.Vertex.Attribute[3] = nullptr;
-  this->Parameters.Primitive.Index = nullptr;
+  auto& params = this->Parameters;
+  anari_cpp::release(this->Device, params.Vertex.Position);
+  anari_cpp::release(this->Device, params.Vertex.Normal);
+  anari_cpp::release(this->Device, params.Primitive.Index);
+  params.Vertex.Position = nullptr;
+  params.Vertex.Normal = nullptr;
+  params.Primitive.Index = nullptr;
+  for (std::size_t slot = 0; slot < 4; ++slot)
+  {
+    anari_cpp::release(this->Device, params.Vertex.Attribute[slot]);
+    anari_cpp::release(this->Device, params.Primitive.Attribute[slot]);
+    params.Vertex.Attribute[slot] = nullptr;
+    params.Primitive.Attribute[slot] = nullptr;
+    params.AttributeName[slot].clear();
+  }
+  params.NumPrimitives = 0;
 }
 
 } // namespace anari
