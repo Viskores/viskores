@@ -167,7 +167,13 @@ void ANARIMapperTriangles::SetANARIColorMapValueRange(const viskores::Vec2f_32& 
 
 void ANARIMapperTriangles::SetCalculateNormals(bool enabled)
 {
+  if (enabled == this->CalculateNormals)
+    return;
+
   this->CalculateNormals = enabled;
+  this->Current = false;
+  if (this->Handles->Geometry)
+    this->ConstructArrays(true);
 }
 
 anari_cpp::Geometry ANARIMapperTriangles::GetANARIGeometry()
@@ -232,19 +238,12 @@ const TrianglesParameters& ANARIMapperTriangles::GetANARITrianglesParameters() c
   return this->Handles->Parameters;
 }
 
-bool ANARIMapperTriangles::NeedToGenerateData() const
-{
-  const bool haveNormals = this->Handles->Parameters.Vertex.Normal != nullptr;
-  const bool needNormals = this->CalculateNormals && !haveNormals;
-  return !this->Current || needNormals;
-}
-
 void ANARIMapperTriangles::ConstructArrays(bool regenerate)
 {
   if (regenerate)
     this->Current = false;
 
-  if (!regenerate && !this->NeedToGenerateData())
+  if (this->Current)
     return;
 
   this->Current = true;

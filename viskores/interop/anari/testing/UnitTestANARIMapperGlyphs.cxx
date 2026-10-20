@@ -10,6 +10,7 @@
 // viskores::anari
 #include <viskores/interop/anari/ANARIMapperGlyphs.h>
 // viskores
+#include <viskores/cont/DataSetBuilderExplicit.h>
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/filter/vector_analysis/Gradient.h>
 #include <viskores/io/EncodePNG.h>
@@ -22,6 +23,54 @@
 
 namespace
 {
+
+// Changing `SetOffsetGlyphs` after the surface exists moves the glyph vertices
+// without a new actor. This only reads the arrays, so it runs even when the
+// device has no cones.
+void OffsetToggleTests()
+{
+  auto d = loadANARIDevice();
+
+  // Two vertex cells one unit apart, each with a vector along +Z. The glyph
+  // size is the bounds diagonal / 300.
+  const std::vector<viskores::Vec3f_32> coords = { { 0.f, 0.f, 0.f }, { 1.f, 0.f, 0.f } };
+  auto dataSet = viskores::cont::DataSetBuilderExplicit::Create(
+    coords,
+    std::vector<viskores::UInt8>{ viskores::CELL_SHAPE_VERTEX, viskores::CELL_SHAPE_VERTEX },
+    std::vector<viskores::IdComponent>{ 1, 1 },
+    std::vector<viskores::Id>{ 0, 1 });
+  dataSet.AddPointField("vectors",
+                        std::vector<viskores::Vec3f_32>{ { 0.f, 0.f, 1.f }, { 0.f, 0.f, 1.f } });
+
+  viskores::interop::anari::ANARIActor actor(
+    dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("vectors"));
+  viskores::interop::anari::ANARIMapperGlyphs mapper(d, actor);
+  mapper.GetANARISurface();
+
+  const auto& params = mapper.GetANARIGlyphsParameters();
+  const viskores::Float32 size = 1.f / 300.f;
+  const auto checkFirstGlyph = [&](viskores::Float32 tipZ, viskores::Float32 tailZ)
+  {
+    VISKORES_TEST_ASSERT(params.NumPrimitives == 2, "Expected 2 glyphs");
+    const auto vertices = ReadANARIArray<viskores::Vec3f_32>(d, params.Vertex.Position, 8);
+    VISKORES_TEST_ASSERT(test_equal(vertices[0], viskores::Vec3f_32(0.f, 0.f, tipZ)),
+                         "Wrong first vertex of glyph 0: ",
+                         vertices[0]);
+    VISKORES_TEST_ASSERT(test_equal(vertices[3], viskores::Vec3f_32(0.f, 0.f, tailZ)),
+                         "Wrong last vertex of glyph 0: ",
+                         vertices[3]);
+  };
+
+  checkFirstGlyph(size, -size);
+
+  mapper.SetOffsetGlyphs(true);
+  checkFirstGlyph(0.f, -2.f * size);
+
+  mapper.SetOffsetGlyphs(false);
+  checkFirstGlyph(size, -size);
+
+  anari_cpp::release(d, d);
+}
 
 void RenderTests()
 {
@@ -86,9 +135,15 @@ void RenderTests()
   anari_cpp::release(d, d);
 }
 
+void GlyphsTests()
+{
+  OffsetToggleTests();
+  RenderTests();
+}
+
 } // namespace
 
 int UnitTestANARIMapperGlyphs(int argc, char* argv[])
 {
-  return viskores::cont::testing::Testing::Run(RenderTests, argc, argv);
+  return viskores::cont::testing::Testing::Run(GlyphsTests, argc, argv);
 }

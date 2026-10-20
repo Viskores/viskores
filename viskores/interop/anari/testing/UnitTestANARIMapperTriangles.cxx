@@ -63,17 +63,6 @@ viskores::Id CellOfTriangle(const viskores::Vec3ui_32& triangle)
   return uses(0) ? 0 : (uses(5) ? 2 : 1);
 }
 
-template <typename T>
-std::vector<T> ReadANARIArray(anari_cpp::Device d, ANARIArray array, std::size_t size)
-{
-  VISKORES_TEST_ASSERT(array != nullptr, "Expected an ANARI array");
-  const auto* values = static_cast<const T*>(anariMapArray(d, array));
-  VISKORES_TEST_ASSERT(values != nullptr, "Could not map the ANARI array");
-  std::vector<T> result(values, values + size);
-  anariUnmapArray(d, array);
-  return result;
-}
-
 // Check that `index` holds 4 triangles over 6 points and that `cellAttribute`
 // holds the cell value of each triangle's cell.
 void CheckCellAttribute(anari_cpp::Device d,
@@ -207,6 +196,41 @@ void MixedFieldTests()
   anari_cpp::release(d, d);
 }
 
+// Changing `SetCalculateNormals` after the surface exists adds or removes
+// `vertex.normal` without a new actor.
+void NormalsToggleTests()
+{
+  auto d = loadANARIDevice();
+  auto dataSet = MakeMixedCellDataSet();
+
+  viskores::interop::anari::ANARIActor actor(dataSet, "pointValues");
+  viskores::interop::anari::ANARIMapperTriangles mapper(d, actor);
+  auto surface = mapper.GetANARISurface();
+
+  const auto& params = mapper.GetANARITrianglesParameters();
+  VISKORES_TEST_ASSERT(params.Vertex.Normal == nullptr, "Normals made without being asked for");
+
+  mapper.SetCalculateNormals(true);
+  VISKORES_TEST_ASSERT(params.Vertex.Normal != nullptr,
+                       "Enabling normals after the surface exists did not add them");
+  const auto normals = ReadANARIArray<viskores::Vec3f_32>(d, params.Vertex.Normal, 6);
+  for (const auto& normal : normals)
+  {
+    VISKORES_TEST_ASSERT(test_equal(viskores::Abs(normal[2]), 1.f),
+                         "The normals of a flat mesh in z = 0 should point along z");
+  }
+  CheckPositions(d, params, dataSet);
+  RenderSurface(d, surface);
+
+  mapper.SetCalculateNormals(false);
+  VISKORES_TEST_ASSERT(params.Vertex.Normal == nullptr,
+                       "Disabling normals after the surface exists did not remove them");
+  CheckPositions(d, params, dataSet);
+  RenderSurface(d, surface);
+
+  anari_cpp::release(d, d);
+}
+
 void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
@@ -264,6 +288,7 @@ void TrianglesTests()
 {
   CellFieldTests();
   MixedFieldTests();
+  NormalsToggleTests();
   RenderTests();
 }
 

@@ -48,17 +48,6 @@ viskores::cont::DataSet MakePointsDataSet()
   return dataSet;
 }
 
-template <typename T>
-std::vector<T> ReadANARIArray(anari_cpp::Device d, ANARIArray array, std::size_t size)
-{
-  VISKORES_TEST_ASSERT(array != nullptr, "Expected an ANARI array");
-  const auto* values = static_cast<const T*>(anariMapArray(d, array));
-  VISKORES_TEST_ASSERT(values != nullptr, "Could not map the ANARI array");
-  std::vector<T> result(values, values + size);
-  anariUnmapArray(d, array);
-  return result;
-}
-
 // Render a small frame of `surface` looking down -Z at `center`, and return the
 // pixel at the middle of the image and the one in a corner.
 std::pair<viskores::Vec4f_32, viskores::Vec4f_32> RenderSurface(anari_cpp::Device d,

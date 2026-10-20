@@ -167,7 +167,13 @@ void ANARIMapperGlyphs::SetActor(const ANARIActor& actor)
 
 void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
 {
+  if (enabled == this->Offset)
+    return;
+
   this->Offset = enabled;
+  this->Current = false;
+  if (this->Handles->Geometry)
+    this->ConstructArrays(true);
 }
 
 anari_cpp::Geometry ANARIMapperGlyphs::GetANARIGeometry()
@@ -203,6 +209,11 @@ anari_cpp::Surface ANARIMapperGlyphs::GetANARISurface()
   anari_cpp::setParameter(d, this->Handles->Surface, "material", this->Handles->Material);
   anari_cpp::commitParameters(d, this->Handles->Surface);
   return this->Handles->Surface;
+}
+
+const GlyphsParameters& ANARIMapperGlyphs::GetANARIGlyphsParameters() const
+{
+  return this->Handles->Parameters;
 }
 
 void ANARIMapperGlyphs::ConstructArrays(bool regenerate)

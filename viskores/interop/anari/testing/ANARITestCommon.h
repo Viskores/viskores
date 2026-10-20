@@ -16,6 +16,8 @@
 #include <viskores/interop/anari/ANARIMapper.h>
 #include <viskores/rendering/testing/Testing.h>
 #include <viskores/testing/Testing.h>
+// std
+#include <vector>
 
 namespace
 {
@@ -38,6 +40,18 @@ static void setColorMap(anari_cpp::Device d, viskores::interop::anari::ANARIMapp
   mapper.SetANARIColorMap(colorArray, opacityArray, true);
   mapper.SetANARIColorMapValueRange(viskores::Vec2f_32(0.f, 10.f));
   mapper.SetANARIColorMapOpacityScale(0.5f);
+}
+
+// Copy the first `size` values of a 1D ANARI array.
+template <typename T>
+std::vector<T> ReadANARIArray(anari_cpp::Device d, ANARIArray array, std::size_t size)
+{
+  VISKORES_TEST_ASSERT(array != nullptr, "Expected an ANARI array");
+  const auto* values = static_cast<const T*>(anariMapArray(d, array));
+  VISKORES_TEST_ASSERT(values != nullptr, "Could not map the ANARI array");
+  std::vector<T> result(values, values + size);
+  anariUnmapArray(d, array);
+  return result;
 }
 
 static anari_cpp::Device loadANARIDevice()

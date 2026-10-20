@@ -62,7 +62,8 @@ struct VISKORES_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
   ///
   /// This will cause the mapper to offset the glyph, making the arrow appear to
   /// be coming out of the point instead of going through it. This is useful for
-  /// visualizing things like surface normals on a mesh.
+  /// visualizing things like surface normals on a mesh. If the geometry
+  /// already exists, changing this rebuilds its arrays.
   void SetOffsetGlyphs(bool enabled);
 
   /// @brief Get the corresponding ANARIGeometry handle from this mapper.
@@ -74,6 +75,13 @@ struct VISKORES_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
   ///
   /// NOTE: This handle is not retained, so applications should not release it.
   anari_cpp::Surface GetANARISurface() override;
+
+  /// @brief Get the raw ANARI arrays and parameter values set on the geometry.
+  ///
+  /// The handles are null until the geometry has been constructed.
+  ///
+  /// @note Intended for testing only; this is not a stable interface.
+  const GlyphsParameters& GetANARIGlyphsParameters() const;
 
 private:
   /// @brief Do the work to construct the basic ANARI arrays for the ANARIGeometry.

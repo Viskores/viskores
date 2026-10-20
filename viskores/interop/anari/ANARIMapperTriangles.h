@@ -88,6 +88,8 @@ struct VISKORES_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
 
   /// @brief Set whether `vertex.normal` data should also be calculated when triangulating geometry.
   ///
+  /// If the geometry already exists, changing this rebuilds its arrays, adding
+  /// or removing `vertex.normal`.
   void SetCalculateNormals(bool enabled);
 
   anari_cpp::Geometry GetANARIGeometry() override;
@@ -101,7 +103,6 @@ struct VISKORES_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
   const TrianglesParameters& GetANARITrianglesParameters() const;
 
 private:
-  bool NeedToGenerateData() const;
   /// @brief Do the work to construct the basic ANARI arrays for the ANARIGeometry.
   /// @param regenerate Force the position/radius arrays are regenerated.
   ///
