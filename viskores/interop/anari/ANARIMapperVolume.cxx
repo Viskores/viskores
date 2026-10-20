@@ -31,11 +31,7 @@ ANARIMapperVolume::ANARIMapperVolume(anari_cpp::Device device,
   anari_cpp::retain(device, device);
 }
 
-ANARIMapperVolume::~ANARIMapperVolume()
-{
-  // ensure ANARI handles are released before host memory goes away
-  this->Handles.reset();
-}
+ANARIMapperVolume::~ANARIMapperVolume() = default;
 
 void ANARIMapperVolume::SetActor(const ANARIActor& actor)
 {
@@ -151,6 +147,21 @@ struct ToAnariCellType
   }
 };
 
+namespace
+{
+
+struct UnstructuredVolumeArrays
+{
+  viskores::cont::ArrayHandle<viskores::Vec3f_32> VertexPosition;
+  viskores::cont::ArrayHandle<viskores::Float32> VertexData;
+  viskores::cont::ArrayHandle<viskores::UInt64> Index;
+  viskores::cont::ArrayHandle<viskores::UInt64> CellIndex;
+  viskores::cont::ArrayHandle<viskores::Float32> CellData;
+  viskores::cont::ArrayHandle<viskores::UInt8> CellType;
+};
+
+} // namespace
+
 void ANARIMapperVolume::ConstructArrays(bool regenerate)
 {
   if (regenerate)
@@ -224,10 +235,8 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     auto pdims =
       isPointBased ? structuredCells.GetPointDimensions() : structuredCells.GetCellDimensions();
 
-    StructuredVolumeArrays arrays;
-
-    viskores::cont::ArrayCopyShallowIfPossible(fieldArray, arrays.Data);
-    auto* ptr = (float*)arrays.Data.GetBuffers()[0].ReadPointerHost(*arrays.Token);
+    viskores::cont::ArrayHandle<viskores::Float32> data;
+    viskores::cont::ArrayCopyShallowIfPossible(fieldArray, data);
 
     auto bounds = coords.GetBounds();
     viskores::Vec3f_32 bLower(bounds.X.Min, bounds.Y.Min, bounds.Z.Min);
@@ -240,10 +249,8 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     std::memcpy(this->Handles->StructuredParameters.Dims, &dims, sizeof(dims));
     std::memcpy(this->Handles->StructuredParameters.Origin, &bLower, sizeof(bLower));
     std::memcpy(this->Handles->StructuredParameters.Spacing, &spacing, sizeof(spacing));
-    this->Handles->StructuredParameters.Data =
-      anari_cpp::newArray3D(d, ptr, NoopANARIDeleter, nullptr, dims[0], dims[1], dims[2]);
+    this->Handles->StructuredParameters.Data = MakeANARIArray3D(d, data, dims[0], dims[1], dims[2]);
 
-    this->StructuredArrays = arrays;
     this->Valid = true;
   }
   // Unstructured volume data
@@ -252,7 +259,7 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     this->Handles->SpatialField =
       anari_cpp::newObject<anari_cpp::SpatialField>(this->GetDevice(), "unstructured");
 
-    UntructuredVolumeArrays arrays;
+    UnstructuredVolumeArrays arrays;
 
     // Cell Data
     if (cells.IsType<viskores::cont::CellSetSingleType<>>())
@@ -305,50 +312,35 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     // "indexPrefixed"
     this->Handles->UnstructuredParameters.IndexPrefixed = false;
 
+    auto& parameters = this->Handles->UnstructuredParameters;
+
     // "vertex.position"
-    {
-      auto* ptr =
-        (viskores::Vec3f_32*)arrays.VertexPosition.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-      this->Handles->UnstructuredParameters.VertexPosition = anari_cpp::newArray1D(
-        d, ptr, NoopANARIDeleter, nullptr, arrays.VertexPosition.GetNumberOfValues());
-    }
+    parameters.VertexPosition = MakeANARIArray1D(d, arrays.VertexPosition);
 
     // "vertex.data"
-    {
-      auto* ptr = (float*)arrays.VertexData.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-      this->Handles->UnstructuredParameters.VertexData = anari_cpp::newArray1D(
-        d, ptr, NoopANARIDeleter, nullptr, arrays.VertexData.GetNumberOfValues());
-    }
+    parameters.VertexData = MakeANARIArray1D(d, arrays.VertexData);
 
     // "index"
-    {
-      auto* ptr = (uint64_t*)arrays.Index.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-      this->Handles->UnstructuredParameters.Index =
-        anari_cpp::newArray1D(d, ptr, NoopANARIDeleter, nullptr, arrays.Index.GetNumberOfValues());
-    }
+    parameters.Index = MakeANARIArray1D(
+      d, arrays.Index, ANARI_UINT64, static_cast<std::uint64_t>(arrays.Index.GetNumberOfValues()));
 
-    // "cell.index"
-    {
-      auto* ptr = (uint64_t*)arrays.CellIndex.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-      this->Handles->UnstructuredParameters.CellIndex = anari_cpp::newArray1D(
-        d, ptr, NoopANARIDeleter, nullptr, arrays.CellIndex.GetNumberOfValues() - 1);
-    }
+    // "cell.index": the offsets array without its final entry
+    parameters.CellIndex =
+      MakeANARIArray1D(d,
+                       arrays.CellIndex,
+                       ANARI_UINT64,
+                       static_cast<std::uint64_t>(arrays.CellIndex.GetNumberOfValues() - 1));
 
     // TODO "cell.data" (NOT SUPPORTED YET)
-    // {
-    //   auto* ptr = (float*)arrays.CellData.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-    //   this->Handles->UnstructuredParameters.CellData =
-    //     anari_cpp::newArray1D(d, ptr, NoopANARIDeleter, nullptr, arrays.CellData.GetNumberOfValues());
-    // }
+    // parameters.CellData = MakeANARIArray1D(d, arrays.CellData);
 
     // "cell.type"
-    {
-      uint8_t* ptr = (uint8_t*)arrays.CellType.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-      this->Handles->UnstructuredParameters.CellType = anari_cpp::newArray1D(
-        d, ptr, NoopANARIDeleter, nullptr, arrays.CellType.GetNumberOfValues());
-    }
+    parameters.CellType =
+      MakeANARIArray1D(d,
+                       arrays.CellType,
+                       ANARI_UINT8,
+                       static_cast<std::uint64_t>(arrays.CellType.GetNumberOfValues()));
 
-    this->UnstructuredArrays = arrays;
     this->Valid = true;
   }
 

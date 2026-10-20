@@ -39,30 +39,6 @@ struct TrianglesParameters
   unsigned int NumPrimitives{ 0 };
 };
 
-/// @brief Viskores data arrays underlying the `ANARIArray` handles created by the mapper.
-///
-struct TriangleArrays
-{
-  viskores::cont::ArrayHandle<viskores::Vec3f_32> Vertices;
-  viskores::cont::ArrayHandle<viskores::Vec3f_32> Normals;
-  std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
-};
-
-/// @brief Viskores data arrays underlying the `ANARIArray` handles created by the mapper for field attributes.
-///
-struct TriangleFieldArrays
-{
-  viskores::cont::ArrayHandle<viskores::Float32> Field1;
-  std::string Field1Name;
-  viskores::cont::ArrayHandle<viskores::Float32> Field2;
-  std::string Field2Name;
-  viskores::cont::ArrayHandle<viskores::Float32> Field3;
-  std::string Field3Name;
-  viskores::cont::ArrayHandle<viskores::Float32> Field4;
-  std::string Field4Name;
-  std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
-};
-
 /// @brief Mapper which triangulates cells into ANARI `triangle` geometry.
 ///
 /// NOTE: This mapper will only color map values that are 1-component Float32
@@ -138,8 +114,6 @@ private:
 
   bool CalculateNormals{ false };
   viskores::IdComponent PrimaryField{ 0 };
-  TriangleArrays Arrays;
-  TriangleFieldArrays FieldArrays;
 };
 
 } // namespace anari

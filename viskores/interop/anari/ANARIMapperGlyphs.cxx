@@ -77,6 +77,17 @@ public:
 
 // Helper functions ///////////////////////////////////////////////////////////
 
+namespace
+{
+
+struct GlyphArrays
+{
+  viskores::cont::ArrayHandle<viskores::Vec3f_32> Vertices;
+  viskores::cont::ArrayHandle<viskores::Float32> Radii;
+};
+
+} // namespace
+
 static GlyphArrays MakeGlyphs(viskores::cont::Field gradients,
                               viskores::cont::UnknownCellSet cells,
                               viskores::cont::CoordinateSystem coords,
@@ -146,11 +157,7 @@ ANARIMapperGlyphs::ANARIMapperGlyphs(anari_cpp::Device device,
   anari_cpp::retain(device, device);
 }
 
-ANARIMapperGlyphs::~ANARIMapperGlyphs()
-{
-  // ensure ANARI handles are released before host memory goes away
-  this->Handles.reset();
-}
+ANARIMapperGlyphs::~ANARIMapperGlyphs() = default;
 
 void ANARIMapperGlyphs::SetActor(const ANARIActor& actor)
 {
@@ -234,19 +241,13 @@ void ANARIMapperGlyphs::ConstructArrays(bool regenerate)
 
   auto arrays = MakeGlyphs(field, cells, coords, glyphSize, Offset);
 
-  auto* v = (viskores::Vec3f_32*)arrays.Vertices.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-  auto* r = (float*)arrays.Radii.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-
   auto d = this->GetDevice();
-  this->Handles->Parameters.Vertex.Position =
-    anari_cpp::newArray1D(d, v, NoopANARIDeleter, nullptr, arrays.Vertices.GetNumberOfValues());
-  this->Handles->Parameters.Vertex.Radius =
-    anari_cpp::newArray1D(d, r, NoopANARIDeleter, nullptr, arrays.Radii.GetNumberOfValues());
+  this->Handles->Parameters.Vertex.Position = MakeANARIArray1D(d, arrays.Vertices);
+  this->Handles->Parameters.Vertex.Radius = MakeANARIArray1D(d, arrays.Radii);
   this->Handles->Parameters.NumPrimitives = numGlyphs;
 
   this->UpdateGeometry();
 
-  this->Arrays = arrays;
   this->Valid = true;
 
   this->RefreshGroup();

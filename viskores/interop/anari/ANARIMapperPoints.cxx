@@ -9,6 +9,7 @@
 
 // viskores
 #include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/ArrayHandleRuntimeVec.h>
 #include <viskores/interop/anari/ANARIMapperPoints.h>
 #include <viskores/rendering/raytracing/SphereExtractor.h>
 #include <viskores/worklet/WorkletMapField.h>
@@ -51,6 +52,33 @@ public:
 };
 
 // Helper functions ///////////////////////////////////////////////////////////
+
+namespace
+{
+
+struct PointsArrays
+{
+  viskores::cont::ArrayHandle<viskores::Vec3f_32> Vertices;
+  viskores::cont::ArrayHandle<viskores::Float32> Radii;
+};
+
+struct PointsFieldArrays
+{
+  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field1;
+  int NumberOfField1Components{ 1 };
+  std::string Field1Name;
+  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field2;
+  int NumberOfField2Components{ 1 };
+  std::string Field2Name;
+  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field3;
+  int NumberOfField3Components{ 1 };
+  std::string Field3Name;
+  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field4;
+  int NumberOfField4Components{ 1 };
+  std::string Field4Name;
+};
+
+} // namespace
 
 static PointsFieldArrays UnpackFields(FieldSet fields)
 {
@@ -123,11 +151,7 @@ ANARIMapperPoints::ANARIMapperPoints(anari_cpp::Device device,
   anari_cpp::retain(device, device);
 }
 
-ANARIMapperPoints::~ANARIMapperPoints()
-{
-  // ensure ANARI handles are released before host memory goes away
-  this->Handles.reset();
-}
+ANARIMapperPoints::~ANARIMapperPoints() = default;
 
 void ANARIMapperPoints::SetActor(const ANARIActor& actor)
 {
@@ -280,38 +304,28 @@ void ANARIMapperPoints::ConstructArrays(bool regenerate)
   auto fieldArrays = UnpackFields(actor.GetFieldSet());
 
   arrays.Radii = sphereExtractor.GetRadii();
-  auto* p = (viskores::Vec3f_32*)arrays.Vertices.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-  auto* r = (float*)arrays.Radii.GetBuffers()[0].ReadPointerHost(*arrays.Token);
 
   auto d = this->GetDevice();
   this->Handles->Parameters.Vertex.Position =
-    anari_cpp::newArray1D(d, p, NoopANARIDeleter, nullptr, numPoints);
+    MakeANARIArray1D(d, arrays.Vertices, ANARI_FLOAT32_VEC3, numPoints);
   this->Handles->Parameters.Vertex.Radius =
-    anari_cpp::newArray1D(d, r, NoopANARIDeleter, nullptr, numPoints);
+    MakeANARIArray1D(d, arrays.Radii, ANARI_FLOAT32, numPoints);
 
-  auto createANARIArray = [](auto device, auto fieldArray, auto& token) -> anari_cpp::Array1D
+  auto createANARIArray = [d](const auto& fieldArray) -> anari_cpp::Array1D
   {
     const auto nv = fieldArray.GetNumberOfValues();
     if (nv == 0)
       return nullptr;
 
     anari_cpp::DataType type = ANARI_FLOAT32 + fieldArray.GetNumberOfComponents() - 1;
-    const auto& buffers = fieldArray.GetBuffers();
-    auto* a = buffers[0].ReadPointerHost(*token);
-    if (!a && buffers.size() > 1)
-      a = buffers[1].ReadPointerHost(*token);
-
-    return a ? anariNewArray1D(device, a, NoopANARIDeleter, nullptr, type, nv) : nullptr;
+    return MakeANARIArray1D(
+      d, fieldArray.GetComponentsArray(), type, static_cast<std::uint64_t>(nv));
   };
 
-  this->Handles->Parameters.Vertex.Attribute[0] =
-    createANARIArray(d, fieldArrays.Field1, fieldArrays.Token);
-  this->Handles->Parameters.Vertex.Attribute[1] =
-    createANARIArray(d, fieldArrays.Field2, fieldArrays.Token);
-  this->Handles->Parameters.Vertex.Attribute[2] =
-    createANARIArray(d, fieldArrays.Field3, fieldArrays.Token);
-  this->Handles->Parameters.Vertex.Attribute[3] =
-    createANARIArray(d, fieldArrays.Field4, fieldArrays.Token);
+  this->Handles->Parameters.Vertex.Attribute[0] = createANARIArray(fieldArrays.Field1);
+  this->Handles->Parameters.Vertex.Attribute[1] = createANARIArray(fieldArrays.Field2);
+  this->Handles->Parameters.Vertex.Attribute[2] = createANARIArray(fieldArrays.Field3);
+  this->Handles->Parameters.Vertex.Attribute[3] = createANARIArray(fieldArrays.Field4);
 
   this->Handles->Parameters.Vertex.AttributeName[0] = fieldArrays.Field1Name;
   this->Handles->Parameters.Vertex.AttributeName[1] = fieldArrays.Field2Name;
@@ -321,8 +335,6 @@ void ANARIMapperPoints::ConstructArrays(bool regenerate)
   this->UpdateGeometry();
   this->UpdateMaterial();
 
-  this->Arrays = arrays;
-  this->FieldArrays = fieldArrays;
   this->Valid = true;
 
   this->RefreshGroup();

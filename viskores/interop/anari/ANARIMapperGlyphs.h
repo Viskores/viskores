@@ -32,15 +32,6 @@ struct GlyphsParameters
   unsigned int NumPrimitives{ 0 };
 };
 
-/// @brief Viskores data arrays underlying the `ANARIArray` handles created by the mapper.
-///
-struct GlyphArrays
-{
-  viskores::cont::ArrayHandle<viskores::Vec3f_32> Vertices;
-  viskores::cont::ArrayHandle<viskores::Float32> Radii;
-  std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
-};
-
 /// @brief Mapper which turns vector data into arrow glyphs.
 ///
 /// This mapper creates ANARI `cone` geometry for the primary field in the
@@ -107,7 +98,6 @@ private:
   std::shared_ptr<ANARIHandles> Handles;
 
   bool Offset{ false };
-  GlyphArrays Arrays;
 };
 
 } // namespace anari

@@ -10,7 +10,6 @@
 #ifndef viskores_interop_anari_ANARIMapperPoints_h
 #define viskores_interop_anari_ANARIMapperPoints_h
 
-#include <viskores/cont/ArrayHandleRuntimeVec.h>
 #include <viskores/interop/anari/ANARIMapper.h>
 
 namespace viskores
@@ -33,34 +32,6 @@ struct PointsParameters
   } Vertex{};
 
   unsigned int NumPrimitives{ 0 };
-};
-
-/// @brief Viskores data arrays underlying the `ANARIArray` handles created by the mapper.
-///
-struct PointsArrays
-{
-  viskores::cont::ArrayHandle<viskores::Vec3f_32> Vertices;
-  viskores::cont::ArrayHandle<viskores::Float32> Radii;
-  std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
-};
-
-/// @brief Viskores data arrays underlying the `ANARIArray` handles created by the mapper for field attributes.
-///
-struct PointsFieldArrays
-{
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field1;
-  int NumberOfField1Components{ 1 };
-  std::string Field1Name;
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field2;
-  int NumberOfField2Components{ 1 };
-  std::string Field2Name;
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field3;
-  int NumberOfField3Components{ 1 };
-  std::string Field3Name;
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field4;
-  int NumberOfField4Components{ 1 };
-  std::string Field4Name;
-  std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
 };
 
 /// @brief Mapper which turns each point into ANARI `sphere` geometry.
@@ -130,8 +101,6 @@ private:
 
   std::shared_ptr<ANARIHandles> Handles;
   viskores::IdComponent PrimaryField{ 0 };
-  PointsArrays Arrays;
-  PointsFieldArrays FieldArrays;
 };
 
 } // namespace anari

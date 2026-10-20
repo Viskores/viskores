@@ -176,6 +176,29 @@ public:
 
 // Helper functions ///////////////////////////////////////////////////////////
 
+namespace
+{
+
+struct TriangleArrays
+{
+  viskores::cont::ArrayHandle<viskores::Vec3f_32> Vertices;
+  viskores::cont::ArrayHandle<viskores::Vec3f_32> Normals;
+};
+
+struct TriangleFieldArrays
+{
+  viskores::cont::ArrayHandle<viskores::Float32> Field1;
+  std::string Field1Name;
+  viskores::cont::ArrayHandle<viskores::Float32> Field2;
+  std::string Field2Name;
+  viskores::cont::ArrayHandle<viskores::Float32> Field3;
+  std::string Field3Name;
+  viskores::cont::ArrayHandle<viskores::Float32> Field4;
+  std::string Field4Name;
+};
+
+} // namespace
+
 static TriangleFieldArrays UnpackFields(viskores::cont::ArrayHandle<viskores::Id4> tris,
                                         FieldSet fields,
                                         viskores::Range range)
@@ -290,11 +313,7 @@ ANARIMapperTriangles::ANARIMapperTriangles(anari_cpp::Device device,
   anari_cpp::retain(device, device);
 }
 
-ANARIMapperTriangles::~ANARIMapperTriangles()
-{
-  // ensure ANARI handles are released before host memory goes away
-  this->Handles.reset();
-}
+ANARIMapperTriangles::~ANARIMapperTriangles() = default;
 
 void ANARIMapperTriangles::SetActor(const ANARIActor& actor)
 {
@@ -457,46 +476,33 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
 
   auto numVerts = arrays.Vertices.GetNumberOfValues();
 
-  auto* v = (viskores::Vec3f_32*)arrays.Vertices.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-  auto* n = (viskores::Vec3f_32*)arrays.Normals.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-
   auto d = this->GetDevice();
   this->Handles->Parameters.NumPrimitives = numVerts / 3;
-  this->Handles->Parameters.Vertex.Position =
-    anari_cpp::newArray1D(d, v, NoopANARIDeleter, nullptr, numVerts);
+  this->Handles->Parameters.Vertex.Position = MakeANARIArray1D(d, arrays.Vertices);
 
   if (fieldArrays.Field1.GetNumberOfValues() != 0)
   {
-    auto* a = (float*)fieldArrays.Field1.GetBuffers()[0].ReadPointerHost(*fieldArrays.Token);
-    this->Handles->Parameters.Vertex.Attribute[0] =
-      anari_cpp::newArray1D(d, a, NoopANARIDeleter, nullptr, numVerts);
+    this->Handles->Parameters.Vertex.Attribute[0] = MakeANARIArray1D(d, fieldArrays.Field1);
     this->Handles->Parameters.Vertex.AttributeName[0] = fieldArrays.Field1Name;
   }
   if (fieldArrays.Field2.GetNumberOfValues() != 0)
   {
-    auto* a = (float*)fieldArrays.Field2.GetBuffers()[0].ReadPointerHost(*fieldArrays.Token);
-    this->Handles->Parameters.Vertex.Attribute[1] =
-      anari_cpp::newArray1D(d, a, NoopANARIDeleter, nullptr, numVerts);
+    this->Handles->Parameters.Vertex.Attribute[1] = MakeANARIArray1D(d, fieldArrays.Field2);
     this->Handles->Parameters.Vertex.AttributeName[1] = fieldArrays.Field2Name;
   }
   if (fieldArrays.Field3.GetNumberOfValues() != 0)
   {
-    auto* a = (float*)fieldArrays.Field3.GetBuffers()[0].ReadPointerHost(*fieldArrays.Token);
-    this->Handles->Parameters.Vertex.Attribute[2] =
-      anari_cpp::newArray1D(d, a, NoopANARIDeleter, nullptr, numVerts);
+    this->Handles->Parameters.Vertex.Attribute[2] = MakeANARIArray1D(d, fieldArrays.Field3);
     this->Handles->Parameters.Vertex.AttributeName[2] = fieldArrays.Field3Name;
   }
   if (fieldArrays.Field4.GetNumberOfValues() != 0)
   {
-    auto* a = (float*)fieldArrays.Field4.GetBuffers()[0].ReadPointerHost(*fieldArrays.Token);
-    this->Handles->Parameters.Vertex.Attribute[3] =
-      anari_cpp::newArray1D(d, a, NoopANARIDeleter, nullptr, numVerts);
+    this->Handles->Parameters.Vertex.Attribute[3] = MakeANARIArray1D(d, fieldArrays.Field4);
     this->Handles->Parameters.Vertex.AttributeName[3] = fieldArrays.Field4Name;
   }
   if (this->CalculateNormals)
   {
-    this->Handles->Parameters.Vertex.Normal =
-      anari_cpp::newArray1D(d, n, NoopANARIDeleter, nullptr, arrays.Normals.GetNumberOfValues());
+    this->Handles->Parameters.Vertex.Normal = MakeANARIArray1D(d, arrays.Normals);
   }
 
   // NOTE: usd device requires indices, but shouldn't
@@ -513,8 +519,6 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
   this->UpdateGeometry();
   this->UpdateMaterial();
 
-  this->Arrays = arrays;
-  this->FieldArrays = fieldArrays;
   this->Valid = true;
 
   this->RefreshGroup();

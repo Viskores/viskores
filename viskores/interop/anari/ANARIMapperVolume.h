@@ -40,25 +40,6 @@ struct UnstructuredVolumeParameters
   bool IndexPrefixed{ false };
 };
 
-/// @brief Viskores data arrays underlying the `ANARIArray` handles created by the mapper.
-///
-struct StructuredVolumeArrays
-{
-  viskores::cont::ArrayHandle<viskores::Float32> Data;
-  std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
-};
-
-struct UntructuredVolumeArrays
-{
-  viskores::cont::ArrayHandle<viskores::Vec3f_32> VertexPosition;
-  viskores::cont::ArrayHandle<viskores::Float32> VertexData;
-  viskores::cont::ArrayHandle<viskores::UInt64> Index;
-  viskores::cont::ArrayHandle<viskores::UInt64> CellIndex;
-  viskores::cont::ArrayHandle<viskores::Float32> CellData;
-  viskores::cont::ArrayHandle<viskores::UInt8> CellType;
-  std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
-};
-
 /// @brief Mapper which turns structured volumes into a single ANARI `transferFunction1D` volume.
 ///
 /// NOTE: This currently only supports Float32 scalar fields. In the future this
@@ -136,8 +117,6 @@ private:
   };
 
   std::shared_ptr<ANARIHandles> Handles;
-  StructuredVolumeArrays StructuredArrays;
-  UntructuredVolumeArrays UnstructuredArrays;
 };
 
 } // namespace anari
