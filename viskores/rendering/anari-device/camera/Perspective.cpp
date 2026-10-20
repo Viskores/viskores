@@ -46,13 +46,6 @@ viskores::rendering::Camera Perspective::camera(const viskores::Bounds& bounds) 
 
   viskores::Vec3f_64 diagonal = { bounds.X.Length(), bounds.Y.Length(), bounds.Z.Length() };
   viskores::Float32 length = static_cast<viskores::Float32>(viskores::Magnitude(diagonal));
-  // A world of zero size, such as a single sphere (bounds come from the
-  // coordinates and leave out the radius), would put the look-at point on the
-  // camera position and collapse the clipping range, so nothing is visible.
-  if (!(length > 0.f) || !viskores::IsFinite(length))
-  {
-    length = 1.f;
-  }
 
   camera.SetPosition(this->m_position);
   camera.SetLookAt(this->m_position + (length * this->m_direction));
