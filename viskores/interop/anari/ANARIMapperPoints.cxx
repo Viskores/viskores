@@ -10,9 +10,8 @@
 // viskores
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandleRuntimeVec.h>
+#include <viskores/cont/Logging.h>
 #include <viskores/interop/anari/ANARIMapperPoints.h>
-#include <viskores/rendering/raytracing/SphereExtractor.h>
-#include <viskores/worklet/WorkletMapField.h>
 // anari
 #include <anari/anari_cpp/ext/linalg.h>
 
@@ -23,118 +22,67 @@ namespace interop
 namespace anari
 {
 
-// Worklets ///////////////////////////////////////////////////////////////////
-
-class ExtractPointPositions : public viskores::worklet::WorkletMapField
-{
-public:
-  VISKORES_CONT
-  ExtractPointPositions() = default;
-
-  using ControlSignature = void(FieldIn,      // [in] index
-                                WholeArrayIn, // [in] point
-                                WholeArrayOut // [out] point
-  );
-  using ExecutionSignature = void(InputIndex,
-                                  _1, // [in] index
-                                  _2, // [in] point
-                                  _3  // [out] points
-  );
-
-  template <typename InPointPortalType, typename OutPointPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id out_idx,
-                                const viskores::Id in_idx,
-                                const InPointPortalType& points,
-                                OutPointPortalType& outP) const
-  {
-    outP.Set(out_idx, static_cast<viskores::Vec3f_32>(points.Get(in_idx)));
-  }
-};
-
 // Helper functions ///////////////////////////////////////////////////////////
 
 namespace
 {
 
-struct PointsArrays
+/// Radius of every sphere: a fraction of the diagonal of the point bounds, as
+/// in VTK's OSPRay pass. Bounds of zero size (a single point, or all points in
+/// one place) fall back to ANARI's default sphere radius of 1.
+viskores::Float32 DefaultRadius(const viskores::Bounds& bounds)
 {
-  viskores::cont::ArrayHandle<viskores::Vec3f_32> Vertices;
-  viskores::cont::ArrayHandle<viskores::Float32> Radii;
-};
+  const viskores::Float64 lx = bounds.X.Length();
+  const viskores::Float64 ly = bounds.Y.Length();
+  const viskores::Float64 lz = bounds.Z.Length();
+  const viskores::Float64 mag = viskores::Sqrt(lx * lx + ly * ly + lz * lz);
+  constexpr viskores::Float64 heuristic = 500.;
+  const auto radius = static_cast<viskores::Float32>(mag / heuristic);
+  return (radius > 0.f && viskores::IsFinite(radius)) ? radius : 1.f;
+}
 
-struct PointsFieldArrays
+/// An ANARI array of `field` as 1-4 component Float32 values, or null when the
+/// field is empty, has another number of components, or does not have one
+/// value per point.
+anari_cpp::Array1D MakeAttributeArray(anari_cpp::Device d,
+                                      const viskores::cont::Field& field,
+                                      viskores::Id numPoints)
 {
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field1;
-  int NumberOfField1Components{ 1 };
-  std::string Field1Name;
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field2;
-  int NumberOfField2Components{ 1 };
-  std::string Field2Name;
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field3;
-  int NumberOfField3Components{ 1 };
-  std::string Field3Name;
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field4;
-  int NumberOfField4Components{ 1 };
-  std::string Field4Name;
-};
+  const auto numValues = field.GetNumberOfValues();
+  if (numValues == 0)
+  {
+    return nullptr;
+  }
+
+  if (numValues != numPoints)
+  {
+    VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                   "ANARIMapperPoints: skipping field '" << field.GetName() << "', which has "
+                                                         << numValues << " values for " << numPoints
+                                                         << " points");
+    return nullptr;
+  }
+
+  const auto fieldData = field.GetData();
+  const auto numComps = fieldData.GetNumberOfComponentsFlat();
+  if (numComps < 1 || numComps > 4)
+  {
+    VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                   "ANARIMapperPoints: skipping field '" << field.GetName() << "', which has "
+                                                         << numComps
+                                                         << " components (1 to 4 are supported)");
+    return nullptr;
+  }
+
+  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> values(numComps);
+  viskores::cont::ArrayCopyShallowIfPossible(fieldData, values);
+
+  const anari_cpp::DataType type = ANARI_FLOAT32 + numComps - 1;
+  return MakeANARIArray1D(
+    d, values.GetComponentsArray(), type, static_cast<std::uint64_t>(numValues));
+}
 
 } // namespace
-
-static PointsFieldArrays UnpackFields(FieldSet fields)
-{
-  PointsFieldArrays retval;
-
-  using AttributeHandleT = decltype(retval.Field1);
-
-  auto makeFieldArray = [](auto field, auto& numComps) -> AttributeHandleT
-  {
-    if (field.GetNumberOfValues() == 0)
-      return {};
-
-    auto fieldData = field.GetData();
-    numComps = fieldData.GetNumberOfComponentsFlat();
-    if (numComps >= 1 && numComps <= 4)
-    {
-      viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> outData(numComps);
-      viskores::cont::ArrayCopyShallowIfPossible(fieldData, outData);
-      return outData;
-    }
-
-    return {};
-  };
-
-  retval.Field1 = makeFieldArray(fields[0], retval.NumberOfField1Components);
-  retval.Field2 = makeFieldArray(fields[1], retval.NumberOfField2Components);
-  retval.Field3 = makeFieldArray(fields[2], retval.NumberOfField3Components);
-  retval.Field4 = makeFieldArray(fields[3], retval.NumberOfField4Components);
-
-  auto isFieldEmpty = [](const viskores::cont::Field& f) -> bool
-  { return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1; };
-
-  if (!isFieldEmpty(fields[0]))
-    retval.Field1Name = fields[0].GetName();
-  if (!isFieldEmpty(fields[1]))
-    retval.Field2Name = fields[1].GetName();
-  if (!isFieldEmpty(fields[2]))
-    retval.Field3Name = fields[2].GetName();
-  if (!isFieldEmpty(fields[3]))
-    retval.Field4Name = fields[3].GetName();
-
-  return retval;
-}
-
-static PointsArrays UnpackPoints(viskores::cont::ArrayHandle<viskores::Id> points,
-                                 viskores::cont::CoordinateSystem coords)
-{
-  PointsArrays retval;
-
-  const auto numPoints = points.GetNumberOfValues();
-  retval.Vertices.Allocate(numPoints);
-  viskores::worklet::DispatcherMapField<ExtractPointPositions>().Invoke(
-    points, coords, retval.Vertices);
-
-  return retval;
-}
 
 // ANARIMapperPoints definitions //////////////////////////////////////////////
 
@@ -251,6 +199,11 @@ anari_cpp::Surface ANARIMapperPoints::GetANARISurface()
   return this->Handles->Surface;
 }
 
+const PointsParameters& ANARIMapperPoints::GetANARIPointsParameters() const
+{
+  return this->Handles->Parameters;
+}
+
 void ANARIMapperPoints::ConstructArrays(bool regenerate)
 {
   if (regenerate)
@@ -266,29 +219,7 @@ void ANARIMapperPoints::ConstructArrays(bool regenerate)
 
   const auto& actor = this->GetActor();
   const auto& coords = actor.GetCoordinateSystem();
-
-  if (coords.GetNumberOfPoints() == 0)
-  {
-    this->RefreshGroup();
-    return;
-  }
-
-  viskores::Bounds coordBounds = coords.GetBounds();
-  // set a default radius
-  viskores::Float64 lx = coordBounds.X.Length();
-  viskores::Float64 ly = coordBounds.Y.Length();
-  viskores::Float64 lz = coordBounds.Z.Length();
-  viskores::Float64 mag = viskores::Sqrt(lx * lx + ly * ly + lz * lz);
-  // same as used in vtk ospray
-  constexpr viskores::Float64 heuristic = 500.;
-  auto baseRadius = static_cast<viskores::Float32>(mag / heuristic);
-
-  viskores::rendering::raytracing::SphereExtractor sphereExtractor;
-
-  sphereExtractor.ExtractCoordinates(coords, baseRadius);
-
-  auto numPoints = sphereExtractor.GetNumberOfSpheres();
-  this->Handles->Parameters.NumPrimitives = static_cast<uint32_t>(numPoints);
+  const auto numPoints = coords.GetNumberOfPoints();
 
   if (numPoints == 0)
   {
@@ -296,41 +227,24 @@ void ANARIMapperPoints::ConstructArrays(bool regenerate)
     return;
   }
 
-  this->PrimaryField = actor.GetPrimaryFieldIndex();
-
-  auto pts = sphereExtractor.GetPointIds();
-
-  auto arrays = UnpackPoints(pts, coords);
-  auto fieldArrays = UnpackFields(actor.GetFieldSet());
-
-  arrays.Radii = sphereExtractor.GetRadii();
-
   auto d = this->GetDevice();
-  this->Handles->Parameters.Vertex.Position =
-    MakeANARIArray1D(d, arrays.Vertices, ANARI_FLOAT32_VEC3, numPoints);
-  this->Handles->Parameters.Vertex.Radius =
-    MakeANARIArray1D(d, arrays.Radii, ANARI_FLOAT32, numPoints);
+  auto& params = this->Handles->Parameters;
+  params.NumPrimitives = static_cast<unsigned int>(numPoints);
+  params.Radius = DefaultRadius(coords.GetBounds());
 
-  auto createANARIArray = [d](const auto& fieldArray) -> anari_cpp::Array1D
+  viskores::cont::ArrayHandle<viskores::Vec3f_32> positions;
+  viskores::cont::ArrayCopyShallowIfPossible(coords.GetData(), positions);
+  params.Vertex.Position = MakeANARIArray1D(d, positions);
+
+  const auto fields = actor.GetFieldSet();
+  for (std::size_t slot = 0; slot < fields.size(); ++slot)
   {
-    const auto nv = fieldArray.GetNumberOfValues();
-    if (nv == 0)
-      return nullptr;
+    params.Vertex.Attribute[slot] = MakeAttributeArray(d, fields[slot], numPoints);
+    params.Vertex.AttributeName[slot] =
+      params.Vertex.Attribute[slot] ? fields[slot].GetName() : std::string{};
+  }
 
-    anari_cpp::DataType type = ANARI_FLOAT32 + fieldArray.GetNumberOfComponents() - 1;
-    return MakeANARIArray1D(
-      d, fieldArray.GetComponentsArray(), type, static_cast<std::uint64_t>(nv));
-  };
-
-  this->Handles->Parameters.Vertex.Attribute[0] = createANARIArray(fieldArrays.Field1);
-  this->Handles->Parameters.Vertex.Attribute[1] = createANARIArray(fieldArrays.Field2);
-  this->Handles->Parameters.Vertex.Attribute[2] = createANARIArray(fieldArrays.Field3);
-  this->Handles->Parameters.Vertex.Attribute[3] = createANARIArray(fieldArrays.Field4);
-
-  this->Handles->Parameters.Vertex.AttributeName[0] = fieldArrays.Field1Name;
-  this->Handles->Parameters.Vertex.AttributeName[1] = fieldArrays.Field2Name;
-  this->Handles->Parameters.Vertex.AttributeName[2] = fieldArrays.Field3Name;
-  this->Handles->Parameters.Vertex.AttributeName[3] = fieldArrays.Field4Name;
+  this->PrimaryField = actor.GetPrimaryFieldIndex();
 
   this->UpdateGeometry();
   this->UpdateMaterial();
@@ -348,7 +262,7 @@ void ANARIMapperPoints::UpdateGeometry()
   auto d = this->GetDevice();
 
   anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.position");
-  anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.radius");
+  anari_cpp::unsetParameter(d, this->Handles->Geometry, "radius");
   anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.attribute0");
   anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.attribute1");
   anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.attribute2");
@@ -364,8 +278,7 @@ void ANARIMapperPoints::UpdateGeometry()
   {
     anari_cpp::setParameter(
       d, this->Handles->Geometry, "vertex.position", this->Handles->Parameters.Vertex.Position);
-    anari_cpp::setParameter(
-      d, this->Handles->Geometry, "vertex.radius", this->Handles->Parameters.Vertex.Radius);
+    anari_cpp::setParameter(d, this->Handles->Geometry, "radius", this->Handles->Parameters.Radius);
     if (this->GetMapFieldAsAttribute())
     {
       // Attributes //
@@ -456,17 +369,11 @@ ANARIMapperPoints::ANARIHandles::~ANARIHandles()
 void ANARIMapperPoints::ANARIHandles::ReleaseArrays()
 {
   anari_cpp::release(this->Device, this->Parameters.Vertex.Position);
-  anari_cpp::release(this->Device, this->Parameters.Vertex.Radius);
-  anari_cpp::release(this->Device, this->Parameters.Vertex.Attribute[0]);
-  anari_cpp::release(this->Device, this->Parameters.Vertex.Attribute[1]);
-  anari_cpp::release(this->Device, this->Parameters.Vertex.Attribute[2]);
-  anari_cpp::release(this->Device, this->Parameters.Vertex.Attribute[3]);
-  this->Parameters.Vertex.Position = nullptr;
-  this->Parameters.Vertex.Radius = nullptr;
-  this->Parameters.Vertex.Attribute[0] = nullptr;
-  this->Parameters.Vertex.Attribute[1] = nullptr;
-  this->Parameters.Vertex.Attribute[2] = nullptr;
-  this->Parameters.Vertex.Attribute[3] = nullptr;
+  for (auto& attribute : this->Parameters.Vertex.Attribute)
+  {
+    anari_cpp::release(this->Device, attribute);
+  }
+  this->Parameters = PointsParameters{};
 }
 
 } // namespace anari

@@ -21,15 +21,19 @@ namespace anari
 
 /// @brief Raw ANARI arrays and parameter values set on the `ANARIGeometry`.
 ///
+/// Attribute slot `N` holds actor field `N` when that field has one value per
+/// point; otherwise the slot is empty.
 struct PointsParameters
 {
   struct VertexData
   {
     anari_cpp::Array1D Position{ nullptr };
-    anari_cpp::Array1D Radius{ nullptr };
-    std::array<anari_cpp::Array1D, 4> Attribute;
+    std::array<anari_cpp::Array1D, 4> Attribute{};
     std::array<std::string, 4> AttributeName;
   } Vertex{};
+
+  /// Radius of every sphere, set as the geometry's `radius` parameter.
+  viskores::Float32 Radius{ 0.f };
 
   unsigned int NumPrimitives{ 0 };
 };
@@ -37,7 +41,7 @@ struct PointsParameters
 /// @brief Mapper which turns each point into ANARI `sphere` geometry.
 ///
 /// NOTE: This mapper will color map values that are 1/2/3/4 component Float32
-/// fields, otherwise they will be ignored.
+/// fields with one value per point, otherwise they will be ignored.
 struct VISKORES_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
 {
   /// @brief Constructor
@@ -75,6 +79,13 @@ struct VISKORES_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
 
   anari_cpp::Geometry GetANARIGeometry() override;
   anari_cpp::Surface GetANARISurface() override;
+
+  /// @brief Get the raw ANARI arrays and parameter values set on the geometry.
+  ///
+  /// The handles are null until the geometry has been constructed.
+  ///
+  /// @note Intended for testing only; this is not a stable interface.
+  const PointsParameters& GetANARIPointsParameters() const;
 
 private:
   /// @brief Do the work to construct the basic ANARI arrays for the ANARIGeometry.
