@@ -120,6 +120,11 @@ const UnstructuredVolumeParameters& ANARIMapperVolume::GetANARIUnstructuredParam
   return this->Handles->UnstructuredParameters;
 }
 
+const StructuredVolumeParameters& ANARIMapperVolume::GetANARIStructuredParameters() const
+{
+  return this->Handles->StructuredParameters;
+}
+
 // ANARI's KHR_SPATIAL_FIELD_UNSTRUCTURED `cell.type` uses the VTK cell IDs:
 //    10 = tetrahedron, 12 = hexahedron, 13 = wedge, 14 = pyramid
 // Viskores' CELL_SHAPE_* values for these shapes are the same, so they pass through
@@ -410,11 +415,21 @@ ANARIMapperVolume::ANARIHandles::~ANARIHandles()
 
 void ANARIMapperVolume::ANARIHandles::ReleaseArrays()
 {
-  anari_cpp::release(this->Device, this->StructuredParameters.Data);
-  this->StructuredParameters.Data = nullptr;
+  auto releaseArray = [this](auto& array)
+  {
+    anari_cpp::release(this->Device, array);
+    array = nullptr;
+  };
 
-  anari_cpp::release(this->Device, this->UnstructuredParameters.VertexPosition);
-  this->UnstructuredParameters.VertexPosition = nullptr;
+  releaseArray(this->StructuredParameters.Data);
+
+  releaseArray(this->UnstructuredParameters.VertexPosition);
+  releaseArray(this->UnstructuredParameters.VertexData);
+  releaseArray(this->UnstructuredParameters.Index);
+  releaseArray(this->UnstructuredParameters.CellIndex);
+  releaseArray(this->UnstructuredParameters.CellData);
+  releaseArray(this->UnstructuredParameters.CellType);
+  this->UnstructuredParameters.IndexPrefixed = false;
 }
 
 } // namespace anari

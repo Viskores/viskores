@@ -107,6 +107,14 @@ struct VISKORES_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
   /// @note Intended for testing only; this is not a stable interface.
   const UnstructuredVolumeParameters& GetANARIUnstructuredParameters() const;
 
+  /// @brief Get the raw ANARI arrays and values set on a structured spatial field.
+  ///
+  /// The `Data` handle is null until the spatial field has been constructed from an
+  /// actor with a structured cell set.
+  ///
+  /// @note Intended for testing only; this is not a stable interface.
+  const StructuredVolumeParameters& GetANARIStructuredParameters() const;
+
 private:
   /// @brief Do the work to construct the basic ANARI arrays for the ANARIGeometry.
   /// @param regenerate Force the position/radius arrays are regenerated.
