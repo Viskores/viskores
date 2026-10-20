@@ -52,43 +52,64 @@ public:
                                 OutVertexPortalType& vertices,
                                 OutRadiusPortalType& radii) const
   {
-    const auto vec = static_cast<viskores::Vec3f_32>(gradient);
-    const viskores::Vec3f_32 pt = points.Get(idx);
+    const auto direction = static_cast<viskores::Vec3f_64>(gradient);
+    const viskores::Vec3f_32 point = points.Get(idx);
 
-    // A vector too short to normalize (or not finite) gets a zero-size glyph
-    // at its point instead of NaN vertices.
-    const auto length = viskores::Magnitude(vec);
-    if (!(length > 0.f) || !viskores::IsFinite(length))
+    // A zero or non-finite vector gets a zero-size glyph at its point instead
+    // of NaN vertices. Scaling by the largest component first keeps the
+    // squared length from overflowing or underflowing.
+    const viskores::Float64 largest =
+      viskores::Max(viskores::Abs(direction[0]),
+                    viskores::Max(viskores::Abs(direction[1]), viskores::Abs(direction[2])));
+    if (!(largest > 0.) || !viskores::IsFinite(largest))
     {
-      for (viskores::Id i = 0; i < 4; ++i)
-      {
-        vertices.Set(4 * idx + i, pt);
-        radii.Set(4 * idx + i, 0.f);
-      }
+      WriteEmptyGlyph(idx, point, vertices, radii);
+      return;
+    }
+    const auto scaled = direction * (1. / largest);
+    const viskores::Float64 scaledLengthSquared = viskores::Dot(scaled, scaled);
+    if (!viskores::IsFinite(scaledLengthSquared))
+    {
+      WriteEmptyGlyph(idx, point, vertices, radii);
       return;
     }
 
-    const auto ng = vec / length;
-    auto v0 = pt + ng * this->SizeFactor;
-    auto v1 = pt + ng * -this->SizeFactor;
+    const auto unitDirection =
+      static_cast<viskores::Vec3f_32>(scaled * (1. / viskores::Sqrt(scaledLengthSquared)));
+    const auto tip = point + unitDirection * this->SizeFactor;
+    const auto tail = point + unitDirection * -this->SizeFactor;
     if (this->Offset)
     {
-      vertices.Set(4 * idx + 0, pt);
-      vertices.Set(4 * idx + 1, v1);
-      vertices.Set(4 * idx + 2, v1);
-      vertices.Set(4 * idx + 3, v1 - (this->SizeFactor * ng));
+      vertices.Set(4 * idx + 0, point);
+      vertices.Set(4 * idx + 1, tail);
+      vertices.Set(4 * idx + 2, tail);
+      vertices.Set(4 * idx + 3, tail - (this->SizeFactor * unitDirection));
     }
     else
     {
-      vertices.Set(4 * idx + 0, v0);
-      vertices.Set(4 * idx + 1, pt);
-      vertices.Set(4 * idx + 2, pt);
-      vertices.Set(4 * idx + 3, v1);
+      vertices.Set(4 * idx + 0, tip);
+      vertices.Set(4 * idx + 1, point);
+      vertices.Set(4 * idx + 2, point);
+      vertices.Set(4 * idx + 3, tail);
     }
     radii.Set(4 * idx + 0, this->SizeFactor / 8);
     radii.Set(4 * idx + 1, this->SizeFactor / 8);
     radii.Set(4 * idx + 2, this->SizeFactor / 4);
     radii.Set(4 * idx + 3, 0.f);
+  }
+
+private:
+  template <typename OutVertexPortalType, typename OutRadiusPortalType>
+  VISKORES_EXEC static void WriteEmptyGlyph(const viskores::Id idx,
+                                            const viskores::Vec3f_32& point,
+                                            OutVertexPortalType& vertices,
+                                            OutRadiusPortalType& radii)
+  {
+    for (viskores::Id vertexIndex = 0; vertexIndex < 4; ++vertexIndex)
+    {
+      vertices.Set(4 * idx + vertexIndex, point);
+      radii.Set(4 * idx + vertexIndex, 0.f);
+    }
   }
 };
 
@@ -264,10 +285,17 @@ void ANARIMapperGlyphs::ConstructArrays(bool regenerate)
     {
       unsupportedReason = "its field does not have 3 components";
     }
-    else if (field.IsPointField() ? numGlyphs != coords.GetNumberOfValues()
-                                  : !field.IsCellField() || numGlyphs != cells.GetNumberOfCells())
+    else if (!field.IsPointField() && !field.IsCellField())
     {
-      unsupportedReason = "its field is not a point or cell field of matching size";
+      unsupportedReason = "its field is not a point or cell field";
+    }
+    else if (field.IsPointField() && numGlyphs != coords.GetNumberOfValues())
+    {
+      unsupportedReason = "its point field does not have one value per point";
+    }
+    else if (field.IsCellField() && numGlyphs != cells.GetNumberOfCells())
+    {
+      unsupportedReason = "its cell field does not have one value per cell";
     }
   }
 

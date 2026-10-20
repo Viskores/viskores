@@ -18,6 +18,9 @@
 #include <viskores/source/Tangle.h>
 // std
 #include <cstdlib>
+#include <limits>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "ANARITestCommon.h"
@@ -81,9 +84,9 @@ viskores::cont::DataSet MakeVertexDataSet(const std::vector<viskores::Vec3f_32>&
 {
   const auto numPoints = coords.size();
   std::vector<viskores::Id> connectivity(numPoints);
-  for (std::size_t i = 0; i < numPoints; ++i)
+  for (std::size_t pointIndex = 0; pointIndex < numPoints; ++pointIndex)
   {
-    connectivity[i] = static_cast<viskores::Id>(i);
+    connectivity[pointIndex] = static_cast<viskores::Id>(pointIndex);
   }
   return viskores::cont::DataSetBuilderExplicit::Create(
     coords,
@@ -92,66 +95,117 @@ viskores::cont::DataSet MakeVertexDataSet(const std::vector<viskores::Vec3f_32>&
     connectivity);
 }
 
-// A vector too short to normalize gives a zero-size glyph at its point, not
-// NaN or infinite vertices.
+// A zero or non-finite vector gives a zero-size glyph at its point, not NaN or
+// infinite vertices. Very short and very long vectors are not degenerate.
 void ZeroVectorTests()
 {
   auto d = loadANARIDevice();
 
-  const std::vector<viskores::Vec3f_32> coords = { { 0.f, 0.f, 0.f },
-                                                   { 1.f, 0.f, 0.f },
-                                                   { 2.f, 0.f, 0.f } };
+  const std::vector<viskores::Vec3f_32> coords = {
+    { 0.f, 0.f, 0.f }, { 1.f, 0.f, 0.f }, { 2.f, 0.f, 0.f }, { 3.f, 0.f, 0.f }, { 4.f, 0.f, 0.f }
+  };
+  const std::vector<viskores::Vec3f_32> vectors = {
+    { 0.f, 0.f, 0.f },                                               // zero
+    { 0.f, 0.f, 1.f },                                               // ordinary
+    { 1e-30f, 0.f, 0.f },                                            // squared length underflows
+    { 1e20f, 0.f, 0.f },                                             // squared length overflows
+    { std::numeric_limits<viskores::Float32>::infinity(), 0.f, 0.f } // not finite
+  };
+  const std::vector<bool> degenerate = { true, false, false, false, true };
+  const std::size_t numGlyphs = coords.size();
+
   auto dataSet = MakeVertexDataSet(coords);
-  // A zero vector, a normal one, and one whose squared length underflows.
-  dataSet.AddPointField(
-    "vectors",
-    std::vector<viskores::Vec3f_32>{ { 0.f, 0.f, 0.f }, { 0.f, 0.f, 1.f }, { 1e-30f, 0.f, 0.f } });
+  dataSet.AddPointField("pointVectors", vectors);
+  // One vertex cell per point, so the cell centers are the points.
+  dataSet.AddCellField("cellVectors", vectors);
 
-  viskores::interop::anari::ANARIActor actor(
-    dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("vectors"));
-  viskores::interop::anari::ANARIMapperGlyphs mapper(d, actor);
-  mapper.GetANARISurface();
+  // The bounds diagonal is 4, so the glyph size is 4 / 300.
+  const viskores::Float32 size = 4.f / 300.f;
 
-  const auto& params = mapper.GetANARIGlyphsParameters();
-  VISKORES_TEST_ASSERT(params.NumPrimitives == 3, "Expected 3 glyphs");
-  const std::size_t numVertices = 4 * 3;
-  const auto vertices = ReadANARIArray<viskores::Vec3f_32>(d, params.Vertex.Position, numVertices);
-  const auto radii = ReadANARIArray<viskores::Float32>(d, params.Vertex.Radius, numVertices);
-
-  for (std::size_t i = 0; i < numVertices; ++i)
+  const auto checkGlyphs =
+    [&](viskores::interop::anari::ANARIMapperGlyphs& mapper, bool offset, const std::string& what)
   {
-    for (viskores::IdComponent c = 0; c < 3; ++c)
-    {
-      VISKORES_TEST_ASSERT(
-        viskores::IsFinite(vertices[i][c]), "vertex.position ", i, " is not finite: ", vertices[i]);
-    }
-    VISKORES_TEST_ASSERT(
-      viskores::IsFinite(radii[i]), "vertex.radius ", i, " is not finite: ", radii[i]);
-  }
+    const auto& params = mapper.GetANARIGlyphsParameters();
+    VISKORES_TEST_ASSERT(params.NumPrimitives == numGlyphs, "Wrong glyph count for ", what);
+    const std::size_t numVertices = 4 * numGlyphs;
+    const auto vertices =
+      ReadANARIArray<viskores::Vec3f_32>(d, params.Vertex.Position, numVertices);
+    const auto radii = ReadANARIArray<viskores::Float32>(d, params.Vertex.Radius, numVertices);
 
-  // The degenerate glyphs collapse onto their points with zero radius.
-  for (std::size_t glyph : { std::size_t{ 0 }, std::size_t{ 2 } })
+    for (std::size_t vertexIndex = 0; vertexIndex < numVertices; ++vertexIndex)
+    {
+      for (viskores::IdComponent component = 0; component < 3; ++component)
+      {
+        VISKORES_TEST_ASSERT(viskores::IsFinite(vertices[vertexIndex][component]),
+                             "vertex.position ",
+                             vertexIndex,
+                             " is not finite for ",
+                             what,
+                             ": ",
+                             vertices[vertexIndex]);
+      }
+      VISKORES_TEST_ASSERT(viskores::IsFinite(radii[vertexIndex]),
+                           "vertex.radius ",
+                           vertexIndex,
+                           " is not finite for ",
+                           what);
+    }
+
+    for (std::size_t glyphIndex = 0; glyphIndex < numGlyphs; ++glyphIndex)
+    {
+      const auto first = 4 * glyphIndex;
+      if (degenerate[glyphIndex])
+      {
+        // The glyph collapses onto its point with zero radius.
+        for (std::size_t vertexIndex = first; vertexIndex < first + 4; ++vertexIndex)
+        {
+          VISKORES_TEST_ASSERT(test_equal(vertices[vertexIndex], coords[glyphIndex]),
+                               "Degenerate glyph ",
+                               glyphIndex,
+                               " is not at its point for ",
+                               what,
+                               ": ",
+                               vertices[vertexIndex]);
+          VISKORES_TEST_ASSERT(radii[vertexIndex] == 0.f,
+                               "Degenerate glyph ",
+                               glyphIndex,
+                               " has a non-zero radius for ",
+                               what);
+        }
+      }
+      else
+      {
+        const viskores::Vec3f_32 unitDirection =
+          viskores::Normal(viskores::Vec3f_64(vectors[glyphIndex]));
+        const auto expectedFirst =
+          offset ? coords[glyphIndex] : coords[glyphIndex] + unitDirection * size;
+        VISKORES_TEST_ASSERT(test_equal(vertices[first], expectedFirst),
+                             "Wrong first vertex of glyph ",
+                             glyphIndex,
+                             " for ",
+                             what,
+                             ": ",
+                             vertices[first]);
+        VISKORES_TEST_ASSERT(test_equal(radii[first], size / 8),
+                             "Wrong first radius of glyph ",
+                             glyphIndex,
+                             " for ",
+                             what);
+      }
+    }
+  };
+
+  for (const std::string fieldName : { "pointVectors", "cellVectors" })
   {
-    for (std::size_t v = 0; v < 4; ++v)
-    {
-      const auto i = 4 * glyph + v;
-      VISKORES_TEST_ASSERT(test_equal(vertices[i], coords[glyph]),
-                           "Degenerate glyph ",
-                           glyph,
-                           " vertex ",
-                           v,
-                           " is not at its point: ",
-                           vertices[i]);
-      VISKORES_TEST_ASSERT(radii[i] == 0.f, "Degenerate glyph ", glyph, " has a non-zero radius");
-    }
-  }
+    viskores::interop::anari::ANARIActor actor(
+      dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField(fieldName));
+    viskores::interop::anari::ANARIMapperGlyphs mapper(d, actor);
+    mapper.GetANARISurface();
+    checkGlyphs(mapper, false, fieldName);
 
-  // The glyph with a real vector is unchanged.
-  const viskores::Float32 size = 2.f / 300.f;
-  VISKORES_TEST_ASSERT(test_equal(vertices[4], viskores::Vec3f_32(1.f, 0.f, size)),
-                       "Wrong first vertex of glyph 1: ",
-                       vertices[4]);
-  VISKORES_TEST_ASSERT(test_equal(radii[4], size / 8), "Wrong first radius of glyph 1");
+    mapper.SetOffsetGlyphs(true);
+    checkGlyphs(mapper, true, fieldName + " with offset glyphs");
+  }
 
   anari_cpp::release(d, d);
 }
@@ -167,8 +221,8 @@ void CheckRejected(viskores::interop::anari::ANARIMapperGlyphs& mapper, const ch
   mapper.GetANARIGroup();
 }
 
-// A field that is not a 3-component vector gives an empty group, not an
-// exception.
+// A field that is not a 3-component point or cell field of the right size
+// gives an empty group, not an exception.
 void UnsupportedFieldTests()
 {
   auto d = loadANARIDevice();
@@ -178,31 +232,49 @@ void UnsupportedFieldTests()
   dataSet.AddPointField("vec2", std::vector<viskores::Vec2f_32>{ { 1.f, 0.f }, { 0.f, 1.f } });
   dataSet.AddPointField("vectors",
                         std::vector<viskores::Vec3f_32>{ { 0.f, 0.f, 1.f }, { 0.f, 0.f, 1.f } });
+  dataSet.AddPointField("intVectors", std::vector<viskores::Vec3i_32>{ { 0, 0, 1 }, { 0, 0, 1 } });
 
-  auto makeActor = [&](const char* fieldName)
+  const auto oneVector =
+    viskores::cont::make_ArrayHandle<viskores::Vec3f_32>({ { 0.f, 0.f, 1.f } });
+
+  auto makeActor = [&](const viskores::cont::Field& field)
   {
     return viskores::interop::anari::ANARIActor(
-      dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField(fieldName));
+      dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), field);
   };
 
+  const std::vector<std::pair<viskores::cont::Field, const char*>> rejected = {
+    { dataSet.GetField("scalars"), "a scalar field" },
+    { dataSet.GetField("vec2"), "a Vec2 field" },
+    { viskores::cont::Field("global", viskores::cont::Field::Association::WholeDataSet, oneVector),
+      "a whole-dataset field" },
+    { viskores::cont::Field("short", viskores::cont::Field::Association::Points, oneVector),
+      "a point field with too few values" },
+    { viskores::cont::Field("short", viskores::cont::Field::Association::Cells, oneVector),
+      "a cell field with too few values" },
+  };
+
+  for (const auto& fieldAndWhat : rejected)
   {
-    viskores::interop::anari::ANARIMapperGlyphs mapper(d, makeActor("scalars"));
+    viskores::interop::anari::ANARIMapperGlyphs mapper(d, makeActor(fieldAndWhat.first));
     mapper.GetANARISurface();
-    CheckRejected(mapper, "a scalar field");
+    CheckRejected(mapper, fieldAndWhat.second);
   }
 
+  // A 3-component integer field is converted, not rejected.
   {
-    viskores::interop::anari::ANARIMapperGlyphs mapper(d, makeActor("vec2"));
+    viskores::interop::anari::ANARIMapperGlyphs mapper(d,
+                                                       makeActor(dataSet.GetField("intVectors")));
     mapper.GetANARISurface();
-    CheckRejected(mapper, "a Vec2 field");
+    VISKORES_TEST_ASSERT(!mapper.GroupIsEmpty(), "A Vec3i field was rejected");
   }
 
   // Switching from a valid actor to a scalar field drops the old glyphs.
   {
-    viskores::interop::anari::ANARIMapperGlyphs mapper(d, makeActor("vectors"));
+    viskores::interop::anari::ANARIMapperGlyphs mapper(d, makeActor(dataSet.GetField("vectors")));
     mapper.GetANARISurface();
     VISKORES_TEST_ASSERT(!mapper.GroupIsEmpty(), "A Vec3 field was rejected");
-    mapper.SetActor(makeActor("scalars"));
+    mapper.SetActor(makeActor(dataSet.GetField("scalars")));
     CheckRejected(mapper, "a scalar field after a valid one");
   }
 
