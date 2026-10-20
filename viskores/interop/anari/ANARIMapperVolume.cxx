@@ -10,6 +10,7 @@
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayCopyDevice.h>
+#include <viskores/cont/Logging.h>
 #include <viskores/interop/anari/ANARIMapperVolume.h>
 
 namespace viskores
@@ -177,8 +178,30 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   anari_cpp::release(d, this->Handles->SpatialField);
   this->Handles->SpatialField = nullptr;
 
+  // Reject inputs neither branch below can map, before creating any ANARI object.
+  const char* unsupported = nullptr;
+  if (cells.GetNumberOfCells() == 0)
+    unsupported = "the cell set is empty";
+  else if (!isScalar)
+    unsupported = "the field is not scalar";
+  else if (!isStructured && !isPointBased)
+    unsupported = "cell fields are only supported on 3D structured cell sets";
+  else if (!isStructured && !cells.IsType<viskores::cont::CellSetSingleType<>>() &&
+           !cells.IsType<viskores::cont::CellSetExplicit<>>())
+    unsupported = "the cell set type is not supported";
+
+  if (unsupported)
+  {
+    VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                   "ANARIMapperVolume '" << this->GetName()
+                                         << "' cannot map its actor: " << unsupported);
+    this->UpdateSpatialField();
+    this->RefreshGroup();
+    return;
+  }
+
   // Structured regular volume data
-  if (isStructured && isScalar)
+  if (isStructured)
   {
     this->Handles->SpatialField =
       anari_cpp::newObject<anari_cpp::SpatialField>(this->GetDevice(), "structuredRegular");
@@ -210,7 +233,7 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     this->Valid = true;
   }
   // Unstructured volume data
-  else if (isPointBased)
+  else
   {
     this->Handles->SpatialField =
       anari_cpp::newObject<anari_cpp::SpatialField>(this->GetDevice(), "unstructured");
@@ -321,10 +344,19 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
 
 void ANARIMapperVolume::UpdateSpatialField()
 {
-  if (!this->Handles->SpatialField)
-    return;
-
   auto d = this->GetDevice();
+
+  if (!this->Handles->SpatialField)
+  {
+    // Drop the volume's reference to a spatial field from an earlier actor.
+    if (this->Handles->Volume)
+    {
+      anari_cpp::unsetParameter(d, this->Handles->Volume, "field");
+      anari_cpp::unsetParameter(d, this->Handles->Volume, "value");
+      anari_cpp::commitParameters(d, this->Handles->Volume);
+    }
+    return;
+  }
 
   anari_cpp::unsetParameter(d, this->Handles->SpatialField, "origin");
   anari_cpp::unsetParameter(d, this->Handles->SpatialField, "spacing");

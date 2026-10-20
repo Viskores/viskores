@@ -13,6 +13,8 @@
 // viskores
 #include <viskores/CellShape.h>
 #include <viskores/cont/CellSetSingleType.h>
+#include <viskores/cont/CellSetStructured.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/filter/contour/Contour.h>
 #include <viskores/io/EncodePNG.h>
@@ -201,6 +203,100 @@ void SwitchRepresentationTests()
   VISKORES_TEST_ASSERT(leaks.empty(), "ANARI objects leaked by the volume mapper:", report);
 }
 
+void CheckRejected(viskores::interop::anari::ANARIMapperVolume& mVol, const char* what)
+{
+  VISKORES_TEST_ASSERT(mVol.GetANARISpatialField() == nullptr, "Spatial field created for ", what);
+  VISKORES_TEST_ASSERT(mVol.GroupIsEmpty(), "Group not empty for ", what);
+  VISKORES_TEST_ASSERT(
+    mVol.GetANARIStructuredParameters().Data == nullptr, "Structured data created for ", what);
+  const auto& unstructured = mVol.GetANARIUnstructuredParameters();
+  VISKORES_TEST_ASSERT(unstructured.VertexPosition == nullptr, "vertex.position for ", what);
+  VISKORES_TEST_ASSERT(unstructured.VertexData == nullptr, "vertex.data for ", what);
+  VISKORES_TEST_ASSERT(unstructured.Index == nullptr, "index for ", what);
+  VISKORES_TEST_ASSERT(unstructured.CellIndex == nullptr, "cell.index for ", what);
+  VISKORES_TEST_ASSERT(unstructured.CellData == nullptr, "cell.data for ", what);
+  VISKORES_TEST_ASSERT(unstructured.CellType == nullptr, "cell.type for ", what);
+
+  // Building the rest of the ANARI objects must not fail either.
+  mVol.GetANARIVolume();
+  mVol.GetANARIGroup();
+}
+
+void UnsupportedInputTests()
+{
+  auto d = loadANARIDevice();
+
+  // Structured cells with a Vec3 point field
+  {
+    const viskores::Id3 dims(3, 3, 3);
+    auto dataSet = viskores::cont::DataSetBuilderUniform::Create(dims);
+    std::vector<viskores::Vec3f_32> vectors(static_cast<std::size_t>(dims[0] * dims[1] * dims[2]),
+                                            viskores::Vec3f_32(1.f, 2.f, 3.f));
+    dataSet.AddPointField("vectors", vectors);
+    viskores::interop::anari::ANARIActor actor(
+      dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("vectors"));
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    CheckRejected(mVol, "structured cells with a Vec3 point field");
+  }
+
+  // Empty cell set
+  {
+    viskores::cont::CellSetSingleType<> cells;
+    viskores::cont::CoordinateSystem coords("coords",
+                                            viskores::cont::ArrayHandle<viskores::Vec3f_32>{});
+    viskores::cont::Field field("values",
+                                viskores::cont::Field::Association::Points,
+                                viskores::cont::ArrayHandle<viskores::Float32>{});
+    viskores::interop::anari::ANARIActor actor(cells, coords, field);
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    CheckRejected(mVol, "an empty cell set");
+  }
+
+  // Cell set type the unstructured path does not handle
+  {
+    viskores::cont::CellSetStructured<2> cells;
+    cells.SetPointDimensions(viskores::Id2(3, 3));
+    std::vector<viskores::Vec3f_32> points;
+    std::vector<viskores::Float32> values;
+    for (viskores::IdComponent j = 0; j < 3; ++j)
+    {
+      for (viskores::IdComponent i = 0; i < 3; ++i)
+      {
+        points.emplace_back(
+          static_cast<viskores::Float32>(i), static_cast<viskores::Float32>(j), 0.f);
+        values.push_back(static_cast<viskores::Float32>(i + j));
+      }
+    }
+    viskores::cont::CoordinateSystem coords(
+      "coords", viskores::cont::make_ArrayHandle(points, viskores::CopyFlag::On));
+    viskores::cont::Field field("values",
+                                viskores::cont::Field::Association::Points,
+                                viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On));
+    viskores::interop::anari::ANARIActor actor(cells, coords, field);
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    CheckRejected(mVol, "a 2D structured cell set");
+  }
+
+  // A valid actor replaced by an unsupported one leaves nothing behind
+  {
+    auto valid = MakeStructuredDataSet();
+    viskores::interop::anari::ANARIActor validActor(
+      valid.GetCellSet(), valid.GetCoordinateSystem(), valid.GetField("values"));
+    viskores::interop::anari::ANARIMapperVolume mVol(d, validActor);
+    mVol.GetANARIGroup();
+    VISKORES_TEST_ASSERT(!mVol.GroupIsEmpty(), "Valid structured actor was rejected");
+
+    viskores::cont::CellSetSingleType<> cells;
+    viskores::cont::Field field("values",
+                                viskores::cont::Field::Association::Points,
+                                viskores::cont::ArrayHandle<viskores::Float32>{});
+    mVol.SetActor(viskores::interop::anari::ANARIActor(cells, valid.GetCoordinateSystem(), field));
+    CheckRejected(mVol, "an empty cell set replacing a valid actor");
+  }
+
+  anari_cpp::release(d, d);
+}
+
 void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
@@ -247,6 +343,7 @@ void VolumeTests()
 {
   UnstructuredCellTypeTests();
   SwitchRepresentationTests();
+  UnsupportedInputTests();
   RenderTests();
 }
 
