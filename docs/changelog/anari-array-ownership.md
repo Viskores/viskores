@@ -10,7 +10,9 @@ reference to the Viskores array, which it drops when it destroys the ANARI
 array, so retained handles stay valid after the mapper is gone. While the
 device holds such an array, writes to the Viskores array it shares wait, so
 release retained handles before you modify a field that a mapper shares
-without copying.
+without copying. A write on the thread that still holds them deadlocks. The
+headers now document this, and that copies of a mapper (including the copy
+`ANARIScene::AddMapper` stores) share the same ANARI objects.
 
 We removed the `TriangleArrays`, `TriangleFieldArrays`, `PointsArrays`,
 `PointsFieldArrays`, `GlyphArrays`, `StructuredVolumeArrays` and

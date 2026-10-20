@@ -86,10 +86,16 @@ auto MakeANARIArrayWithHostMemory(const viskores::cont::ArrayHandle<T>& array,
 
 /// @brief Create an ANARI 1D array that shares the host memory of a Viskores array.
 ///
-/// The ANARI array keeps the Viskores array's memory alive, and blocks writes to it,
-/// until the device destroys the ANARI array. Handles that hold the array stay valid
+/// The ANARI array keeps the Viskores array's memory alive, and holds a read lock on
+/// it, until the device destroys the ANARI array. Handles that hold the array stay valid
 /// after the `ANARIMapper` that made them is gone. Returns null if there is nothing
 /// to share.
+///
+/// While the lock is held, a write to `array`, or to any `ArrayHandle` sharing its
+/// memory, blocks. A write on the thread that still holds the ANARI objects
+/// deadlocks. To unlock, release every handle and ANARI object that uses the array
+/// (destroy the mapper and any `ANARIScene` holding it, and release retained
+/// handles) so the device destroys it.
 ///
 /// @param elementType The ANARI type of each element.
 /// @param numItems The number of `elementType` elements to share, which must fit in
@@ -154,6 +160,15 @@ anari_cpp::Array3D MakeANARIArray3D(anari_cpp::Device device,
 /// own the Viskores memory they share (see `MakeANARIArray1D`). Additionally,
 /// ANARIMappers will update surface or volume objects if changes occur, such as
 /// changes to the color map or ANARIActor.
+///
+/// Arrays that a mapper shares with the actor's data without copying hold a
+/// Viskores read lock until the device destroys them, which can be after the
+/// mapper is destroyed. Writes to those arrays block until then, and deadlock
+/// on the thread that holds the ANARI objects; see `MakeANARIArray1D`.
+///
+/// Copies of a mapper share the same ANARI objects but keep their own actor,
+/// options and validity state. Rebuilding one copy, for example with
+/// `SetActor`, changes the geometry the other copies use.
 struct VISKORES_ANARI_EXPORT ANARIMapper
 {
   ANARIMapper(

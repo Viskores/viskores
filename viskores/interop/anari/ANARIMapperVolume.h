@@ -44,6 +44,9 @@ struct UnstructuredVolumeParameters
 ///
 /// NOTE: This currently only supports Float32 scalar fields. In the future this
 /// mapper will also support Uint8, Uint16, and Float64 scalar fields.
+///
+/// Unstructured cells that are not tetrahedra, hexahedra, wedges or pyramids are
+/// sent with `cell.type` 255. What a device does with them is device-defined.
 struct VISKORES_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
 {
   /// @brief Constructor

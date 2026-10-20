@@ -59,6 +59,11 @@ struct VISKORES_ANARI_EXPORT ANARIScene
   /// @tparam ANARIMapperType Any subclass of `ANARIMapper`.
   ///
   /// NOTE: This will replace any mapper that has the same name.
+  ///
+  /// The scene stores a copy of `mapper`. The copy shares `mapper`'s ANARI
+  /// objects but has its own actor, options and validity state, so rebuilding
+  /// either one changes the geometry the other uses. Make changes through the
+  /// returned reference.
   template <typename ANARIMapperType>
   ANARIMapperType& AddMapper(const ANARIMapperType& mapper, bool visible = true);
 
@@ -68,6 +73,9 @@ struct VISKORES_ANARI_EXPORT ANARIScene
   /// NOTE: Replace the i'th mapper with a new instance.
   /// NOTE: It is undefined behavior to use this to put 2 or more mappers in the
   /// scene with the same name.
+  ///
+  /// The scene stores a copy of `newMapper`, which shares its ANARI objects as
+  /// described in `AddMapper`.
   template <typename ANARIMapperType>
   void ReplaceMapper(const ANARIMapperType& newMapper, viskores::IdComponent id, bool visible);
 
