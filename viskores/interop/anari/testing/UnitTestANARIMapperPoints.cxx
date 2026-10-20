@@ -145,6 +145,7 @@ void FieldTests()
                        "vertex.attribute2 does not hold the vector point field");
   VISKORES_TEST_ASSERT(params.Vertex.AttributeName[2] == "pointVectors", "Wrong attribute 2 name");
 
+  // Render once so the device reads every array; only a crash or error fails here.
   RenderSurface(d, mapper.GetANARISurface(), viskores::Vec3f_32(0.5f, 0.5f, 0.f));
 
   anari_cpp::release(d, d);

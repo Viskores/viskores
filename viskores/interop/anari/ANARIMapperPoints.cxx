@@ -32,19 +32,20 @@ namespace
 /// one place) fall back to ANARI's default sphere radius of 1.
 viskores::Float32 DefaultRadius(const viskores::Bounds& bounds)
 {
-  const viskores::Float64 lx = bounds.X.Length();
-  const viskores::Float64 ly = bounds.Y.Length();
-  const viskores::Float64 lz = bounds.Z.Length();
-  const viskores::Float64 mag = viskores::Sqrt(lx * lx + ly * ly + lz * lz);
+  const viskores::Vec3f_64 diagonal(bounds.X.Length(), bounds.Y.Length(), bounds.Z.Length());
   constexpr viskores::Float64 heuristic = 500.;
-  const auto radius = static_cast<viskores::Float32>(mag / heuristic);
+  const auto radius = static_cast<viskores::Float32>(viskores::Magnitude(diagonal) / heuristic);
   return (radius > 0.f && viskores::IsFinite(radius)) ? radius : 1.f;
 }
 
 /// An ANARI array of `field` as 1-4 component Float32 values, or null when the
 /// field is empty, has another number of components, or does not have one
 /// value per point.
-anari_cpp::Array1D MakeAttributeArray(anari_cpp::Device d,
+///
+/// Only the number of values is checked, not the association: a cell field
+/// with one value per point, such as on a data set of vertex cells, gives one
+/// value per sphere and is attached.
+anari_cpp::Array1D MakeAttributeArray(anari_cpp::Device device,
                                       const viskores::cont::Field& field,
                                       viskores::Id numPoints)
 {
@@ -64,22 +65,22 @@ anari_cpp::Array1D MakeAttributeArray(anari_cpp::Device d,
   }
 
   const auto fieldData = field.GetData();
-  const auto numComps = fieldData.GetNumberOfComponentsFlat();
-  if (numComps < 1 || numComps > 4)
+  const auto numComponents = fieldData.GetNumberOfComponentsFlat();
+  if (numComponents < 1 || numComponents > 4)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
                    "ANARIMapperPoints: skipping field '" << field.GetName() << "', which has "
-                                                         << numComps
+                                                         << numComponents
                                                          << " components (1 to 4 are supported)");
     return nullptr;
   }
 
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> values(numComps);
+  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> values(numComponents);
   viskores::cont::ArrayCopyShallowIfPossible(fieldData, values);
 
-  const anari_cpp::DataType type = ANARI_FLOAT32 + numComps - 1;
+  const anari_cpp::DataType type = ANARI_FLOAT32 + numComponents - 1;
   return MakeANARIArray1D(
-    d, values.GetComponentsArray(), type, static_cast<std::uint64_t>(numValues));
+    device, values.GetComponentsArray(), type, static_cast<std::uint64_t>(numValues));
 }
 
 } // namespace
@@ -229,7 +230,7 @@ void ANARIMapperPoints::ConstructArrays(bool regenerate)
 
   auto d = this->GetDevice();
   auto& params = this->Handles->Parameters;
-  params.NumPrimitives = static_cast<unsigned int>(numPoints);
+  params.NumPrimitives = static_cast<viskores::UInt32>(numPoints);
   params.Radius = DefaultRadius(coords.GetBounds());
 
   viskores::cont::ArrayHandle<viskores::Vec3f_32> positions;
