@@ -9,8 +9,10 @@
 
 // viskores
 #include "viskores/rendering/raytracing/SphereExtractor.h"
+#include <viskores/Math.h>
 #include <viskores/VectorAnalysis.h>
 #include <viskores/cont/Invoker.h>
+#include <viskores/cont/Logging.h>
 #include <viskores/filter/field_conversion/CellAverage.h>
 #include <viskores/interop/anari/ANARIMapperGlyphs.h>
 #include <viskores/worklet/WorkletMapField.h>
@@ -50,8 +52,23 @@ public:
                                 OutVertexPortalType& vertices,
                                 OutRadiusPortalType& radii) const
   {
-    auto ng = viskores::Normal(static_cast<viskores::Vec3f_32>(gradient));
-    auto pt = points.Get(idx);
+    const auto vec = static_cast<viskores::Vec3f_32>(gradient);
+    const viskores::Vec3f_32 pt = points.Get(idx);
+
+    // A vector too short to normalize (or not finite) gets a zero-size glyph
+    // at its point instead of NaN vertices.
+    const auto length = viskores::Magnitude(vec);
+    if (!(length > 0.f) || !viskores::IsFinite(length))
+    {
+      for (viskores::Id i = 0; i < 4; ++i)
+      {
+        vertices.Set(4 * idx + i, pt);
+        radii.Set(4 * idx + i, 0.f);
+      }
+      return;
+    }
+
+    const auto ng = vec / length;
     auto v0 = pt + ng * this->SizeFactor;
     auto v1 = pt + ng * -this->SizeFactor;
     if (this->Offset)
@@ -240,8 +257,29 @@ void ANARIMapperGlyphs::ConstructArrays(bool regenerate)
 
   auto numGlyphs = field.GetNumberOfValues();
 
-  if (numGlyphs == 0)
+  const char* unsupportedReason = nullptr;
+  if (numGlyphs > 0)
   {
+    if (field.GetData().GetNumberOfComponentsFlat() != 3)
+    {
+      unsupportedReason = "its field does not have 3 components";
+    }
+    else if (field.IsPointField() ? numGlyphs != coords.GetNumberOfValues()
+                                  : !field.IsCellField() || numGlyphs != cells.GetNumberOfCells())
+    {
+      unsupportedReason = "its field is not a point or cell field of matching size";
+    }
+  }
+
+  if (numGlyphs == 0 || unsupportedReason)
+  {
+    if (unsupportedReason)
+    {
+      VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                     "ANARIMapperGlyphs '" << this->GetName()
+                                           << "' cannot map its actor: " << unsupportedReason);
+    }
+    this->UpdateGeometry();
     this->RefreshGroup();
     return;
   }
@@ -253,6 +291,11 @@ void ANARIMapperGlyphs::ConstructArrays(bool regenerate)
   viskores::Float64 mag = viskores::Sqrt(lx * lx + ly * ly + lz * lz);
   constexpr viskores::Float64 heuristic = 300.;
   auto glyphSize = static_cast<viskores::Float32>(mag / heuristic);
+  // Zero-size bounds, such as a single point, would give invisible glyphs.
+  if (!(glyphSize > 0.f) || !viskores::IsFinite(glyphSize))
+  {
+    glyphSize = 1.f;
+  }
 
   auto arrays = MakeGlyphs(field, cells, coords, glyphSize, Offset);
 
@@ -307,6 +350,7 @@ void ANARIMapperGlyphs::ANARIHandles::ReleaseArrays()
   anari_cpp::release(this->Device, this->Parameters.Vertex.Radius);
   this->Parameters.Vertex.Position = nullptr;
   this->Parameters.Vertex.Radius = nullptr;
+  this->Parameters.NumPrimitives = 0;
 }
 
 } // namespace anari
