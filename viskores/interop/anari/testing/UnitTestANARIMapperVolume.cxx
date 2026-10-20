@@ -308,8 +308,8 @@ void CheckOnlyStructuredParameters(const viskores::interop::anari::ANARIMapperVo
 
 void SwitchRepresentationTests()
 {
-  // Leaks are not detected directly: each switch must null the other representation's
-  // handles, which ReleaseArrays only does after releasing them.
+  // ReleaseArrays releases each handle before nulling it, so null handles for the other
+  // representation after a switch mean its arrays were released.
   auto d = loadANARIDevice();
 
   auto unstructured = MakeSingleCellDataSet(viskores::CELL_SHAPE_HEXAHEDRON,
