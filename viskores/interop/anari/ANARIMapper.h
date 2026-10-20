@@ -92,7 +92,7 @@ auto MakeANARIArrayWithHostMemory(const viskores::cont::ArrayHandle<T>& array,
 /// to share.
 ///
 /// While the lock is held, a write to `array`, or to any `ArrayHandle` sharing its
-/// memory, blocks. A write on the thread that still holds the ANARI objects
+/// memory, blocks. A write on the thread that would release the ANARI objects
 /// deadlocks. To unlock, release every handle and ANARI object that uses the array
 /// (destroy the mapper and any `ANARIScene` holding it, and release retained
 /// handles) so the device destroys it.
@@ -153,8 +153,8 @@ anari_cpp::Array3D MakeANARIArray3D(anari_cpp::Device device,
 /// @brief This is the base class used for all ANARI mappers.
 ///
 /// This class implements shared functionality of all ANARI mappers. All ANARI
-/// object handle lifetimes are tied to the lifetime of the mapper, including
-/// the device.  Applications are not intended to ever release handles received
+/// object handle lifetimes are tied to the lifetime of the mapper and its
+/// copies, including the device.  Applications are not intended to ever release handles received
 /// from the mapper, unless they manually retain the handle. A retained handle
 /// stays valid after the mapper is destroyed, because the ANARI arrays it uses
 /// own the Viskores memory they share (see `MakeANARIArray1D`). Additionally,
@@ -164,10 +164,10 @@ anari_cpp::Array3D MakeANARIArray3D(anari_cpp::Device device,
 /// Arrays that a mapper shares with the actor's data without copying hold a
 /// Viskores read lock until the device destroys them, which can be after the
 /// mapper is destroyed. Writes to those arrays block until then, and deadlock
-/// on the thread that holds the ANARI objects; see `MakeANARIArray1D`.
+/// on the thread that would release them; see `MakeANARIArray1D`.
 ///
 /// Copies of a mapper share the same ANARI objects but keep their own actor,
-/// options and validity state. Rebuilding one copy, for example with
+/// name, color table and settings. Rebuilding one copy, for example with
 /// `SetActor`, changes the geometry the other copies use.
 struct VISKORES_ANARI_EXPORT ANARIMapper
 {

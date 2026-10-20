@@ -60,10 +60,8 @@ struct VISKORES_ANARI_EXPORT ANARIScene
   ///
   /// NOTE: This will replace any mapper that has the same name.
   ///
-  /// The scene stores a copy of `mapper`. The copy shares `mapper`'s ANARI
-  /// objects but has its own actor, options and validity state, so rebuilding
-  /// either one changes the geometry the other uses. Make changes through the
-  /// returned reference.
+  /// The scene stores a copy of `mapper`, which shares its ANARI objects (see
+  /// `ANARIMapper`). Make changes through the returned reference.
   template <typename ANARIMapperType>
   ANARIMapperType& AddMapper(const ANARIMapperType& mapper, bool visible = true);
 
