@@ -12,6 +12,7 @@
 #include <viskores/rendering/anari-device/ViskoresDevice.h>
 // viskores
 #include <viskores/CellShape.h>
+#include <viskores/cont/CellSetExplicit.h>
 #include <viskores/cont/CellSetSingleType.h>
 #include <viskores/cont/CellSetStructured.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
@@ -22,6 +23,7 @@
 // std
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -100,6 +102,75 @@ void UnstructuredCellTypeTests()
     viskores::CELL_SHAPE_PYRAMID,
     { { 0, 0, 0 }, { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 0 }, { 0.5f, 0.5f, 1 } });
   CheckSentCellType(d, pyramid, 14);
+
+  anari_cpp::release(d, d);
+}
+
+viskores::cont::DataSet MakeTwoTetrahedraDataSet()
+{
+  const std::vector<viskores::Vec3f_32> points = {
+    { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 }, { 1, 1, 1 }
+  };
+  const std::vector<viskores::UInt8> shapes = { viskores::CELL_SHAPE_TETRA,
+                                                viskores::CELL_SHAPE_TETRA };
+  const std::vector<viskores::Id> connectivity = { 0, 1, 2, 3, 1, 2, 3, 4 };
+  const std::vector<viskores::Id> offsets = { 0, 4, 8 };
+  const std::vector<viskores::Float32> values = { 0, 1, 2, 3, 4 };
+
+  viskores::cont::CellSetExplicit<> cells;
+  cells.Fill(static_cast<viskores::Id>(points.size()),
+             viskores::cont::make_ArrayHandle(shapes, viskores::CopyFlag::On),
+             viskores::cont::make_ArrayHandle(connectivity, viskores::CopyFlag::On),
+             viskores::cont::make_ArrayHandle(offsets, viskores::CopyFlag::On));
+
+  viskores::cont::DataSet dataSet;
+  dataSet.SetCellSet(cells);
+  dataSet.AddCoordinateSystem(viskores::cont::CoordinateSystem(
+    "coords", viskores::cont::make_ArrayHandle(points, viskores::CopyFlag::On)));
+  dataSet.AddPointField("values", values);
+  return dataSet;
+}
+
+void CheckUInt32Array(anari_cpp::Device d,
+                      anari_cpp::Array1D array,
+                      const std::vector<viskores::UInt32>& expected,
+                      const char* name)
+{
+  VISKORES_TEST_ASSERT(array != nullptr, "No ", name, " array was sent to ANARI");
+
+  // KHR_SPATIAL_FIELD_UNSTRUCTURED requires ANARI_UINT32 elements. Reading wider
+  // elements as UInt32 gives the wrong values.
+  const auto* values = anari_cpp::map<viskores::UInt32>(d, array);
+  const std::vector<viskores::UInt32> sent(values, values + expected.size());
+  anari_cpp::unmap(d, array);
+
+  for (std::size_t valueIndex = 0; valueIndex < expected.size(); ++valueIndex)
+  {
+    VISKORES_TEST_ASSERT(sent[valueIndex] == expected[valueIndex],
+                         "Wrong ",
+                         name,
+                         "[",
+                         valueIndex,
+                         "] sent to ANARI: expected ",
+                         expected[valueIndex],
+                         ", got ",
+                         sent[valueIndex]);
+  }
+}
+
+void UnstructuredIndexTypeTests()
+{
+  auto d = loadANARIDevice();
+
+  auto dataSet = MakeTwoTetrahedraDataSet();
+  viskores::interop::anari::ANARIActor actor(
+    dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("values"));
+  viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+  mVol.GetANARISpatialField();
+
+  const auto& parameters = mVol.GetANARIUnstructuredParameters();
+  CheckUInt32Array(d, parameters.Index, { 0, 1, 2, 3, 1, 2, 3, 4 }, "index");
+  CheckUInt32Array(d, parameters.CellIndex, { 0, 4 }, "cell.index");
 
   anari_cpp::release(d, d);
 }
@@ -278,6 +349,31 @@ void UnsupportedInputTests()
     CheckRejected(mVol, "a 2D structured cell set");
   }
 
+  // Connectivity that does not fit in the UInt32 indices ANARI requires
+  {
+    const viskores::Id tooLarge =
+      static_cast<viskores::Id>(std::numeric_limits<viskores::UInt32>::max()) + 1;
+    const std::vector<viskores::Id> connectivity = { 0, 1, 2, tooLarge };
+    const std::vector<viskores::Vec3f_32> points = {
+      { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 }
+    };
+    const std::vector<viskores::Float32> values = { 0, 1, 2, 3 };
+
+    viskores::cont::CellSetSingleType<> cells;
+    cells.Fill(static_cast<viskores::Id>(points.size()),
+               viskores::CELL_SHAPE_TETRA,
+               4,
+               viskores::cont::make_ArrayHandle(connectivity, viskores::CopyFlag::On));
+    viskores::cont::CoordinateSystem coords(
+      "coords", viskores::cont::make_ArrayHandle(points, viskores::CopyFlag::On));
+    viskores::cont::Field field("values",
+                                viskores::cont::Field::Association::Points,
+                                viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On));
+    viskores::interop::anari::ANARIActor actor(cells, coords, field);
+    viskores::interop::anari::ANARIMapperVolume mVol(d, actor);
+    CheckRejected(mVol, "connectivity above UINT32_MAX");
+  }
+
   // A valid actor replaced by an unsupported one leaves nothing behind
   {
     auto valid = MakeStructuredDataSet();
@@ -343,6 +439,7 @@ void RenderTests()
 void VolumeTests()
 {
   UnstructuredCellTypeTests();
+  UnstructuredIndexTypeTests();
   SwitchRepresentationTests();
   UnsupportedInputTests();
   RenderTests();

@@ -13,6 +13,8 @@
 #include <viskores/cont/Logging.h>
 #include <viskores/interop/anari/ANARIMapperVolume.h>
 
+#include <limits>
+
 namespace viskores
 {
 namespace interop
@@ -154,11 +156,39 @@ struct UnstructuredVolumeArrays
 {
   viskores::cont::ArrayHandle<viskores::Vec3f_32> VertexPosition;
   viskores::cont::ArrayHandle<viskores::Float32> VertexData;
-  viskores::cont::ArrayHandle<viskores::UInt64> Index;
-  viskores::cont::ArrayHandle<viskores::UInt64> CellIndex;
+  viskores::cont::ArrayHandle<viskores::UInt32> Index;
+  viskores::cont::ArrayHandle<viskores::UInt32> CellIndex;
   viskores::cont::ArrayHandle<viskores::Float32> CellData;
   viskores::cont::ArrayHandle<viskores::UInt8> CellType;
 };
+
+// Copy the cell types, connectivity and offsets of an unstructured cell set into the
+// arrays sent to ANARI. KHR_SPATIAL_FIELD_UNSTRUCTURED requires UInt32 `index` and
+// `cell.index`, so this returns false, and copies nothing, when the connectivity has a
+// point index or size that does not fit in UInt32.
+template <typename CellSetType>
+bool CopyUnstructuredCells(const CellSetType& cellSet, UnstructuredVolumeArrays& arrays)
+{
+  const viskores::TopologyElementTagCell visit;
+  const viskores::TopologyElementTagPoint incident;
+  constexpr auto maxIndex = static_cast<viskores::Id>(std::numeric_limits<viskores::UInt32>::max());
+
+  auto connectivity = cellSet.GetConnectivityArray(visit, incident);
+  // The offsets sent as `cell.index` are all smaller than the connectivity size.
+  if (connectivity.GetNumberOfValues() - 1 > maxIndex ||
+      viskores::cont::Algorithm::Reduce(connectivity, viskores::Id(0), viskores::Maximum()) >
+        maxIndex)
+  {
+    return false;
+  }
+
+  viskores::cont::ArrayCopyDevice(viskores::cont::make_ArrayHandleTransform(
+                                    cellSet.GetShapesArray(visit, incident), ToAnariCellType{}),
+                                  arrays.CellType);
+  viskores::cont::ArrayCopyDevice(connectivity, arrays.Index);
+  viskores::cont::ArrayCopyDevice(cellSet.GetOffsetsArray(visit, incident), arrays.CellIndex);
+  return true;
+}
 
 } // namespace
 
@@ -191,6 +221,7 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
 
   // Reject inputs neither branch below can map, before creating any ANARI object.
   const char* unsupportedReason = nullptr;
+  UnstructuredVolumeArrays unstructuredArrays;
   if (cells.GetNumberOfCells() == 0)
   {
     unsupportedReason = "the cell set is empty";
@@ -207,6 +238,18 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
            !cells.IsType<viskores::cont::CellSetExplicit<>>())
   {
     unsupportedReason = "the cell set type is not supported";
+  }
+  else if (!isStructured)
+  {
+    const bool copied = cells.IsType<viskores::cont::CellSetSingleType<>>()
+      ? CopyUnstructuredCells(cells.AsCellSet<viskores::cont::CellSetSingleType<>>(),
+                              unstructuredArrays)
+      : CopyUnstructuredCells(cells.AsCellSet<viskores::cont::CellSetExplicit<>>(),
+                              unstructuredArrays);
+    if (!copied)
+    {
+      unsupportedReason = "the connectivity does not fit in the UInt32 indices ANARI requires";
+    }
   }
 
   if (unsupportedReason)
@@ -259,55 +302,11 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     this->Handles->SpatialField =
       anari_cpp::newObject<anari_cpp::SpatialField>(this->GetDevice(), "unstructured");
 
-    UnstructuredVolumeArrays arrays;
-
-    // Cell Data
-    if (cells.IsType<viskores::cont::CellSetSingleType<>>())
-    {
-      // 1. Cell Type
-      viskores::cont::CellSetSingleType<> sgl =
-        cells.AsCellSet<viskores::cont::CellSetSingleType<>>();
-      auto shapes =
-        sgl.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(
-        viskores::cont::make_ArrayHandleTransform(shapes, ToAnariCellType{}), arrays.CellType);
-
-      // 2. Cell Connectivity
-      auto conn = sgl.GetConnectivityArray(viskores::TopologyElementTagCell(),
-                                           viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(conn, arrays.Index);
-
-      // 3. Cell Index
-      auto offsets = sgl.GetOffsetsArray(viskores::TopologyElementTagCell(),
-                                         viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(offsets, arrays.CellIndex);
-    }
-
-    else if (cells.IsType<viskores::cont::CellSetExplicit<>>())
-    {
-      // 1. Cell Type
-      viskores::cont::CellSetExplicit<> exp = cells.AsCellSet<viskores::cont::CellSetExplicit<>>();
-      auto shapes =
-        exp.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(
-        viskores::cont::make_ArrayHandleTransform(shapes, ToAnariCellType{}), arrays.CellType);
-
-      // 2. Cell Connectivity
-      auto conn = exp.GetConnectivityArray(viskores::TopologyElementTagCell(),
-                                           viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(conn, arrays.Index);
-
-      // 3. Cell Index
-      auto offsets = exp.GetOffsetsArray(viskores::TopologyElementTagCell(),
-                                         viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(offsets, arrays.CellIndex);
-    }
-
     // Vetrex Coordinates
-    viskores::cont::ArrayCopyShallowIfPossible(coords.GetData(), arrays.VertexPosition);
+    viskores::cont::ArrayCopyShallowIfPossible(coords.GetData(), unstructuredArrays.VertexPosition);
 
     // Vetrex Data
-    viskores::cont::ArrayCopyShallowIfPossible(fieldArray, arrays.VertexData);
+    viskores::cont::ArrayCopyShallowIfPossible(fieldArray, unstructuredArrays.VertexData);
 
     // "indexPrefixed"
     this->Handles->UnstructuredParameters.IndexPrefixed = false;
@@ -315,31 +314,30 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     auto& parameters = this->Handles->UnstructuredParameters;
 
     // "vertex.position"
-    parameters.VertexPosition = MakeANARIArray1D(d, arrays.VertexPosition);
+    parameters.VertexPosition = MakeANARIArray1D(d, unstructuredArrays.VertexPosition);
 
     // "vertex.data"
-    parameters.VertexData = MakeANARIArray1D(d, arrays.VertexData);
+    parameters.VertexData = MakeANARIArray1D(d, unstructuredArrays.VertexData);
 
-    // "index" (the type is explicit: ANARI has no type mapping for viskores::UInt64)
-    parameters.Index = MakeANARIArray1D(
-      d, arrays.Index, ANARI_UINT64, static_cast<std::uint64_t>(arrays.Index.GetNumberOfValues()));
+    // "index"
+    parameters.Index = MakeANARIArray1D(d, unstructuredArrays.Index);
 
     // "cell.index": the offsets array without its final entry
-    parameters.CellIndex =
-      MakeANARIArray1D(d,
-                       arrays.CellIndex,
-                       ANARI_UINT64,
-                       static_cast<std::uint64_t>(arrays.CellIndex.GetNumberOfValues() - 1));
+    parameters.CellIndex = MakeANARIArray1D(
+      d,
+      unstructuredArrays.CellIndex,
+      ANARI_UINT32,
+      static_cast<std::uint64_t>(unstructuredArrays.CellIndex.GetNumberOfValues() - 1));
 
     // TODO "cell.data" (NOT SUPPORTED YET)
-    // parameters.CellData = MakeANARIArray1D(d, arrays.CellData);
+    // parameters.CellData = MakeANARIArray1D(d, unstructuredArrays.CellData);
 
     // "cell.type"
     parameters.CellType =
       MakeANARIArray1D(d,
-                       arrays.CellType,
+                       unstructuredArrays.CellType,
                        ANARI_UINT8,
-                       static_cast<std::uint64_t>(arrays.CellType.GetNumberOfValues()));
+                       static_cast<std::uint64_t>(unstructuredArrays.CellType.GetNumberOfValues()));
 
     this->Valid = true;
   }
