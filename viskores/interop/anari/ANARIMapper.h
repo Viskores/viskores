@@ -167,8 +167,9 @@ anari_cpp::Array3D MakeANARIArray3D(anari_cpp::Device device,
 /// on the thread that would release them; see `MakeANARIArray1D`.
 ///
 /// Copies of a mapper share the same ANARI objects but keep their own actor,
-/// name, color table and settings. Rebuilding one copy, for example with
-/// `SetActor`, changes the geometry the other copies use.
+/// name and settings. Any change one copy makes to those objects, such as
+/// rebuilding geometry with `SetActor` or setting the ANARI color map, is seen
+/// by every copy, and the other copies are not told that their state is stale.
 struct VISKORES_ANARI_EXPORT ANARIMapper
 {
   ANARIMapper(
