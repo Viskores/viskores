@@ -7,8 +7,12 @@ destroyed the mapper, left the device reading freed memory. The mappers now
 create their arrays with `MakeANARIArray1D` and `MakeANARIArray3D` (in
 `viskores/interop/anari/ANARIMapper.h`). These functions hand the device a
 reference to the Viskores array, which it drops when it destroys the ANARI
-array, so retained handles stay valid after the mapper is gone.
+array, so retained handles stay valid after the mapper is gone. While the
+device holds such an array, writes to the Viskores array it shares wait, so
+release retained handles before you modify a field that a mapper shares
+without copying.
 
-The `TriangleArrays`, `TriangleFieldArrays`, `PointsArrays`,
+We removed the `TriangleArrays`, `TriangleFieldArrays`, `PointsArrays`,
 `PointsFieldArrays`, `GlyphArrays`, `StructuredVolumeArrays` and
-`UntructuredVolumeArrays` structs are no longer part of the public headers.
+`UntructuredVolumeArrays` structs from the public headers. They only described
+mapper internals.

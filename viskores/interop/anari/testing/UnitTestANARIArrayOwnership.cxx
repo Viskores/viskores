@@ -29,7 +29,7 @@ namespace
 
 // Host memory whose release the test can observe ////////////////////////////
 
-int NumTrackedBuffersFreed = 0;
+viskores::IdComponent NumTrackedBuffersFreed = 0;
 
 template <typename T>
 void TrackedDeleter(void* memory)
@@ -50,9 +50,9 @@ viskores::cont::ArrayHandleBasic<T> MakeTrackedArray(const std::vector<T>& value
 std::vector<viskores::Float32> MakeRamp(std::size_t size)
 {
   std::vector<viskores::Float32> values(size);
-  for (std::size_t i = 0; i < size; ++i)
+  for (std::size_t valueIndex = 0; valueIndex < size; ++valueIndex)
   {
-    values[i] = static_cast<viskores::Float32>(i);
+    values[valueIndex] = static_cast<viskores::Float32>(valueIndex);
   }
   return values;
 }
@@ -192,13 +192,13 @@ void RetainedSpatialFieldTests()
 template <typename MapperType>
 void CheckRetainedGeometry(anari_cpp::Device d,
                            const viskores::interop::anari::ANARIActor& actor,
-                           const char* what)
+                           const char* mapperName)
 {
   anari_cpp::Geometry geometry = nullptr;
   {
     MapperType mapper(d, actor);
     geometry = mapper.GetANARIGeometry();
-    VISKORES_TEST_ASSERT(geometry != nullptr, "No geometry created by the ", what, " mapper");
+    VISKORES_TEST_ASSERT(geometry != nullptr, "No geometry created by the ", mapperName, " mapper");
     anari_cpp::retain(d, geometry);
   }
 

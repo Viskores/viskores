@@ -320,7 +320,7 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     // "vertex.data"
     parameters.VertexData = MakeANARIArray1D(d, arrays.VertexData);
 
-    // "index"
+    // "index" (the type is explicit: ANARI has no type mapping for viskores::UInt64)
     parameters.Index = MakeANARIArray1D(
       d, arrays.Index, ANARI_UINT64, static_cast<std::uint64_t>(arrays.Index.GetNumberOfValues()));
 
