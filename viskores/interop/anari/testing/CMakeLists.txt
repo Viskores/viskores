@@ -16,6 +16,7 @@ SOURCES
   UnitTestANARIMapperTriangles.cxx
   UnitTestANARIMapperVolume.cxx
   UnitTestANARIMaterialMatte.cxx
+  UnitTestANARICameraDefaults.cxx
   UnitTestANARIGeometryCylinder.cxx
   UnitTestANARIGeometryQuad.cxx
   UnitTestANARIGeometrySphere.cxx
