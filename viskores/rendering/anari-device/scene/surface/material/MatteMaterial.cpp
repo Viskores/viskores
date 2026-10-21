@@ -29,7 +29,7 @@ void MatteMaterial::commitParameters()
   this->m_color = viskores::Min(viskores::Max(this->m_color, { 0.f, 0.f, 0.f }), { 1.f, 1.f, 1.f });
   // TODO: Implement sampler
 
-  this->m_opacityAttribute = helium::attributeFromString(this->getParamString("color", "none"));
+  this->m_opacityAttribute = helium::attributeFromString(this->getParamString("opacity", "none"));
   this->m_opacity = this->getParam("opacity", viskores::Float32{ 1.0f });
   // TODO: Implement sampler
 

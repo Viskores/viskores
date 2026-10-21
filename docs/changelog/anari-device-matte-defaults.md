@@ -8,3 +8,6 @@ drawn with an arbitrary color or opacity, or not at all, and Valgrind
 reported the uninitialized reads in `Canvas::BlendBackground`. The material
 now starts with the default color (0.8, 0.8, 0.8), opacity 1, opaque alpha
 mode and alpha cutoff 0.5.
+
+The material also read its opacity attribute from the `color` parameter
+instead of `opacity`. Nothing in the device uses that attribute yet.
