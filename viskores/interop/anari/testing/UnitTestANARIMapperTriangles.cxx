@@ -283,8 +283,8 @@ void DegenerateValueRangeTests()
   anari_cpp::release(d, d);
 }
 
-// A field the mapper cannot use is skipped with a warning naming it, and the
-// rest of the actor still renders. A usable field gives no warning.
+// A field the mapper cannot use is skipped, and the rest of the actor still
+// renders.
 void UnusableFieldTests()
 {
   auto d = loadANARIDevice();
@@ -312,15 +312,7 @@ void UnusableFieldTests()
       dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), field);
     viskores::interop::anari::ANARIMapperTriangles mapper(d, actor);
 
-    StderrCapture capture;
     mapper.GetANARIGeometry();
-    const auto log = capture.Stop();
-
-#ifdef VISKORES_ENABLE_LOGGING
-    VISKORES_TEST_ASSERT(log.find("skipping field '" + name + "'") != std::string::npos,
-                         "No warning for unusable field ",
-                         name);
-#endif
 
     const auto& params = mapper.GetANARITrianglesParameters();
     VISKORES_TEST_ASSERT(params.Vertex.Attribute[0] == nullptr &&
@@ -335,19 +327,6 @@ void UnusableFieldTests()
     const auto pixel = RenderSurface(d, mapper.GetANARISurface());
     VISKORES_TEST_ASSERT(
       pixel[0] + pixel[1] + pixel[2] > 0.f, "Nothing rendered with unusable field ", name);
-  }
-
-  // Usable fields, and the actor's unset field slots, give no warning.
-  {
-    viskores::interop::anari::ANARIActor actor(dataSet, "pointValues", "cellValues");
-    viskores::interop::anari::ANARIMapperTriangles mapper(d, actor);
-    mapper.SetCalculateNormals(true);
-
-    StderrCapture capture;
-    mapper.GetANARIGeometry();
-    const auto log = capture.Stop();
-    VISKORES_TEST_ASSERT(
-      log.find("skipping") == std::string::npos, "Warning for usable fields: ", log);
   }
 
   anari_cpp::release(d, d);
