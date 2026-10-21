@@ -24,10 +24,13 @@ struct Orthographic : public Camera
   viskores::rendering::Camera camera(const viskores::Bounds& bounds) const override;
 
 private:
-  viskores::Float32 m_aspect;
-  viskores::Float32 m_height;
-  viskores::Float32 m_near;
-  viskores::Float32 m_far;
+  // helium calls commitParameters() only for an object whose parameters changed
+  // since its last commit, so a camera committed without any parameters set
+  // keeps these values. They must match the defaults in commitParameters().
+  viskores::Float32 m_aspect{ 1.f };
+  viskores::Float32 m_height{ 1.f };
+  viskores::Float32 m_near{ -1.f };
+  viskores::Float32 m_far{ -1.f };
 };
 
 } // namespace viskores_device

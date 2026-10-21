@@ -38,8 +38,11 @@ struct Sampler : public Object
                          ColorMap& colorMap) const = 0;
 
 private:
-  Mat4f_32 m_outTransform;
-  viskores::Vec4f_32 m_outOffset;
+  // helium calls commitParameters() only for an object whose parameters changed
+  // since its last commit, so a sampler committed without any parameters set
+  // keeps these values. They must match the defaults in commitParameters().
+  Mat4f_32 m_outTransform{ viskores::MatrixIdentity<viskores::Float32, 4>() };
+  viskores::Vec4f_32 m_outOffset{ 0.f, 0.f, 0.f, 0.f };
 };
 
 } // namespace viskores_device

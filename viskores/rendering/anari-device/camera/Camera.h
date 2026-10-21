@@ -40,10 +40,13 @@ struct Camera : public Object
   virtual viskores::rendering::Camera camera(const viskores::Bounds& bounds) const = 0;
 
 protected:
-  viskores::Vec3f_32 m_position;
-  viskores::Vec3f_32 m_direction;
-  viskores::Vec3f_32 m_up;
-  viskores::Vec4f_32 m_imageRegion;
+  // helium calls commitParameters() only for an object whose parameters changed
+  // since its last commit, so a camera committed without any parameters set
+  // keeps these values. They must match the defaults in commitParameters().
+  viskores::Vec3f_32 m_position{ 0.f, 0.f, 0.f };
+  viskores::Vec3f_32 m_direction{ 0.f, 0.f, -1.f };
+  viskores::Vec3f_32 m_up{ 0.f, 1.f, 0.f };
+  viskores::Vec4f_32 m_imageRegion{ 0.f, 0.f, 1.f, 1.f };
 
   viskores::Float32 imageRegionToViewport(viskores::Float32 value) const;
 };

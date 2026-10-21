@@ -42,9 +42,14 @@ private:
   viskores::Range m_valueRange;
   helium::ChangeObserverPtr<Array1D> m_colorArray;
   helium::ChangeObserverPtr<Array1D> m_opacityArray;
-  float4 m_color;
-  viskores::Float32 m_alpha;
-  viskores::Float32 m_unitDistance;
+
+  // helium calls commitParameters() only for an object whose parameters changed
+  // since its last commit, so a volume committed without any parameters set
+  // keeps these values. They must match the defaults in commitParameters().
+  float4 m_color{ 1.f, 1.f, 1.f, 1.f };
+  viskores::Float32 m_alpha{ 1.f };
+  viskores::Float32 m_unitDistance{ 1.f };
+
   viskores::Float32 m_sampleDistance;
   viskores::cont::ArrayHandle<viskores::Vec4f_32> m_colorMap;
 };

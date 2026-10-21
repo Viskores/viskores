@@ -38,11 +38,17 @@ struct Image1DSampler : public Sampler
                  ColorMap& colorMap) const override;
 
 private:
-  Mat4f_32 m_inTransform;
-  viskores::Vec4f_32 m_inOffset;
+  // helium calls commitParameters() only for an object whose parameters changed
+  // since its last commit, so a sampler committed without any parameters set
+  // keeps these values. They must match the defaults in commitParameters().
+  Mat4f_32 m_inTransform{ viskores::MatrixIdentity<viskores::Float32, 4>() };
+  viskores::Vec4f_32 m_inOffset{ 0.f, 0.f, 0.f, 0.f };
+  helium::WrapMode m_wrapMode{ helium::WrapMode::CLAMP_TO_EDGE };
+
+  // Empty until commitParameters() sets it, so a sampler without parameters
+  // matches no field and the material falls back to its own color.
   std::string m_inAttribute;
   helium::ChangeObserverPtr<Array1D> m_colorArray;
-  helium::WrapMode m_wrapMode;
 
   viskores::cont::ArrayHandle<viskores::Vec4f_32> m_colorMap;
 };
