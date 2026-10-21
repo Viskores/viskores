@@ -9,12 +9,16 @@
 //=============================================================================
 
 #include "Cylinder.h"
+#include "PaddedBounds.h"
 // Viskores
 #include <viskores/CellShape.h>
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandleConstant.h>
+#include <viskores/cont/ArrayHandleExtractComponent.h>
+#include <viskores/cont/ArrayHandlePermutation.h>
 #include <viskores/cont/ArrayHandleRuntimeVec.h>
+#include <viskores/cont/ArrayHandleView.h>
 #include <viskores/cont/CellSetSingleType.h>
 #include <viskores/cont/Invoker.h>
 #include <viskores/rendering/CanvasRayTracer.h>
@@ -120,6 +124,7 @@ void Cylinder::finalize()
   this->m_radii = viskores::cont::ArrayHandle<viskores::Float32>{};
   this->m_capMasks = viskores::cont::ArrayHandle<viskores::UInt8>{};
   this->m_cylinderIntersector.reset();
+  this->m_bounds = viskores::Bounds{};
 
   helium::ChangeObserverPtr<Array1D>& positionArray = this->m_vertexAttributes.getParam("position");
   if (!positionArray)
@@ -169,6 +174,7 @@ void Cylinder::finalize()
   this->m_cylinderIds = cylinderExtractor.GetCylIds();
   this->BuildRadii(cylinderExtractor.GetNumberOfCylinders());
   this->BuildCapMasks();
+  this->BuildBounds();
 
   if (this->m_cylinderIds.GetNumberOfValues() > 0)
   {
@@ -220,6 +226,11 @@ void Cylinder::render(viskores::rendering::Canvas& canvas,
   canvasRT->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
 }
 
+viskores::Bounds Cylinder::bounds() const
+{
+  return this->m_bounds;
+}
+
 bool Cylinder::isValid() const
 {
   return this->m_vertexAttributes.getParam("position");
@@ -250,6 +261,22 @@ void Cylinder::BuildRadii(viskores::Id numberOfCylinders)
   else
   {
     this->m_radii.AllocateAndFill(numberOfCylinders, this->m_globalRadius);
+  }
+}
+
+void Cylinder::BuildBounds()
+{
+  // A cylinder lies within its radius of the segment between its end points,
+  // so the boxes around both end points cover it.
+  const viskores::Id numberOfCylinders = this->m_cylinderIds.GetNumberOfValues();
+  const auto radii = viskores::cont::make_ArrayHandleView(this->m_radii, 0, numberOfCylinders);
+  const auto points = this->m_dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
+  for (viskores::IdComponent end : { 1, 2 })
+  {
+    const auto endPointIds =
+      viskores::cont::make_ArrayHandleExtractComponent(this->m_cylinderIds, end);
+    this->m_bounds.Include(
+      PaddedBounds(viskores::cont::make_ArrayHandlePermutation(endPointIds, points), radii));
   }
 }
 

@@ -39,6 +39,9 @@ struct Cylinder : public Geometry
   void commitParameters() override;
   void finalize() override;
 
+  // The bounds of the end points padded by each cylinder's radius.
+  viskores::Bounds bounds() const override;
+
   bool isValid() const override;
 
   virtual void render(
@@ -56,6 +59,8 @@ private:
 
   void BuildCapMasks();
 
+  void BuildBounds();
+
   helium::ChangeObserverPtr<Array1D> m_index;
   helium::ChangeObserverPtr<Array1D> m_radius;
   helium::ChangeObserverPtr<Array1D> m_caps;
@@ -65,6 +70,7 @@ private:
   viskores::cont::ArrayHandle<viskores::Float32> m_radii;
   viskores::cont::ArrayHandle<viskores::UInt8> m_capMasks;
   std::shared_ptr<viskores::rendering::raytracing::CylinderIntersector> m_cylinderIntersector;
+  viskores::Bounds m_bounds;
 
   float m_globalRadius{ 0.01f };
   viskores::UInt8 m_globalCapMask{ 0 };

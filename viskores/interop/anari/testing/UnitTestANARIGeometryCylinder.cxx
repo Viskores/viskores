@@ -12,8 +12,71 @@
 
 #include "ANARITestCommon.h"
 
+#include <array>
+
 namespace
 {
+
+// Read the world's `bounds` property as { min corner, max corner }.
+std::array<viskores::Vec3f_32, 2> GetWorldBounds(anari_cpp::Device d, anari_cpp::World world)
+{
+  std::array<viskores::Vec3f_32, 2> bounds;
+  VISKORES_TEST_ASSERT(
+    anariGetProperty(
+      d, world, "bounds", ANARI_FLOAT32_BOX3, bounds.data(), sizeof(bounds), ANARI_WAIT),
+    "The device did not report the world bounds");
+  return bounds;
+}
+
+void CheckWorldBounds(anari_cpp::Device d,
+                      anari_cpp::World world,
+                      const viskores::Vec3f_32& expectedMin,
+                      const viskores::Vec3f_32& expectedMax)
+{
+  const auto bounds = GetWorldBounds(d, world);
+  VISKORES_TEST_ASSERT(test_equal(bounds[0], expectedMin),
+                       "World bounds minimum ",
+                       bounds[0],
+                       " does not include the cylinder radius; expected ",
+                       expectedMin);
+  VISKORES_TEST_ASSERT(test_equal(bounds[1], expectedMax),
+                       "World bounds maximum ",
+                       bounds[1],
+                       " does not include the cylinder radius; expected ",
+                       expectedMax);
+}
+
+// A single cylinder with the global radius covers each end point -/+ radius.
+void GlobalRadiusBoundsTests(anari_cpp::Device d)
+{
+  auto vertices = anari_cpp::newArray1D(d, ANARI_FLOAT32_VEC3, 2);
+  auto* positions = anari_cpp::map<viskores::Vec3f_32>(d, vertices);
+  positions[0] = viskores::Vec3f_32(1.f, 2.f, 3.f);
+  positions[1] = viskores::Vec3f_32(1.f, 2.f, 4.f);
+  anari_cpp::unmap(d, vertices);
+
+  auto geometry = anari_cpp::newObject<anari_cpp::Geometry>(d, "cylinder");
+  anari_cpp::setAndReleaseParameter(d, geometry, "vertex.position", vertices);
+  anari_cpp::setParameter(d, geometry, "radius", 0.5f);
+  anari_cpp::commitParameters(d, geometry);
+
+  auto material = anari_cpp::newObject<anari_cpp::Material>(d, "matte");
+  anari_cpp::commitParameters(d, material);
+
+  auto surface = anari_cpp::newObject<anari_cpp::Surface>(d);
+  anari_cpp::setAndReleaseParameter(d, surface, "geometry", geometry);
+  anari_cpp::setAndReleaseParameter(d, surface, "material", material);
+  anari_cpp::commitParameters(d, surface);
+
+  auto world = anari_cpp::newObject<anari_cpp::World>(d);
+  anari_cpp::setParameterArray1D(d, world, "surface", &surface, 1);
+  anari_cpp::commitParameters(d, world);
+  anari_cpp::release(d, surface);
+
+  CheckWorldBounds(
+    d, world, viskores::Vec3f_32(0.5f, 1.5f, 2.5f), viskores::Vec3f_32(1.5f, 2.5f, 4.5f));
+  anari_cpp::release(d, world);
+}
 
 void RenderTests()
 {
@@ -124,6 +187,14 @@ void RenderTests()
                        viskores::Vec3f_32(0.f, 0.f, 1.f),
                        "interop/anari/cylinder.png",
                        viskores::Vec2ui_32(512, 512));
+
+  // Check bounds /////////////////////////////////////////////////////////////
+
+  // Per-primitive radii. The expected corners are the extremes of each end
+  // point -/+ its cylinder's radius.
+  CheckWorldBounds(
+    d, world, viskores::Vec3f_32(-0.98f, -0.43f, -0.47f), viskores::Vec3f_32(0.78f, 0.47f, 0.47f));
+  GlobalRadiusBoundsTests(d);
 
   // Cleanup //////////////////////////////////////////////////////////////////
 
