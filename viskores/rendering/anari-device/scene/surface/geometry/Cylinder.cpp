@@ -271,10 +271,11 @@ void Cylinder::BuildBounds()
   const viskores::Id numberOfCylinders = this->m_cylinderIds.GetNumberOfValues();
   const auto radii = viskores::cont::make_ArrayHandleView(this->m_radii, 0, numberOfCylinders);
   const auto points = this->m_dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
-  for (viskores::IdComponent end : { 1, 2 })
+  // Components 1 and 2 of each cylinder id are its end point ids (0 is the cell).
+  for (viskores::IdComponent endPointComponent : { 1, 2 })
   {
     const auto endPointIds =
-      viskores::cont::make_ArrayHandleExtractComponent(this->m_cylinderIds, end);
+      viskores::cont::make_ArrayHandleExtractComponent(this->m_cylinderIds, endPointComponent);
     this->m_bounds.Include(
       PaddedBounds(viskores::cont::make_ArrayHandlePermutation(endPointIds, points), radii));
   }

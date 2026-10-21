@@ -11,3 +11,6 @@ when there is none.
 The world bounds also left out instance transforms: each instance's group
 bounds were added untransformed. The world bounds now cover the 8 corners
 of each group's bounds after its instance's `transform`.
+The device does not yet apply instance transforms when it renders, so this
+changes only the reported bounds and the size of the cameras' default
+clipping range, which follows the length of the bounds' diagonal.

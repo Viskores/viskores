@@ -27,13 +27,13 @@ viskores::Bounds TransformBounds(const mat4& xfm, const viskores::Bounds& bounds
     return bounds;
   }
   viskores::Bounds result;
-  for (int corner = 0; corner < 8; ++corner)
+  for (viskores::IdComponent corner = 0; corner < 8; ++corner)
   {
     const viskores::Vec3f_64 point((corner & 1) ? bounds.X.Max : bounds.X.Min,
                                    (corner & 2) ? bounds.Y.Max : bounds.Y.Min,
                                    (corner & 4) ? bounds.Z.Max : bounds.Z.Min);
     viskores::Vec3f_64 transformed;
-    for (int row = 0; row < 3; ++row)
+    for (viskores::IdComponent row = 0; row < 3; ++row)
     {
       transformed[row] =
         xfm[0][row] * point[0] + xfm[1][row] * point[1] + xfm[2][row] * point[2] + xfm[3][row];

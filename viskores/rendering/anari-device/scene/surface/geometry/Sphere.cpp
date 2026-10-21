@@ -78,20 +78,19 @@ void Sphere::finalize()
   // At this point, this->m_dataSet should have fields for all vertex arrays
   // passed through ANARI properties.
 
+  const auto centers = this->m_dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
   if (this->m_dataSet.HasField("radius"))
   {
     this->m_radiusRange = this->m_dataSet.GetField("radius").GetRange().ReadPortal().Get(0);
     viskores::cont::ArrayHandle<viskores::Float32> radii;
     viskores::cont::ArrayCopyShallowIfPossible(this->m_dataSet.GetField("radius").GetData(), radii);
-    this->m_bounds =
-      PaddedBounds(this->m_dataSet.GetCoordinateSystem().GetDataAsMultiplexer(), radii);
+    this->m_bounds = PaddedBounds(centers, radii);
   }
   else
   {
     this->m_bounds = PaddedBounds(
-      this->m_dataSet.GetCoordinateSystem().GetDataAsMultiplexer(),
-      viskores::cont::make_ArrayHandleConstant(
-        this->m_globalRadius, this->m_dataSet.GetCoordinateSystem().GetNumberOfValues()));
+      centers,
+      viskores::cont::make_ArrayHandleConstant(this->m_globalRadius, centers.GetNumberOfValues()));
   }
 
   auto connIdx = viskores::cont::make_ArrayHandleIndex(numSpheres);
