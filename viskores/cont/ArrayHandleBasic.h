@@ -20,6 +20,7 @@
 #include <viskores/VecFlat.h>
 
 #include <limits>
+#include <utility>
 
 namespace viskores
 {
@@ -345,12 +346,14 @@ VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandleMove(
 
 /// Move an std::vector into an ArrayHandle.
 ///
+/// The `CopyFlag` is ignored. The vector's memory is always moved, never copied.
+///
 template <typename T, typename Allocator>
 VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandle(
   std::vector<T, Allocator>&& array,
   viskores::CopyFlag viskoresNotUsed(copy))
 {
-  return make_ArrayHandleMove(array);
+  return make_ArrayHandleMove(std::move(array));
 }
 
 /// Create an ArrayHandle directly from an initializer list of values.

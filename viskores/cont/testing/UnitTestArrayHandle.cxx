@@ -328,6 +328,16 @@ struct VerifyVectorMovedMemory
       //check that we got the proper values in the user array
       CheckArray(arrayHandle);
     }
+
+    std::cout << "Check make_ArrayHandle with an std::vector rvalue." << std::endl;
+    for (viskores::CopyFlag copy : { viskores::CopyFlag::On, viskores::CopyFlag::Off })
+    {
+      viskores::cont::ArrayHandle<T> movedHandle = viskores::cont::make_ArrayHandle(
+        std::vector<T>{ TestValue(0, T()), TestValue(1, T()), TestValue(2, T()) }, copy);
+      VISKORES_TEST_ASSERT(movedHandle.GetNumberOfValues() == 3,
+                           "ArrayHandle has wrong number of entries.");
+      CheckArray(movedHandle);
+    }
   }
 };
 
