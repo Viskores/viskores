@@ -490,6 +490,7 @@ void ANARIMapperVolume::ANARIHandles::ReleaseArrays()
   };
 
   releaseArray(this->StructuredParameters.Data);
+  this->StructuredParameters = StructuredVolumeParameters{};
 
   releaseArray(this->UnstructuredParameters.VertexPosition);
   releaseArray(this->UnstructuredParameters.VertexData);

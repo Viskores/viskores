@@ -24,9 +24,9 @@ namespace anari
 struct StructuredVolumeParameters
 {
   anari_cpp::Array3D Data{ nullptr };
-  int Dims[3];
-  float Origin[3];
-  float Spacing[3];
+  int Dims[3]{};
+  float Origin[3]{};
+  float Spacing[3]{};
 };
 
 struct UnstructuredVolumeParameters

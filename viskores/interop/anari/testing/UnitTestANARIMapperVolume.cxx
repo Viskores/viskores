@@ -289,8 +289,15 @@ void CheckOnlyUnstructuredParameters(const viskores::interop::anari::ANARIMapper
   VISKORES_TEST_ASSERT(unstructured.Index != nullptr, "Missing index");
   VISKORES_TEST_ASSERT(unstructured.CellIndex != nullptr, "Missing cell.index");
   VISKORES_TEST_ASSERT(unstructured.CellType != nullptr, "Missing cell.type");
-  VISKORES_TEST_ASSERT(mVol.GetANARIStructuredParameters().Data == nullptr,
+  const auto& structured = mVol.GetANARIStructuredParameters();
+  VISKORES_TEST_ASSERT(structured.Data == nullptr,
                        "Stale structured data left on an unstructured spatial field");
+  for (int axis = 0; axis < 3; ++axis)
+  {
+    VISKORES_TEST_ASSERT(structured.Dims[axis] == 0, "Stale structured dims");
+    VISKORES_TEST_ASSERT(structured.Origin[axis] == 0.f, "Stale structured origin");
+    VISKORES_TEST_ASSERT(structured.Spacing[axis] == 0.f, "Stale structured spacing");
+  }
 }
 
 void CheckOnlyStructuredParameters(const viskores::interop::anari::ANARIMapperVolume& mVol)
