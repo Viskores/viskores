@@ -214,85 +214,6 @@ void BoundsTests(anari_cpp::Device d)
   anari_cpp::release(d, singleWorld);
 }
 
-// An instance of `group` with the column-major transform `xfm`.
-anari_cpp::Instance CreateInstance(anari_cpp::Device d,
-                                   anari_cpp::Group group,
-                                   const std::array<float, 16>& xfm)
-{
-  auto instance = anari_cpp::newObject<anari_cpp::Instance>(d, "transform");
-  anari_cpp::setParameter(d, instance, "group", group);
-  anariSetParameter(d, instance, "transform", ANARI_FLOAT32_MAT4, xfm.data());
-  anari_cpp::commitParameters(d, instance);
-  return instance;
-}
-
-// The world bounds cover each instance's group after its transform.
-void InstanceBoundsTests(anari_cpp::Device d)
-{
-  auto vertices = anari_cpp::newArray1D(d, ANARI_FLOAT32_VEC3, 1);
-  *anari_cpp::map<viskores::Vec3f_32>(d, vertices) = viskores::Vec3f_32(1.f, 2.f, 3.f);
-  anari_cpp::unmap(d, vertices);
-
-  auto geometry = anari_cpp::newObject<anari_cpp::Geometry>(d, "sphere");
-  anari_cpp::setAndReleaseParameter(d, geometry, "vertex.position", vertices);
-  anari_cpp::setParameter(d, geometry, "radius", 0.5f);
-  anari_cpp::commitParameters(d, geometry);
-
-  auto material = anari_cpp::newObject<anari_cpp::Material>(d, "matte");
-  anari_cpp::commitParameters(d, material);
-
-  auto surface = anari_cpp::newObject<anari_cpp::Surface>(d);
-  anari_cpp::setAndReleaseParameter(d, surface, "geometry", geometry);
-  anari_cpp::setAndReleaseParameter(d, surface, "material", material);
-  anari_cpp::commitParameters(d, surface);
-
-  // The group's bounds are (0.5, 1.5, 2.5) to (1.5, 2.5, 3.5).
-  auto group = anari_cpp::newObject<anari_cpp::Group>(d);
-  anari_cpp::setParameterArray1D(d, group, "surface", &surface, 1);
-  anari_cpp::commitParameters(d, group);
-  anari_cpp::release(d, surface);
-
-  const std::array<float, 16> translate = { 1.f, 0.f, 0.f, 0.f, 0.f,  1.f, 0.f, 0.f,
-                                            0.f, 0.f, 1.f, 0.f, 10.f, 0.f, 0.f, 1.f };
-  auto translated = CreateInstance(d, group, translate);
-
-  auto world = anari_cpp::newObject<anari_cpp::World>(d);
-  anari_cpp::setParameterArray1D(d, world, "instance", &translated, 1);
-  anari_cpp::commitParameters(d, world);
-
-  auto bounds = GetWorldBounds(d, world);
-  VISKORES_TEST_ASSERT(test_equal(bounds[0], viskores::Vec3f_32(10.5f, 1.5f, 2.5f)) &&
-                         test_equal(bounds[1], viskores::Vec3f_32(11.5f, 2.5f, 3.5f)),
-                       "World bounds ",
-                       bounds[0],
-                       " to ",
-                       bounds[1],
-                       " do not follow the translated instance");
-
-  // A second instance scaled by 2 and rotated a quarter turn about z, which
-  // maps (x, y, z) to (-2y, 2x, 2z): its corners span (-5, 1, 5) to (-3, 3, 7).
-  const std::array<float, 16> rotateScale = { 0.f, 2.f, 0.f, 0.f, -2.f, 0.f, 0.f, 0.f,
-                                              0.f, 0.f, 2.f, 0.f, 0.f,  0.f, 0.f, 1.f };
-  auto rotated = CreateInstance(d, group, rotateScale);
-  const anari_cpp::Instance instances[] = { translated, rotated };
-  anari_cpp::setParameterArray1D(d, world, "instance", instances, 2);
-  anari_cpp::commitParameters(d, world);
-
-  bounds = GetWorldBounds(d, world);
-  VISKORES_TEST_ASSERT(test_equal(bounds[0], viskores::Vec3f_32(-5.f, 1.f, 2.5f)) &&
-                         test_equal(bounds[1], viskores::Vec3f_32(11.5f, 3.f, 7.f)),
-                       "World bounds ",
-                       bounds[0],
-                       " to ",
-                       bounds[1],
-                       " do not cover both transformed instances");
-
-  anari_cpp::release(d, translated);
-  anari_cpp::release(d, rotated);
-  anari_cpp::release(d, group);
-  anari_cpp::release(d, world);
-}
-
 // Render `world` with the default clipping range and return the middle pixel.
 viskores::Vec4f_32 RenderMiddlePixel(anari_cpp::Device d,
                                      anari_cpp::World world,
@@ -423,7 +344,6 @@ void RenderTests()
 
   BoundsTests(d);
   LargeSpheresTests(d);
-  InstanceBoundsTests(d);
 
   // Cleanup //////////////////////////////////////////////////////////////////
 

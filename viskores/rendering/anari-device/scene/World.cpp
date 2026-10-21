@@ -15,36 +15,6 @@
 namespace viskores_device
 {
 
-namespace
-{
-
-// The box around the 8 corners of `bounds` after the affine, column-major
-// transform `xfm`.
-viskores::Bounds TransformBounds(const mat4& xfm, const viskores::Bounds& bounds)
-{
-  if (!bounds.IsNonEmpty())
-  {
-    return bounds;
-  }
-  viskores::Bounds result;
-  for (viskores::IdComponent corner = 0; corner < 8; ++corner)
-  {
-    const viskores::Vec3f_64 point((corner & 1) ? bounds.X.Max : bounds.X.Min,
-                                   (corner & 2) ? bounds.Y.Max : bounds.Y.Min,
-                                   (corner & 4) ? bounds.Z.Max : bounds.Z.Min);
-    viskores::Vec3f_64 transformed;
-    for (viskores::IdComponent row = 0; row < 3; ++row)
-    {
-      transformed[row] =
-        xfm[0][row] * point[0] + xfm[1][row] * point[1] + xfm[2][row] * point[2] + xfm[3][row];
-    }
-    result.Include(transformed);
-  }
-  return result;
-}
-
-} // namespace
-
 World::World(ViskoresDeviceGlobalState* s)
   : Object(ANARI_WORLD, s)
   , m_zeroSurfaceData(this)
@@ -162,7 +132,6 @@ viskores::Bounds World::bounds() const
       reportMessage(ANARI_SEVERITY_DEBUG, "skip bounds check on invalid group");
       continue;
     }
-    viskores::Bounds groupBounds;
     for (auto&& surface : instance->group()->surfaces())
     {
       if (!surface || !surface->isValid())
@@ -170,7 +139,7 @@ viskores::Bounds World::bounds() const
         reportMessage(ANARI_SEVERITY_DEBUG, "skip bounds check on invalid surface");
         continue;
       }
-      groupBounds.Include(surface->bounds());
+      bounds.Include(surface->bounds());
     }
     for (auto&& volume : instance->group()->volumes())
     {
@@ -179,10 +148,8 @@ viskores::Bounds World::bounds() const
         reportMessage(ANARI_SEVERITY_DEBUG, "skip bounds check on invalid volume");
         continue;
       }
-      groupBounds.Include(volume->bounds());
+      bounds.Include(volume->bounds());
     }
-    bounds.Include(instance->xfmIsIdentity() ? groupBounds
-                                             : TransformBounds(instance->xfm(), groupBounds));
   }
 
   return bounds;
