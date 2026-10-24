@@ -26,7 +26,6 @@ viskores_unit_tests(
   SOURCES ${unit_tests} ${testing_headers}
   DEVICE_SOURCES ${unit_tests_device}
   LIBRARIES ${libraries}
-  USE_VISKORES_JOB_POOL
 )
 
 if (Viskores_ENABLE_MPI)
@@ -35,6 +34,5 @@ if (Viskores_ENABLE_MPI)
     SOURCES ${testing_headers}
     DEVICE_SOURCES UnitTestHistSamplingMPI.cxx
     LIBRARIES ${libraries}
-    USE_VISKORES_JOB_POOL
   )
 endif()

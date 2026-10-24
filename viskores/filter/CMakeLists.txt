@@ -29,7 +29,6 @@ viskores_library(
   HEADERS ${core_headers}
   SOURCES ${core_sources}
   DEVICE_SOURCES ${core_sources_device}
-  USE_VISKORES_JOB_POOL
 )
 
 add_library(viskores_filter INTERFACE)

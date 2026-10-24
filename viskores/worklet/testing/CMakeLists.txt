@@ -49,7 +49,6 @@ set(unit_tests
 viskores_unit_tests(
   DEVICE_SOURCES ${unit_tests}
   LIBRARIES viskores_source viskores_worklet viskores_filter viskores_io
-  USE_VISKORES_JOB_POOL
   )
 if (TARGET viskores_cuda)
   if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND

@@ -51,7 +51,6 @@ viskores_library(
   HEADERS ${flow_headers}
   SOURCES ${flow_sources}
   DEVICE_SOURCES ${flow_device_sources} ${advection_worklet_instantiations}
-  USE_VISKORES_JOB_POOL
 )
 
 target_link_libraries(viskores_filter PUBLIC INTERFACE viskores_filter_flow)
