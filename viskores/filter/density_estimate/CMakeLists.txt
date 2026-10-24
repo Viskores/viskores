@@ -34,7 +34,6 @@ viskores_library(
   NAME viskores_filter_density_estimate
   HEADERS ${density_estimate_headers}
   DEVICE_SOURCES ${density_estimate_sources_device}
-  USE_VISKORES_JOB_POOL
 )
 
 set_property(TARGET

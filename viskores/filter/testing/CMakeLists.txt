@@ -21,5 +21,4 @@ viskores_unit_tests(
   NAME UnitTests_viskores_filter_core_testing
   DEVICE_SOURCES ${unit_tests}
   LIBRARIES ${libraries}
-  USE_VISKORES_JOB_POOL
   )

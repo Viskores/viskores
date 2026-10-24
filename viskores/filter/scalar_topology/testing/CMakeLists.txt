@@ -40,7 +40,6 @@ set_source_files_properties(${device_sources}
 viskores_unit_tests(
   SOURCES ${unit_tests}
   DEVICE_SOURCES ${unit_tests_device} ${device_sources}
-  USE_VISKORES_JOB_POOL
 )
 
 if (Viskores_ENABLE_MPI)
@@ -54,6 +53,5 @@ if (Viskores_ENABLE_MPI)
     SOURCES ${mpi_unit_tests}
     DEVICE_SOURCES ${mpi_unit_tests_device} ${device_sources}
     LIBRARIES viskores_filter viskores_source viskores_io
-    USE_VISKORES_JOB_POOL
   )
 endif()

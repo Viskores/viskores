@@ -36,7 +36,6 @@ viskores_library(
   NAME viskores_filter_scalar_topology
   HEADERS ${scalar_topology_headers}
   DEVICE_SOURCES ${scalar_topology_sources}
-  USE_VISKORES_JOB_POOL
 )
 
 if (Viskores_ENABLE_MPI)
