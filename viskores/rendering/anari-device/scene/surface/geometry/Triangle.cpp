@@ -67,8 +67,6 @@ void Triangle::commitParameters()
 
 void Triangle::finalize()
 {
-  this->Geometry::finalize();
-
   helium::ChangeObserverPtr<Array1D>& positionArray = this->m_vertexAttributes.getParam("position");
   if (!positionArray)
   {
@@ -113,6 +111,7 @@ void Triangle::finalize()
                connectionArray.GetComponentsArray());
   this->m_dataSet.SetCellSet(cellSet);
 
+  this->Geometry::finalize();
   this->m_vertexAttributes.setFields(this->m_dataSet);
   this->m_faceVaryingAttributes.setFields(this->m_dataSet);
 
