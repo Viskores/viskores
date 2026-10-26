@@ -24,5 +24,4 @@ set(libraries
 viskores_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
-  USE_VISKORES_JOB_POOL
 )

@@ -24,7 +24,6 @@ viskores_library(
   NAME viskores_filter_image_processing
   HEADERS ${image_processing_headers}
   DEVICE_SOURCES ${image_processing_sources}
-  USE_VISKORES_JOB_POOL
 )
 
 target_link_libraries(viskores_filter PUBLIC INTERFACE viskores_filter_image_processing)

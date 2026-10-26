@@ -81,7 +81,6 @@ viskores_library(
   TEMPLATE_SOURCES ${header_impls}
   HEADERS ${headers}
   DEVICE_SOURCES ${sources_device}
-  USE_VISKORES_JOB_POOL
   )
 
 set_source_files_properties(${sources_device} PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)

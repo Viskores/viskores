@@ -146,7 +146,6 @@ viskores_library(
   NAME viskores_filter_entity_extraction
   HEADERS ${entity_extraction_headers}
   DEVICE_SOURCES ${entity_extraction_sources_device}
-  USE_VISKORES_JOB_POOL
 )
 
 target_link_libraries(viskores_filter PUBLIC INTERFACE viskores_filter_entity_extraction)
@@ -214,7 +213,6 @@ set(libraries
 viskores_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
-  USE_VISKORES_JOB_POOL
 )
 ```
 

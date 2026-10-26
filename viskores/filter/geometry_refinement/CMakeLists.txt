@@ -40,7 +40,6 @@ viskores_library(
   HEADERS ${geometry_refinement_headers}
   TEMPLATE_SOURCES ${geometry_refinement_template_sources}
   DEVICE_SOURCES ${geometry_refinement_sources}
-  USE_VISKORES_JOB_POOL
 )
 
 target_link_libraries(viskores_filter PUBLIC INTERFACE viskores_filter_geometry_refinement)

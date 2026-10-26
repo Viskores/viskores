@@ -16,8 +16,7 @@ function(_viskores_create_test_executable
   libraries
   defines
   is_mpi_test
-  use_mpi
-  use_job_pool)
+  use_mpi)
 
   viskores_diy_use_mpi_push()
 
@@ -71,10 +70,7 @@ function(_viskores_create_test_executable
 
   target_link_libraries(${prog} PRIVATE viskores_cont_testing ${libraries})
 
-  if(use_job_pool)
-    viskores_setup_job_pool()
-    set_property(TARGET ${prog} PROPERTY JOB_POOL_COMPILE viskores_pool)
-  endif()
+  viskores_set_job_pool(${prog} DEVICE_SOURCES ${device_sources})
 
   viskores_diy_use_mpi_pop()
 endfunction()
@@ -93,7 +89,6 @@ endfunction()
 #   [ MPI ]
 #   [ BACKEND <device> ]
 #   [ ALL_BACKENDS ]
-#   [ USE_VISKORES_JOB_POOL ]
 #   )
 #
 # NAME : Specify the name of the testing executable. If not specified,
@@ -134,7 +129,7 @@ endfunction()
 #
 function(viskores_unit_tests)
   set(options)
-  set(global_options ${options} USE_VISKORES_JOB_POOL MPI ALL_BACKENDS)
+  set(global_options ${options} MPI ALL_BACKENDS)
   set(oneValueArgs BACKEND NAME LABEL)
   set(multiValueArgs SOURCES DEVICE_SOURCES LIBRARIES DEFINES TEST_ARGS)
   cmake_parse_arguments(Viskores_UT
@@ -267,8 +262,7 @@ viskores_unit_tests but not in its test dependencies. Add test dependencies to \
         "${test_libraries}"
         "${Viskores_UT_DEFINES}"
         ON   # is_mpi_test
-        ON   # use_mpi
-        ${Viskores_UT_USE_VISKORES_JOB_POOL})
+        ON)   # use_mpi
     endif()
     if ((NOT Viskores_ENABLE_MPI) OR Viskores_ENABLE_DIY_NOMPI)
       _viskores_create_test_executable(
@@ -278,8 +272,7 @@ viskores_unit_tests but not in its test dependencies. Add test dependencies to \
         "${test_libraries}"
         "${Viskores_UT_DEFINES}"
         ON   # is_mpi_test
-        OFF  # use_mpi
-        ${Viskores_UT_USE_VISKORES_JOB_POOL})
+        OFF)  # use_mpi
     endif()
   else()
     _viskores_create_test_executable(
@@ -289,8 +282,7 @@ viskores_unit_tests but not in its test dependencies. Add test dependencies to \
       "${test_libraries}"
       "${Viskores_UT_DEFINES}"
       OFF   # is_mpi_test
-      OFF   # use_mpi
-      ${Viskores_UT_USE_VISKORES_JOB_POOL})
+      OFF)   # use_mpi
   endif()
 
   list(LENGTH per_device_command_line_arguments number_of_devices)

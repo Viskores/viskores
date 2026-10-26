@@ -159,34 +159,41 @@ function(viskores_declare_headers)
 endfunction(viskores_declare_headers)
 
 #-----------------------------------------------------------------------------
-function(viskores_setup_job_pool)
-  # The Viskores job pool is only used for components that use large amounts
-  # of memory such as worklet tests, filters, and filter tests
-  get_property(viskores_pool_established
-    GLOBAL PROPERTY VISKORES_JOB_POOL_ESTABLISHED SET)
-  if(NOT viskores_pool_established)
-    # The Viskores filters uses large amounts of memory to compile as it does lots
-    # of template expansion. To reduce the amount of tension on the machine when
-    # using generators such as ninja we restrict the number of Viskores enabled
-    # compilation units to be built at the same time.
-    #
-    # We try to allocate a pool size where we presume each compilation process
-    # will require 3GB of memory. To allow for other NON Viskores jobs we leave at
-    # least 3GB of memory as 'slop'.
-    if (NOT DEFINED viskores_pool_size)
+# Compile jobs of targets that use a GPU compiler (CUDA or HIP) are put in
+# `viskores_pool_gpu` and the rest in `viskores_pool_cpu`. The pool sizes can be
+# overridden by defining `viskores_gpu_pool_size` or `viskores_cpu_pool_size`.
+function(viskores_set_job_pool target)
+  cmake_parse_arguments(Viskores_JP "" "" "DEVICE_SOURCES" ${ARGN})
+
+  get_property(pools_established GLOBAL PROPERTY VISKORES_GPU_CPU_POOLS_ESTABLISHED SET)
+  if(NOT pools_established)
+    if (NOT DEFINED viskores_gpu_pool_size)
+      # GPU compilers use more memory than the host ones, assume 6GB per job.
       cmake_host_system_information(RESULT viskores_mem_ QUERY TOTAL_PHYSICAL_MEMORY)
-      math(EXPR viskores_pool_size "(${viskores_mem_}/3072)-1")
-    endif ()
-
-    if (viskores_pool_size LESS 1)
-      set(viskores_pool_size 1)
-    endif ()
-
-    set_property(GLOBAL APPEND
-      PROPERTY
-        JOB_POOLS viskores_pool=${viskores_pool_size})
-    set_property(GLOBAL PROPERTY VISKORES_JOB_POOL_ESTABLISHED TRUE)
+      math(EXPR viskores_gpu_pool_size "(${viskores_mem_}/6144)-1")
+    endif()
+    if (viskores_gpu_pool_size LESS 1)
+      set(viskores_gpu_pool_size 1)
+    endif()
+    if (NOT DEFINED viskores_cpu_pool_size)
+      cmake_host_system_information(RESULT viskores_cpu_pool_size
+        QUERY NUMBER_OF_LOGICAL_CORES)
+    endif()
+    set_property(GLOBAL APPEND PROPERTY JOB_POOLS
+      viskores_pool_gpu=${viskores_gpu_pool_size}
+      viskores_pool_cpu=${viskores_cpu_pool_size})
+    set_property(GLOBAL PROPERTY VISKORES_GPU_CPU_POOLS_ESTABLISHED TRUE)
   endif()
+
+  if(Viskores_JP_DEVICE_SOURCES AND
+     (TARGET viskores_cuda OR TARGET viskores::cuda OR
+      TARGET viskores_kokkos_cuda OR TARGET viskores::kokkos_cuda OR
+      TARGET viskores_kokkos_hip OR TARGET viskores::kokkos_hip))
+    set(pool viskores_pool_gpu)
+  else()
+    set(pool viskores_pool_cpu)
+  endif()
+  set_property(TARGET ${target} PROPERTY JOB_POOL_COMPILE ${pool})
 endfunction()
 
 #-----------------------------------------------------------------------------
@@ -468,11 +475,10 @@ endfunction()
 #   SOURCES <source_list>
 #   TEMPLATE_SOURCES <.hxx >
 #   HEADERS <header list>
-#   USE_VISKORES_JOB_POOL
 #   [ DEVICE_SOURCES <source_list> ]
 #   )
 function(viskores_library)
-  set(options OBJECT STATIC SHARED USE_VISKORES_JOB_POOL)
+  set(options OBJECT STATIC SHARED)
   set(oneValueArgs NAME)
   set(multiValueArgs SOURCES HEADERS TEMPLATE_SOURCES DEVICE_SOURCES)
   cmake_parse_arguments(Viskores_LIB
@@ -592,10 +598,7 @@ function(viskores_library)
     RUNTIME DESTINATION ${Viskores_INSTALL_BIN_DIR}
     )
 
-  if(Viskores_LIB_USE_VISKORES_JOB_POOL)
-    viskores_setup_job_pool()
-    set_property(TARGET ${lib_name} PROPERTY JOB_POOL_COMPILE viskores_pool)
-  endif()
+  viskores_set_job_pool(${lib_name} DEVICE_SOURCES ${Viskores_LIB_DEVICE_SOURCES})
 
 endfunction(viskores_library)
 
