@@ -406,21 +406,20 @@ struct DecoratorStorageTraits
   // Do not use these directly, they are helpers for the MakePortal[...]
   // methods below.
   template <typename DecoratorPortalType, typename... PortalTs>
-  VISKORES_CONT static
-    typename std::enable_if<DecoratorPortalType::ReadOnly::value, DecoratorPortalType>::type
-    CreatePortalDecorator(viskores::Id numVals, const DecoratorImplT& impl, PortalTs&&... portals)
-  { // Portal is read only:
-    return { impl.CreateFunctor(std::forward<PortalTs>(portals)...),
-             typename DecoratorPortalType::InverseFunctorType{},
-             numVals };
-  }
-
-  template <typename DecoratorPortalType, typename... PortalTs>
-  VISKORES_CONT static
-    typename std::enable_if<!DecoratorPortalType::ReadOnly::value, DecoratorPortalType>::type
-    CreatePortalDecorator(viskores::Id numVals, const DecoratorImplT& impl, PortalTs... portals)
-  { // Portal is read/write:
-    return { impl.CreateFunctor(portals...), impl.CreateInverseFunctor(portals...), numVals };
+  VISKORES_CONT static DecoratorPortalType CreatePortalDecorator(viskores::Id numVals,
+                                                                 const DecoratorImplT& impl,
+                                                                 PortalTs&&... portals)
+  {
+    if constexpr (DecoratorPortalType::ReadOnly::value)
+    { // Portal is read only:
+      return { impl.CreateFunctor(std::forward<PortalTs>(portals)...),
+               typename DecoratorPortalType::InverseFunctorType{},
+               numVals };
+    }
+    else
+    { // Portal is read/write:
+      return { impl.CreateFunctor(portals...), impl.CreateInverseFunctor(portals...), numVals };
+    }
   }
 
   // Static dispatch for calling AllocateSourceArrays on supported implementations:

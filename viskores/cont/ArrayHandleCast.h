@@ -175,54 +175,50 @@ public:
 private:
   // Log warnings if type cast is valid but lossy:
   template <typename SrcValueType>
-  VISKORES_CONT static typename std::enable_if<!std::is_same<T, SrcValueType>::value>::type
-  ValidateTypeCast()
+  VISKORES_CONT static void ValidateTypeCast()
   {
+    // no-op if types match
+    if constexpr (!std::is_same<T, SrcValueType>::value)
+    {
 #ifdef VISKORES_ENABLE_LOGGING
-    using DstValueType = T;
-    using SrcComp = typename viskores::VecTraits<SrcValueType>::BaseComponentType;
-    using DstComp = typename viskores::VecTraits<DstValueType>::BaseComponentType;
-    using SrcLimits = std::numeric_limits<SrcComp>;
-    using DstLimits = std::numeric_limits<DstComp>;
+      using DstValueType = T;
+      using SrcComp = typename viskores::VecTraits<SrcValueType>::BaseComponentType;
+      using DstComp = typename viskores::VecTraits<DstValueType>::BaseComponentType;
+      using SrcLimits = std::numeric_limits<SrcComp>;
+      using DstLimits = std::numeric_limits<DstComp>;
 
-    const viskores::Range SrcRange{ SrcLimits::lowest(), SrcLimits::max() };
-    const viskores::Range DstRange{ DstLimits::lowest(), DstLimits::max() };
+      const viskores::Range SrcRange{ SrcLimits::lowest(), SrcLimits::max() };
+      const viskores::Range DstRange{ DstLimits::lowest(), DstLimits::max() };
 
-    const bool RangeLoss = (SrcRange.Max > DstRange.Max || SrcRange.Min < DstRange.Min);
-    const bool PrecLoss = SrcLimits::digits > DstLimits::digits;
+      const bool RangeLoss = (SrcRange.Max > DstRange.Max || SrcRange.Min < DstRange.Min);
+      const bool PrecLoss = SrcLimits::digits > DstLimits::digits;
 
-    if (RangeLoss && PrecLoss)
-    {
-      VISKORES_LOG_F(viskores::cont::LogLevel::Warn,
-                     "ArrayHandleCast: Casting ComponentType of "
-                     "%s to %s reduces range and precision.",
-                     viskores::cont::TypeToString<SrcValueType>().c_str(),
-                     viskores::cont::TypeToString<DstValueType>().c_str());
-    }
-    else if (RangeLoss)
-    {
-      VISKORES_LOG_F(viskores::cont::LogLevel::Warn,
-                     "ArrayHandleCast: Casting ComponentType of "
-                     "%s to %s reduces range.",
-                     viskores::cont::TypeToString<SrcValueType>().c_str(),
-                     viskores::cont::TypeToString<DstValueType>().c_str());
-    }
-    else if (PrecLoss)
-    {
-      VISKORES_LOG_F(viskores::cont::LogLevel::Warn,
-                     "ArrayHandleCast: Casting ComponentType of "
-                     "%s to %s reduces precision.",
-                     viskores::cont::TypeToString<SrcValueType>().c_str(),
-                     viskores::cont::TypeToString<DstValueType>().c_str());
-    }
+      if (RangeLoss && PrecLoss)
+      {
+        VISKORES_LOG_F(viskores::cont::LogLevel::Warn,
+                       "ArrayHandleCast: Casting ComponentType of "
+                       "%s to %s reduces range and precision.",
+                       viskores::cont::TypeToString<SrcValueType>().c_str(),
+                       viskores::cont::TypeToString<DstValueType>().c_str());
+      }
+      else if (RangeLoss)
+      {
+        VISKORES_LOG_F(viskores::cont::LogLevel::Warn,
+                       "ArrayHandleCast: Casting ComponentType of "
+                       "%s to %s reduces range.",
+                       viskores::cont::TypeToString<SrcValueType>().c_str(),
+                       viskores::cont::TypeToString<DstValueType>().c_str());
+      }
+      else if (PrecLoss)
+      {
+        VISKORES_LOG_F(viskores::cont::LogLevel::Warn,
+                       "ArrayHandleCast: Casting ComponentType of "
+                       "%s to %s reduces precision.",
+                       viskores::cont::TypeToString<SrcValueType>().c_str(),
+                       viskores::cont::TypeToString<DstValueType>().c_str());
+      }
 #endif // Logging
-  }
-
-  template <typename SrcValueType>
-  VISKORES_CONT static typename std::enable_if<std::is_same<T, SrcValueType>::value>::type
-  ValidateTypeCast()
-  {
-    //no-op if types match
+    }
   }
 };
 
