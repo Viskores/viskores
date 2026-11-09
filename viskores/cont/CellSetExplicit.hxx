@@ -242,18 +242,15 @@ namespace internal
 // Sets the first value of the array to zero if the handle is writable,
 // otherwise do nothing:
 template <typename ArrayType>
-typename std::enable_if<viskores::cont::internal::IsWritableArrayHandle<ArrayType>::value>::type
-SetFirstToZeroIfWritable(ArrayType&& array)
+void SetFirstToZeroIfWritable(ArrayType&& array)
 {
-  using ValueType = typename std::decay<ArrayType>::type::ValueType;
-  using Traits = viskores::TypeTraits<ValueType>;
-  array.WritePortal().Set(0, Traits::ZeroInitialization());
+  if constexpr (viskores::cont::internal::IsWritableArrayHandle<ArrayType>::value)
+  {
+    using ValueType = typename std::decay<ArrayType>::type::ValueType;
+    using Traits = viskores::TypeTraits<ValueType>;
+    array.WritePortal().Set(0, Traits::ZeroInitialization());
+  }
 }
-
-template <typename ArrayType>
-typename std::enable_if<!viskores::cont::internal::IsWritableArrayHandle<ArrayType>::value>::type
-SetFirstToZeroIfWritable(ArrayType&&)
-{ /* no-op */ }
 
 } // end namespace internal
 
