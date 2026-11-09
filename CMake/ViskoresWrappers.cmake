@@ -459,6 +459,24 @@ endfunction()
 
 
 #-----------------------------------------------------------------------------
+# Adds precompiled headers with the commonly included Viskores and standard
+# headers to the given target when Viskores_ENABLE_PRECOMPILED_HEADERS is on.
+# Only C++ sources use the precompiled headers.
+function(viskores_add_precompiled_headers target)
+  if(Viskores_ENABLE_PRECOMPILED_HEADERS)
+    target_precompile_headers(${target} PRIVATE
+      "$<$<COMPILE_LANGUAGE:CXX>:<algorithm$<ANGLE-R>>"
+      "$<$<COMPILE_LANGUAGE:CXX>:<memory$<ANGLE-R>>"
+      "$<$<COMPILE_LANGUAGE:CXX>:<string$<ANGLE-R>>"
+      "$<$<COMPILE_LANGUAGE:CXX>:<vector$<ANGLE-R>>"
+      "$<$<COMPILE_LANGUAGE:CXX>:${Viskores_SOURCE_DIR}/viskores/Types.h>"
+      "$<$<COMPILE_LANGUAGE:CXX>:${Viskores_SOURCE_DIR}/viskores/List.h>"
+      "$<$<COMPILE_LANGUAGE:CXX>:${Viskores_SOURCE_DIR}/viskores/cont/ArrayHandle.h>"
+      )
+  endif()
+endfunction()
+
+#-----------------------------------------------------------------------------
 # Add a Viskores library. The name of the library will match the "kit" name
 # (e.g. viskores_rendering) unless the NAME argument is given.
 #
@@ -514,6 +532,7 @@ function(viskores_library)
                               EXTENDS_VISKORES
                               DEVICE_SOURCES ${Viskores_LIB_DEVICE_SOURCES}
                               )
+  viskores_add_precompiled_headers(${lib_name})
   if(Viskores_HIDE_PRIVATE_SYMBOLS)
     set_property(TARGET ${lib_name} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
     set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")

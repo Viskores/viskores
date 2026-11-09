@@ -60,6 +60,7 @@ function(_viskores_create_test_executable
   target_compile_definitions(${prog} PRIVATE ${defines})
 
   viskores_add_target_information(${prog} DEVICE_SOURCES ${device_sources})
+  viskores_add_precompiled_headers(${prog})
 
   if(NOT Viskores_USE_DEFAULT_SYMBOL_VISIBILITY)
     set_property(TARGET ${prog} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
