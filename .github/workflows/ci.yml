@@ -105,11 +105,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14]
+        os: [macos-15-intel, macos-latest]
     env:
       CMAKE_BUILD_TYPE: Release
       CMAKE_GENERATOR: 'Unix Makefiles'
-      CMAKE_PREFIX_PATH: /opt/homebrew/opt/libomp
+      CMAKE_PREFIX_PATH: "/opt/homebrew/opt/libomp:/usr/local/opt/libomp"
       VISKORES_SETTINGS: openmp+ccache
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_INSTALL_DIR: ${{ github.workspace }}/.gitlab
