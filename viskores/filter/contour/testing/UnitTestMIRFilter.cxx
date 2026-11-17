@@ -8,6 +8,7 @@
 
 
 #include <viskores/cont/Algorithm.h>
+#include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/DataSetBuilderExplicit.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
 #include <viskores/cont/Invoker.h>
@@ -264,9 +265,72 @@ void TestMIRSynthetic()
   VISKORES_TEST_ASSERT(ds_from_mir.GetNumberOfCells() == 40, "Wrong number of output cells");
 }
 
+viskores::FloatDefault LinearField(const viskores::Vec3f& point)
+{
+  return 1 + 2 * point[0] + 3 * point[1] + 4 * point[2];
+}
+
+void TestMIRPointFields()
+{
+  // MIR interpolates point fields to the new points. Interpolation reproduces fields
+  // that are linear in the coordinates, so the output fields have to match the same
+  // linear functions of the output coordinates.
+  viskores::cont::DataSet ds = GetTestDataSet();
+  viskores::cont::ArrayHandle<viskores::Vec3f> inPoints;
+  viskores::cont::ArrayCopyShallowIfPossible(ds.GetCoordinateSystem().GetData(), inPoints);
+
+  std::vector<viskores::FloatDefault> linear;
+  std::vector<viskores::Vec3f> position;
+  for (viskores::Id i = 0; i < inPoints.GetNumberOfValues(); ++i)
+  {
+    const viskores::Vec3f point = inPoints.ReadPortal().Get(i);
+    linear.push_back(LinearField(point));
+    position.push_back(point);
+  }
+  ds.AddPointField("linear", linear);
+  ds.AddPointField("position", position);
+
+  viskores::filter::contour::MIRFilter mir;
+  mir.SetIDWholeSetName("scatter_ids");
+  mir.SetPositionCellSetName("scatter_pos");
+  mir.SetLengthCellSetName("scatter_len");
+  mir.SetVFWholeSetName("scatter_vfs");
+  mir.SetErrorScaling(viskores::Float64(0.2));
+  mir.SetScalingDecay(viskores::Float64(1.0));
+  mir.SetMaxIterations(viskores::IdComponent(0));
+  mir.SetMaxPercentError(viskores::Float64(0.00001));
+  viskores::cont::DataSet result = mir.Execute(ds);
+
+  viskores::cont::ArrayHandle<viskores::Vec3f> outPoints;
+  viskores::cont::ArrayCopyShallowIfPossible(result.GetCoordinateSystem().GetData(), outPoints);
+  viskores::cont::ArrayHandle<viskores::FloatDefault> outLinear;
+  viskores::cont::ArrayCopyShallowIfPossible(result.GetPointField("linear").GetData(), outLinear);
+  viskores::cont::ArrayHandle<viskores::Vec3f> outPosition;
+  viskores::cont::ArrayCopyShallowIfPossible(result.GetPointField("position").GetData(),
+                                             outPosition);
+
+  const viskores::Id numPoints = outPoints.GetNumberOfValues();
+  VISKORES_TEST_ASSERT(numPoints > inPoints.GetNumberOfValues(), "MIR should add points");
+  VISKORES_TEST_ASSERT(outLinear.GetNumberOfValues() == numPoints, "Wrong size of a scalar field");
+  VISKORES_TEST_ASSERT(outPosition.GetNumberOfValues() == numPoints,
+                       "Wrong size of a vector field");
+  auto pointsPortal = outPoints.ReadPortal();
+  auto linearPortal = outLinear.ReadPortal();
+  auto positionPortal = outPosition.ReadPortal();
+  for (viskores::Id i = 0; i < numPoints; ++i)
+  {
+    const viskores::Vec3f point = pointsPortal.Get(i);
+    VISKORES_TEST_ASSERT(
+      test_equal(linearPortal.Get(i), LinearField(point)), "Wrong scalar field at point ", i);
+    VISKORES_TEST_ASSERT(
+      test_equal(positionPortal.Get(i), point), "Wrong vector field at point ", i);
+  }
+}
+
 void TestMIR()
 {
   TestMIRSynthetic();
+  TestMIRPointFields();
   TestMIRVenn250();
 }
 
