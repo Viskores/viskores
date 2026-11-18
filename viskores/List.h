@@ -351,198 +351,28 @@ using ListAt = typename detail::ListAtImpl<List, Index>::type;
 namespace detail
 {
 
-template <viskores::IdComponent NumSearched, typename Target, typename... Remaining>
-struct FindFirstOfType;
-
-// Not found
-template <viskores::IdComponent NumSearched, typename Target>
-struct FindFirstOfType<NumSearched, Target> : std::integral_constant<viskores::IdComponent, -1>
+// Returns the index of the first Ts equal to Target or -1 if there is none. The leading entry
+// of the array avoids a zero-sized array when Ts is empty.
+template <typename Target, typename... Ts>
+constexpr viskores::IdComponent FindFirstOfType()
 {
-};
-
-// Basic search next one
-template <bool NextIsTarget,
-          viskores::IdComponent NumSearched,
-          typename Target,
-          typename... Remaining>
-struct FindFirstOfCheckHead;
-
-template <viskores::IdComponent NumSearched, typename Target, typename... Ts>
-struct FindFirstOfCheckHead<true, NumSearched, Target, Ts...>
-  : std::integral_constant<viskores::IdComponent, NumSearched>
-{
-};
-
-template <viskores::IdComponent NumSearched, typename Target, typename Next, typename... Remaining>
-struct FindFirstOfCheckHead<false, NumSearched, Target, Next, Remaining...>
-  : FindFirstOfCheckHead<std::is_same<Target, Next>::value, NumSearched + 1, Target, Remaining...>
-{
-};
-
-// Not found
-template <viskores::IdComponent NumSearched, typename Target>
-struct FindFirstOfCheckHead<false, NumSearched, Target>
-  : std::integral_constant<viskores::IdComponent, -1>
-{
-};
-
-template <viskores::IdComponent NumSearched, typename Target, typename Next, typename... Remaining>
-struct FindFirstOfType<NumSearched, Target, Next, Remaining...>
-  : FindFirstOfCheckHead<std::is_same<Target, Next>::value, NumSearched, Target, Remaining...>
-{
-};
-
-// If there are at least 6 entries, check the first 4 to quickly narrow down
-template <bool OneInFirst4Matches,
-          viskores::IdComponent NumSearched,
-          typename Target,
-          typename... Ts>
-struct FindFirstOfSplit4;
-
-template <viskores::IdComponent NumSearched,
-          typename Target,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename... Ts>
-struct FindFirstOfSplit4<true, NumSearched, Target, T0, T1, T2, T3, Ts...>
-  : FindFirstOfCheckHead<std::is_same<Target, T0>::value, NumSearched, Target, T1, T2, T3>
-{
-};
-
-template <viskores::IdComponent NumSearched,
-          typename Target,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename... Ts>
-struct FindFirstOfSplit4<false, NumSearched, Target, T0, T1, T2, T3, T4, Ts...>
-  : FindFirstOfCheckHead<std::is_same<Target, T4>::value, NumSearched + 4, Target, Ts...>
-{
-};
-
-template <viskores::IdComponent NumSearched,
-          typename Target,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename... Ts>
-struct FindFirstOfType<NumSearched, Target, T0, T1, T2, T3, T4, T5, Ts...>
-  : FindFirstOfSplit4<(std::is_same<Target, T0>::value || std::is_same<Target, T1>::value ||
-                       std::is_same<Target, T2>::value || std::is_same<Target, T3>::value),
-                      NumSearched,
-                      Target,
-                      T0,
-                      T1,
-                      T2,
-                      T3,
-                      T4,
-                      T5,
-                      Ts...>
-{
-};
-
-// If there are at least 12 entries, check the first 8 to quickly narrow down
-template <bool OneInFirst8Matches,
-          viskores::IdComponent NumSearched,
-          typename Target,
-          typename... Ts>
-struct FindFirstOfSplit8;
-
-template <viskores::IdComponent NumSearched,
-          typename Target,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename... Ts>
-struct FindFirstOfSplit8<true, NumSearched, Target, T0, T1, T2, T3, T4, T5, T6, T7, Ts...>
-  : FindFirstOfSplit4<(std::is_same<Target, T0>::value || std::is_same<Target, T1>::value ||
-                       std::is_same<Target, T2>::value || std::is_same<Target, T3>::value),
-                      NumSearched,
-                      Target,
-                      T0,
-                      T1,
-                      T2,
-                      T3,
-                      T4,
-                      T5,
-                      T6,
-                      T7>
-{
-};
-
-template <viskores::IdComponent NumSearched,
-          typename Target,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename... Ts>
-struct FindFirstOfSplit8<false, NumSearched, Target, T0, T1, T2, T3, T4, T5, T6, T7, Ts...>
-  : FindFirstOfType<NumSearched + 8, Target, Ts...>
-{
-};
-
-template <viskores::IdComponent NumSearched,
-          typename Target,
-          typename T0,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename T5,
-          typename T6,
-          typename T7,
-          typename T8,
-          typename T9,
-          typename T10,
-          typename T11,
-          typename... Ts>
-struct FindFirstOfType<NumSearched, Target, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Ts...>
-  : FindFirstOfSplit8<(std::is_same<Target, T0>::value || std::is_same<Target, T1>::value ||
-                       std::is_same<Target, T2>::value || std::is_same<Target, T3>::value ||
-                       std::is_same<Target, T4>::value || std::is_same<Target, T5>::value ||
-                       std::is_same<Target, T6>::value || std::is_same<Target, T7>::value),
-                      NumSearched,
-                      Target,
-                      T0,
-                      T1,
-                      T2,
-                      T3,
-                      T4,
-                      T5,
-                      T6,
-                      T7,
-                      T8,
-                      T9,
-                      T10,
-                      T11,
-                      Ts...>
-{
-};
+  constexpr bool matches[] = { false, std::is_same<Target, Ts>::value... };
+  for (viskores::IdComponent i = 0; i < static_cast<viskores::IdComponent>(sizeof...(Ts)); ++i)
+  {
+    if (matches[i + 1])
+    {
+      return i;
+    }
+  }
+  return -1;
+}
 
 template <typename List, typename Target>
 struct ListIndexOfImpl;
 template <typename... Ts, typename Target>
 struct ListIndexOfImpl<viskores::List<Ts...>, Target>
 {
-  using type =
-    std::integral_constant<viskores::IdComponent, FindFirstOfType<0, Target, Ts...>::value>;
+  using type = std::integral_constant<viskores::IdComponent, FindFirstOfType<Target, Ts...>()>;
 };
 template <typename Target>
 struct ListIndexOfImpl<viskores::ListUniversal, Target>
@@ -737,8 +567,7 @@ VISKORES_EXEC_CONT void ListForEach(Functor&& f, viskores::List<Ts...>, Args&&..
 {
   VISKORES_STATIC_ASSERT_MSG((!std::is_same<viskores::List<Ts...>, viskores::ListUniversal>::value),
                              "Cannot call ListFor on viskores::ListUniversal.");
-  auto init_list = { (f(Ts{}, std::forward<Args>(args)...), false)... };
-  (void)init_list;
+  (f(Ts{}, std::forward<Args>(args)...), ...);
 }
 template <typename Functor, typename... Args>
 VISKORES_EXEC_CONT void ListForEach(Functor&&, viskores::ListEmpty, Args&&...)
