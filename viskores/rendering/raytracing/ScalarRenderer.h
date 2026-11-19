@@ -39,7 +39,7 @@ protected:
   template <typename Precision>
   void RenderOnDevice(Ray<Precision>& rays,
                       Precision missScalar,
-                      viskores::rendering::raytracing::Camera& cam);
+                      viskores::rendering::raytracing::Camera* cam);
 
   template <typename Precision>
   void AddBuffer(Ray<Precision>& rays, Precision missScalar, const std::string& name);
@@ -72,6 +72,17 @@ public:
   void Render(viskores::rendering::raytracing::Ray<viskores::Float64>& rays,
               viskores::Float64 missScalar,
               viskores::rendering::raytracing::Camera& cam);
+
+  /// Render rays without a camera, e.g., rays that the caller created for a subset
+  /// of the pixels. The rays get the fields and the depth, but no surface shading,
+  /// which needs a camera.
+  VISKORES_CONT
+  void Render(viskores::rendering::raytracing::Ray<viskores::Float32>& rays,
+              viskores::Float32 missScalar);
+
+  VISKORES_CONT
+  void Render(viskores::rendering::raytracing::Ray<viskores::Float64>& rays,
+              viskores::Float64 missScalar);
 
 }; //class RayTracer
 }

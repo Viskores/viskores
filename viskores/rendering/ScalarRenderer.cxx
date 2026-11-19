@@ -104,13 +104,6 @@ ScalarRenderer::Result ScalarRenderer::Render(const viskores::rendering::Camera&
     throw viskores::cont::ErrorBadValue("ScalarRenderer: input never set");
   }
 
-  raytracing::Logger* logger = raytracing::Logger::GetInstance();
-  logger->OpenLogEntry("scalar_render");
-  viskores::cont::Timer tot_timer;
-  tot_timer.Start();
-  viskores::cont::Timer timer;
-  timer.Start();
-
   // Create rays
   viskores::rendering::raytracing::Camera cam =
     camera.CreateRaytracingCamera(this->Internals->Width, this->Internals->Height);
@@ -120,6 +113,31 @@ ScalarRenderer::Result ScalarRenderer::Render(const viskores::rendering::Camera&
   viskores::rendering::raytracing::Ray<viskores::Float32> rays;
   cam.CreateRays(rays, this->Internals->ShapeBounds);
   rays.Buffers.at(0).InitConst(0.f);
+
+  return this->RenderRays(rays, &cam);
+}
+
+ScalarRenderer::Result ScalarRenderer::Render(
+  viskores::rendering::raytracing::Ray<viskores::Float32>& rays)
+{
+  return this->RenderRays(rays, nullptr);
+}
+
+ScalarRenderer::Result ScalarRenderer::RenderRays(
+  viskores::rendering::raytracing::Ray<viskores::Float32>& rays,
+  viskores::rendering::raytracing::Camera* camera)
+{
+  if (!Internals->ValidDataSet)
+  {
+    throw viskores::cont::ErrorBadValue("ScalarRenderer: input never set");
+  }
+
+  raytracing::Logger* logger = raytracing::Logger::GetInstance();
+  logger->OpenLogEntry("scalar_render");
+  viskores::cont::Timer tot_timer;
+  tot_timer.Start();
+  viskores::cont::Timer timer;
+  timer.Start();
 
   // add fields
   const viskores::Id numFields = this->Internals->DataSet.GetNumberOfFields();
@@ -135,7 +153,14 @@ ScalarRenderer::Result ScalarRenderer::Render(const viskores::rendering::Camera&
     }
   }
 
-  this->Internals->Tracer.Render(rays, Internals->DefaultValue, cam);
+  if (camera != nullptr)
+  {
+    this->Internals->Tracer.Render(rays, Internals->DefaultValue, *camera);
+  }
+  else
+  {
+    this->Internals->Tracer.Render(rays, Internals->DefaultValue);
+  }
 
   using ArrayF32 = viskores::cont::ArrayHandle<viskores::Float32>;
   std::vector<ArrayF32> res;

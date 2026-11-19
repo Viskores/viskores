@@ -252,22 +252,35 @@ void ScalarRenderer::Render(Ray<viskores::Float32>& rays,
                             viskores::Float32 missScalar,
                             viskores::rendering::raytracing::Camera& cam)
 {
-  RenderOnDevice(rays, missScalar, cam);
+  RenderOnDevice(rays, missScalar, &cam);
 }
 
 void ScalarRenderer::Render(Ray<viskores::Float64>& rays,
                             viskores::Float64 missScalar,
                             viskores::rendering::raytracing::Camera& cam)
 {
-  RenderOnDevice(rays, missScalar, cam);
+  RenderOnDevice(rays, missScalar, &cam);
+}
+
+void ScalarRenderer::Render(Ray<viskores::Float32>& rays, viskores::Float32 missScalar)
+{
+  RenderOnDevice(rays, missScalar, nullptr);
+}
+
+void ScalarRenderer::Render(Ray<viskores::Float64>& rays, viskores::Float64 missScalar)
+{
+  RenderOnDevice(rays, missScalar, nullptr);
 }
 
 template <typename Precision>
 void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays,
                                     Precision missScalar,
-                                    viskores::rendering::raytracing::Camera& cam)
+                                    viskores::rendering::raytracing::Camera* cam)
 {
-  this->CurrentCamera = cam;
+  if (cam != nullptr)
+  {
+    this->CurrentCamera = *cam;
+  }
 
   using Timer = viskores::cont::Timer;
 
@@ -306,12 +319,16 @@ void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays,
     AddBuffer(rays, missScalar, Fields[f].GetName());
   }
 
-  const viskores::Int32 numChannels = 1;
-  ChannelBuffer<Precision> buffer(numChannels, rays.NumRays);
-  detail::SurfaceShade<Precision> surfaceShade;
-  surfaceShade.run(rays, cam, this->GetLightPosition(), missScalar, buffer.Buffer, true);
-  buffer.SetName("shading");
-  rays.Buffers.push_back(buffer);
+  // surface shading needs a camera
+  if (cam != nullptr)
+  {
+    const viskores::Int32 numChannels = 1;
+    ChannelBuffer<Precision> buffer(numChannels, rays.NumRays);
+    detail::SurfaceShade<Precision> surfaceShade;
+    surfaceShade.run(rays, *cam, this->GetLightPosition(), missScalar, buffer.Buffer, true);
+    buffer.SetName("shading");
+    rays.Buffers.push_back(buffer);
+  }
 
   this->Invoke(detail::FilterDepth<Precision>{ missScalar }, rays.HitIdx, rays.Distance);
 

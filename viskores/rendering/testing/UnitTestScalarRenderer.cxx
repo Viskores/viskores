@@ -12,6 +12,10 @@
 #include <viskores/rendering/ScalarRenderer.h>
 #include <viskores/rendering/testing/RenderTest.h>
 
+#include <algorithm>
+#include <iterator>
+#include <string>
+
 namespace
 {
 
@@ -113,10 +117,71 @@ void ScalarRendererLightPositionTests()
                        "A rear light should leave only ambient illumination");
 }
 
+void ScalarRendererRaysTests()
+{
+  // Rays that the caller creates from a camera give the same fields and depths as
+  // rendering with the camera, but no surface shading, which needs the camera.
+  viskores::cont::DataSet dataSet = MakeTriangleDataSet();
+
+  viskores::rendering::Camera camera;
+  camera.SetPosition(viskores::Vec3f_32(0.f, 0.f, 3.f));
+  camera.SetLookAt(viskores::Vec3f_32(0.f, 0.f, 0.f));
+  camera.SetViewUp(viskores::Vec3f_32(0.f, 1.f, 0.f));
+  camera.SetClippingRange(0.1f, 10.f);
+
+  constexpr viskores::Int32 width = 8;
+  constexpr viskores::Int32 height = 8;
+  // a finite value for rays that miss, so that the images compare equal
+  constexpr viskores::Float32 missValue = -1.f;
+
+  viskores::rendering::ScalarRenderer withCamera;
+  withCamera.SetInput(dataSet);
+  withCamera.SetWidth(width);
+  withCamera.SetHeight(height);
+  withCamera.SetDefaultValue(missValue);
+  const viskores::rendering::ScalarRenderer::Result expected = withCamera.Render(camera);
+
+  viskores::rendering::raytracing::Camera rayCamera = camera.CreateRaytracingCamera(width, height);
+  viskores::rendering::raytracing::Ray<viskores::Float32> rays;
+  rayCamera.CreateRays(rays, dataSet.GetCoordinateSystem().GetBounds());
+  rays.Buffers.at(0).InitConst(0.f);
+
+  viskores::rendering::ScalarRenderer withRays;
+  withRays.SetInput(dataSet);
+  withRays.SetWidth(width);
+  withRays.SetHeight(height);
+  withRays.SetDefaultValue(missValue);
+  const viskores::rendering::ScalarRenderer::Result result = withRays.Render(rays);
+
+  VISKORES_TEST_ASSERT(result.Width == width && result.Height == height, "Wrong image size");
+  VISKORES_TEST_ASSERT(test_equal_ArrayHandles(result.Depths, expected.Depths),
+                       "Rays without a camera should give the depths of the camera");
+
+  bool foundScalar = false;
+  for (std::size_t index = 0; index < result.ScalarNames.size(); ++index)
+  {
+    const std::string& name = result.ScalarNames[index];
+    VISKORES_TEST_ASSERT(name != "shading", "Rays without a camera should not be shaded");
+    foundScalar = foundScalar || name == "scalar";
+
+    const auto match = std::find(expected.ScalarNames.begin(), expected.ScalarNames.end(), name);
+    VISKORES_TEST_ASSERT(match != expected.ScalarNames.end(), "Unexpected field ", name);
+    const std::size_t expectedIndex =
+      static_cast<std::size_t>(std::distance(expected.ScalarNames.begin(), match));
+    VISKORES_TEST_ASSERT(
+      test_equal_ArrayHandles(result.Scalars[index], expected.Scalars[expectedIndex]),
+      "Rays without a camera should give the field ",
+      name,
+      " of the camera");
+  }
+  VISKORES_TEST_ASSERT(foundScalar, "The point field should be rendered");
+}
+
 void RunTests()
 {
   RenderTests();
   ScalarRendererLightPositionTests();
+  ScalarRendererRaysTests();
 }
 
 } //namespace
