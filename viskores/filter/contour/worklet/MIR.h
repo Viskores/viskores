@@ -553,15 +553,16 @@ public:
               this->swap(ei.Vertex1, ei.Vertex2);
               this->swap(edge[0], edge[1]);
             }
-            // need to swap the weight of the point to be A-C / ((D-C) - (B-A)),
-            // where A and C are edge0 mats 1 and 2, and B and D are edge1 mats 1 and 2.
-            ei.Weight = viskores::Float64(1) +
-              ((static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[0]) -
-                                               newScalars.Get(valPositionStart + edge[0]))) /
-               static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[1]) -
-                                              curScalars.Get(valPositionStart + edge[0]) +
-                                              newScalars.Get(valPositionStart + edge[0]) -
-                                              newScalars.Get(valPositionStart + edge[1])));
+            // Compute the swapped weight as (D-B) / ((D-B) - (C-A)), where A and C
+            // are edge0 materials 1 and 2, and B and D are edge1 materials 1 and 2.
+            // This form avoids cancellation when the crossing is exactly at an endpoint.
+            const viskores::Float64 delta0 =
+              static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[0]) -
+                                             newScalars.Get(valPositionStart + edge[0]));
+            const viskores::Float64 delta1 =
+              static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[1]) -
+                                             newScalars.Get(valPositionStart + edge[1]));
+            ei.Weight = delta1 / (delta1 - delta0);
 
             inCellEdgeReverseConnectivity.Set(inCellEdgeInterpIndex, inCellInterpPointIndex);
             inCellEdgeInterpolation.Set(inCellEdgeInterpIndex, ei);
@@ -619,13 +620,13 @@ public:
               this->swap(edge[0], edge[1]);
             }
 
-            ei.Weight = viskores::Float64(1) +
-              ((static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[0]) -
-                                               newScalars.Get(valPositionStart + edge[0]))) /
-               static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[1]) -
-                                              curScalars.Get(valPositionStart + edge[0]) +
-                                              newScalars.Get(valPositionStart + edge[0]) -
-                                              newScalars.Get(valPositionStart + edge[1])));
+            const viskores::Float64 delta0 =
+              static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[0]) -
+                                             newScalars.Get(valPositionStart + edge[0]));
+            const viskores::Float64 delta1 =
+              static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[1]) -
+                                             newScalars.Get(valPositionStart + edge[1]));
+            ei.Weight = delta1 / (delta1 - delta0);
             //Add to set of new edge points
             //Add reverse connectivity;
             edgePointReverseConnectivity.Set(edgeIndex, connectivityIndex++);
@@ -1636,7 +1637,7 @@ public:
         for (viskores::IdComponent j = 0; j < 8; j++)
         {
           weight[j] *= 1. / static_cast<viskores::Float64>(numValues);
-          VISKORES_ASSERT(curOff[j] == 8);
+          VISKORES_ASSERT(curOff[j] == 8 || keys[j][curOff[j]] == viskores::Id(-1));
         }
       }
     };
@@ -2385,11 +2386,11 @@ struct DestructPointWeightList : public viskores::worklet::WorkletMapField
       }
       else
       {
-        originalVal = originalVals.Get(pointIDs[i]);
+        const auto nextOriginalVal = originalVals.Get(pointIDs[i]);
         for (viskores::IdComponent cIndex = 0; cIndex < newVal.GetNumberOfComponents(); ++cIndex)
         {
-          newVal[cIndex] +=
-            static_cast<ValueType>(static_cast<WeightType>(originalVal[cIndex]) * pointWeights[i]);
+          newVal[cIndex] += static_cast<ValueType>(
+            static_cast<WeightType>(nextOriginalVal[cIndex]) * pointWeights[i]);
         }
       }
     }
