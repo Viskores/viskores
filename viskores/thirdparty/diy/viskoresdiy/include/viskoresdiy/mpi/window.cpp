@@ -3,6 +3,7 @@
 #endif
 
 #include <algorithm>
+#include <stdlib.h>
 
 namespace diy
 {
