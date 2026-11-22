@@ -2828,8 +2828,14 @@ inline VISKORES_EXEC_CONT viskores::UInt64 FloatDistance(viskores::Float32 x, vi
   return detail::FloatDistancePositive(x, y);
 }
 
-// Computes ab - cd.
-// See: https://pharr.org/matt/blog/2019/11/03/difference-of-floats.html
+/// @brief Computes a·b - c·d
+///
+/// When computing the difference of products, you can run into precision issues
+/// when the difference is small with respect to the products. This
+/// implementation uses fused-multiply-add to compute this difference with more
+/// precision when fma compilation is enabled. See
+/// https://pharr.org/matt/blog/2019/11/03/difference-of-floats.html for more
+/// details.
 template<typename T>
 inline VISKORES_EXEC_CONT T DifferenceOfProducts(T a, T b, T c, T d)
 {

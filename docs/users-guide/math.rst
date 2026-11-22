@@ -159,6 +159,8 @@ Rounding and Precision
 .. doxygenfunction:: viskores::Round(const T&)
 .. doxygenfunction:: viskores::Round(const viskores::Vec<T, N>&)
 
+.. doxygenfunction:: viskores::DifferenceOfProducts
+
 Sign
 ==============================
 
