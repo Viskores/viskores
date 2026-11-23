@@ -62,6 +62,13 @@ PUBLIC
   anari::helium
   )
 
+# helium and anari_backend are static archives. Without this, the device
+# exports their symbols, and any other helium-based ANARI device loaded into the
+# same process (OSPRay, for example) binds to this copy and crashes.
+if(UNIX AND NOT APPLE)
+  target_link_options(anari_library_viskores PRIVATE "LINKER:--exclude-libs,ALL")
+endif()
+
 include(GenerateExportHeader)
 generate_export_header(anari_library_viskores
   EXPORT_MACRO_NAME "VISKORES_LIBRARY_INTERFACE"
