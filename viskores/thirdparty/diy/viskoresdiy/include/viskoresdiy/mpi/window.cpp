@@ -3,6 +3,7 @@
 #endif
 
 #include <algorithm>
+#include <cstdlib>
 
 namespace diy
 {
