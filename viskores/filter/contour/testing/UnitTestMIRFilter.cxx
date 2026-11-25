@@ -280,15 +280,16 @@ void TestMIRPointFields()
   viskores::cont::ArrayCopyShallowIfPossible(ds.GetCoordinateSystem().GetData(), inPoints);
 
   std::vector<viskores::FloatDefault> linear;
-  std::vector<viskores::Vec3f> position;
-  for (viskores::Id i = 0; i < inPoints.GetNumberOfValues(); ++i)
+  auto inPointsPortal = inPoints.ReadPortal();
+  for (viskores::Id i = 0; i < inPointsPortal.GetNumberOfValues(); ++i)
   {
-    const viskores::Vec3f point = inPoints.ReadPortal().Get(i);
-    linear.push_back(LinearField(point));
-    position.push_back(point);
+    linear.push_back(LinearField(inPointsPortal.Get(i)));
   }
   ds.AddPointField("linear", linear);
-  ds.AddPointField("position", position);
+  // MIR interpolates the coordinate system in its own code path, not through DoMapField.
+  // Add the coordinate array (shared, not copied) as a regular point field as well, so
+  // that a vector field goes through DoMapField and can be checked against the coordinates.
+  ds.AddPointField("position", inPoints);
 
   viskores::filter::contour::MIRFilter mir;
   mir.SetIDWholeSetName("scatter_ids");
