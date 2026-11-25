@@ -245,7 +245,12 @@ viskores::Vec3f_32 ScalarRenderer::GetLightPosition() const
   if (this->LightPositionSet)
     return this->LightPosition;
 
-  return this->CurrentCamera.GetPosition();
+  if (!this->CurrentCamera.has_value())
+  {
+    throw viskores::cont::ErrorBadValue(
+      "ScalarRenderer: no light position set and the last render had no camera");
+  }
+  return this->CurrentCamera->GetPosition();
 }
 
 void ScalarRenderer::Render(Ray<viskores::Float32>& rays,
@@ -277,9 +282,14 @@ void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays,
                                     Precision missScalar,
                                     viskores::rendering::raytracing::Camera* cam)
 {
+  // Do not keep the camera of an earlier render: without a camera, there is none.
   if (cam != nullptr)
   {
     this->CurrentCamera = *cam;
+  }
+  else
+  {
+    this->CurrentCamera.reset();
   }
 
   using Timer = viskores::cont::Timer;

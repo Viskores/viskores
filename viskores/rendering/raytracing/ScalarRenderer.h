@@ -10,6 +10,7 @@
 #define viskores_rendering_raytracing_ScalarRenderer_h
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <viskores/cont/DataSet.h>
@@ -32,7 +33,8 @@ private:
 protected:
   std::unique_ptr<ShapeIntersector> Intersector;
   std::vector<viskores::cont::Field> Fields;
-  viskores::rendering::raytracing::Camera CurrentCamera;
+  /// The camera of the last render, if that render had a camera.
+  std::optional<viskores::rendering::raytracing::Camera> CurrentCamera;
   viskores::Vec3f_32 LightPosition;
   bool LightPositionSet;
 
@@ -60,6 +62,9 @@ public:
   VISKORES_CONT
   void SetLightPosition(const viskores::Vec3f_32& lightPosition);
 
+  /// The light position from `SetLightPosition`. Without one, the position of the
+  /// camera of the last render. Throws `viskores::cont::ErrorBadValue` if neither is
+  /// set, e.g., before the first render or after a render without a camera.
   VISKORES_CONT
   viskores::Vec3f_32 GetLightPosition() const;
 

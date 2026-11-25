@@ -40,6 +40,9 @@ public:
   void SetHeight(viskores::Int32 height);
   void SetDefaultValue(viskores::Float32 value);
   void SetLightPosition(const viskores::Vec3f_32& lightPosition);
+  /// The light position from `SetLightPosition`. Without one, the position of the
+  /// camera of the last render. Throws `viskores::cont::ErrorBadValue` if neither is
+  /// set, e.g., before the first render or after a render of rays without a camera.
   viskores::Vec3f_32 GetLightPosition() const;
 
   struct VISKORES_RENDERING_EXPORT Result
