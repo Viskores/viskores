@@ -8,9 +8,14 @@
 
 
 #include <viskores/cont/DataSetBuilderExplicit.h>
+#include <viskores/cont/ErrorBadValue.h>
 #include <viskores/io/VTKDataSetWriter.h>
 #include <viskores/rendering/ScalarRenderer.h>
 #include <viskores/rendering/testing/RenderTest.h>
+
+#include <algorithm>
+#include <iterator>
+#include <string>
 
 namespace
 {
@@ -113,10 +118,125 @@ void ScalarRendererLightPositionTests()
                        "A rear light should leave only ambient illumination");
 }
 
+void ScalarRendererRaysTests()
+{
+  // Rays that the caller creates from a camera give the same fields and depths as
+  // rendering with the camera, but no surface shading, which needs the camera.
+  viskores::cont::DataSet dataSet = MakeTriangleDataSet();
+
+  viskores::rendering::Camera camera;
+  camera.SetPosition(viskores::Vec3f_32(0.f, 0.f, 3.f));
+  camera.SetLookAt(viskores::Vec3f_32(0.f, 0.f, 0.f));
+  camera.SetViewUp(viskores::Vec3f_32(0.f, 1.f, 0.f));
+  camera.SetClippingRange(0.1f, 10.f);
+
+  constexpr viskores::Int32 width = 8;
+  constexpr viskores::Int32 height = 8;
+  // a finite value for rays that miss, so that the images compare equal
+  constexpr viskores::Float32 missValue = -1.f;
+
+  viskores::rendering::ScalarRenderer withCamera;
+  withCamera.SetInput(dataSet);
+  withCamera.SetWidth(width);
+  withCamera.SetHeight(height);
+  withCamera.SetDefaultValue(missValue);
+  const viskores::rendering::ScalarRenderer::Result expected = withCamera.Render(camera);
+
+  viskores::rendering::raytracing::Camera rayCamera = camera.CreateRaytracingCamera(width, height);
+  viskores::rendering::raytracing::Ray<viskores::Float32> rays;
+  rayCamera.CreateRays(rays, dataSet.GetCoordinateSystem().GetBounds());
+  rays.Buffers.at(0).InitConst(0.f);
+
+  viskores::rendering::ScalarRenderer withRays;
+  withRays.SetInput(dataSet);
+  withRays.SetWidth(width);
+  withRays.SetHeight(height);
+  withRays.SetDefaultValue(missValue);
+  const viskores::rendering::ScalarRenderer::Result result = withRays.Render(rays);
+
+  VISKORES_TEST_ASSERT(result.Width == width && result.Height == height, "Wrong image size");
+  VISKORES_TEST_ASSERT(test_equal_ArrayHandles(result.Depths, expected.Depths),
+                       "Rays without a camera should give the depths of the camera");
+
+  bool foundScalar = false;
+  for (std::size_t index = 0; index < result.ScalarNames.size(); ++index)
+  {
+    const std::string& name = result.ScalarNames[index];
+    VISKORES_TEST_ASSERT(name != "shading", "Rays without a camera should not be shaded");
+    foundScalar = foundScalar || name == "scalar";
+
+    const auto match = std::find(expected.ScalarNames.begin(), expected.ScalarNames.end(), name);
+    VISKORES_TEST_ASSERT(match != expected.ScalarNames.end(), "Unexpected field ", name);
+    const std::size_t expectedIndex =
+      static_cast<std::size_t>(std::distance(expected.ScalarNames.begin(), match));
+    VISKORES_TEST_ASSERT(
+      test_equal_ArrayHandles(result.Scalars[index], expected.Scalars[expectedIndex]),
+      "Rays without a camera should give the field ",
+      name,
+      " of the camera");
+  }
+  VISKORES_TEST_ASSERT(foundScalar, "The point field should be rendered");
+}
+
+bool GetLightPositionThrows(const viskores::rendering::ScalarRenderer& renderer)
+{
+  try
+  {
+    renderer.GetLightPosition();
+  }
+  catch (const viskores::cont::ErrorBadValue&)
+  {
+    return true;
+  }
+  return false;
+}
+
+void ScalarRendererLightPositionWithoutCameraTests()
+{
+  // Without a light position, GetLightPosition returns the position of the camera
+  // of the last render, if that render had a camera.
+  viskores::cont::DataSet dataSet = MakeTriangleDataSet();
+
+  viskores::rendering::Camera camera;
+  camera.SetPosition(viskores::Vec3f_32(0.f, 0.f, 3.f));
+  camera.SetLookAt(viskores::Vec3f_32(0.f, 0.f, 0.f));
+  camera.SetViewUp(viskores::Vec3f_32(0.f, 1.f, 0.f));
+  camera.SetClippingRange(0.1f, 10.f);
+
+  constexpr viskores::Int32 width = 2;
+  constexpr viskores::Int32 height = 2;
+
+  viskores::rendering::ScalarRenderer renderer;
+  renderer.SetInput(dataSet);
+  renderer.SetWidth(width);
+  renderer.SetHeight(height);
+  VISKORES_TEST_ASSERT(GetLightPositionThrows(renderer),
+                       "Without a light position, there is no camera before the first render");
+
+  renderer.Render(camera);
+  VISKORES_TEST_ASSERT(test_equal(renderer.GetLightPosition(), camera.GetPosition()),
+                       "Without a light position, the light should be at the camera");
+
+  viskores::rendering::raytracing::Camera rayCamera = camera.CreateRaytracingCamera(width, height);
+  viskores::rendering::raytracing::Ray<viskores::Float32> rays;
+  rayCamera.CreateRays(rays, dataSet.GetCoordinateSystem().GetBounds());
+  rays.Buffers.at(0).InitConst(0.f);
+  renderer.Render(rays);
+  VISKORES_TEST_ASSERT(GetLightPositionThrows(renderer),
+                       "A render without a camera should not keep the camera of an earlier one");
+
+  const viskores::Vec3f_32 lightPosition(1.f, 2.f, 3.f);
+  renderer.SetLightPosition(lightPosition);
+  VISKORES_TEST_ASSERT(test_equal(renderer.GetLightPosition(), lightPosition),
+                       "A light position should not need a camera");
+}
+
 void RunTests()
 {
   RenderTests();
   ScalarRendererLightPositionTests();
+  ScalarRendererRaysTests();
+  ScalarRendererLightPositionWithoutCameraTests();
 }
 
 } //namespace

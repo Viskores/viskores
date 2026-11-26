@@ -11,6 +11,7 @@
 
 #include <viskores/cont/DataSet.h>
 #include <viskores/rendering/Camera.h>
+#include <viskores/rendering/raytracing/Ray.h>
 
 #include <memory>
 
@@ -39,6 +40,9 @@ public:
   void SetHeight(viskores::Int32 height);
   void SetDefaultValue(viskores::Float32 value);
   void SetLightPosition(const viskores::Vec3f_32& lightPosition);
+  /// The light position from `SetLightPosition`. Without one, the position of the
+  /// camera of the last render. Throws `viskores::cont::ErrorBadValue` if neither is
+  /// set, e.g., before the first render or after a render of rays without a camera.
   viskores::Vec3f_32 GetLightPosition() const;
 
   struct VISKORES_RENDERING_EXPORT Result
@@ -53,9 +57,20 @@ public:
     viskores::cont::DataSet ToDataSet();
   };
 
+  /// Render the scalar fields of the input as seen from a camera, with surface
+  /// shading in the field "shading".
   ScalarRenderer::Result Render(const viskores::rendering::Camera& camera);
 
+  /// Render the scalar fields of the input along rays that the caller created, e.g.,
+  /// for a subset of the pixels. The pixel indices of the rays refer to an image of
+  /// the width and height of this renderer. Without a camera, there is no surface
+  /// shading.
+  ScalarRenderer::Result Render(viskores::rendering::raytracing::Ray<viskores::Float32>& rays);
+
 private:
+  ScalarRenderer::Result RenderRays(viskores::rendering::raytracing::Ray<viskores::Float32>& rays,
+                                    viskores::rendering::raytracing::Camera* camera);
+
   struct InternalsType;
   std::unique_ptr<InternalsType> Internals;
 };

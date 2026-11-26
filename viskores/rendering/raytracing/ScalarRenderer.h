@@ -10,6 +10,7 @@
 #define viskores_rendering_raytracing_ScalarRenderer_h
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <viskores/cont/DataSet.h>
@@ -32,14 +33,15 @@ private:
 protected:
   std::unique_ptr<ShapeIntersector> Intersector;
   std::vector<viskores::cont::Field> Fields;
-  viskores::rendering::raytracing::Camera CurrentCamera;
+  /// The camera of the last render, if that render had a camera.
+  std::optional<viskores::rendering::raytracing::Camera> CurrentCamera;
   viskores::Vec3f_32 LightPosition;
   bool LightPositionSet;
 
   template <typename Precision>
   void RenderOnDevice(Ray<Precision>& rays,
                       Precision missScalar,
-                      viskores::rendering::raytracing::Camera& cam);
+                      viskores::rendering::raytracing::Camera* cam);
 
   template <typename Precision>
   void AddBuffer(Ray<Precision>& rays, Precision missScalar, const std::string& name);
@@ -60,6 +62,9 @@ public:
   VISKORES_CONT
   void SetLightPosition(const viskores::Vec3f_32& lightPosition);
 
+  /// The light position from `SetLightPosition`. Without one, the position of the
+  /// camera of the last render. Throws `viskores::cont::ErrorBadValue` if neither is
+  /// set, e.g., before the first render or after a render without a camera.
   VISKORES_CONT
   viskores::Vec3f_32 GetLightPosition() const;
 
@@ -72,6 +77,17 @@ public:
   void Render(viskores::rendering::raytracing::Ray<viskores::Float64>& rays,
               viskores::Float64 missScalar,
               viskores::rendering::raytracing::Camera& cam);
+
+  /// Render rays without a camera, e.g., rays that the caller created for a subset
+  /// of the pixels. The rays get the fields and the depth, but no surface shading,
+  /// which needs a camera.
+  VISKORES_CONT
+  void Render(viskores::rendering::raytracing::Ray<viskores::Float32>& rays,
+              viskores::Float32 missScalar);
+
+  VISKORES_CONT
+  void Render(viskores::rendering::raytracing::Ray<viskores::Float64>& rays,
+              viskores::Float64 missScalar);
 
 }; //class RayTracer
 }
