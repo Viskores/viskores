@@ -11,6 +11,8 @@
 #include <viskores/cont/DataSetBuilderUniform.h>
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/filter/uncertainty/ContourUncertainGaussianIndependent.h>
+#include <viskores/filter/uncertainty/ContourUncertainMAGICIndependentClosedForm.h>
+#include <viskores/filter/uncertainty/ContourUncertainMAGICIndependentMonteCarlo.h>
 
 namespace
 {
@@ -54,16 +56,16 @@ viskores::cont::DataSet MakeGaussianIndependentTestDataSet()
 
 void TestContourUncertainGaussianIndependent()
 {
-  using Filter = viskores::filter::uncertainty::ContourUncertainGaussianIndependent;
+  using Dispatcher = viskores::filter::uncertainty::ContourUncertainGaussianIndependent;
+  using ClosedForm = viskores::filter::uncertainty::ContourUncertainMAGICIndependentClosedForm;
+  using MonteCarlo = viskores::filter::uncertainty::ContourUncertainMAGICIndependentMonteCarlo;
   viskores::cont::DataSet input = MakeGaussianIndependentTestDataSet<viskores::FloatDefault>();
 
-  Filter closedFormFilter;
+  ClosedForm closedFormFilter;
   closedFormFilter.SetMeanField("mean");
   closedFormFilter.SetVarianceField("variance");
   closedFormFilter.SetIsoValue(50.0);
   closedFormFilter.SetMergeDuplicatePoints(true);
-  // ClosedForm is the default approach; setting it explicitly documents intent.
-  closedFormFilter.SetApproach(Filter::ApproachEnum::ClosedForm);
   viskores::cont::DataSet closedFormOutput = closedFormFilter.Execute(input);
 
   VISKORES_TEST_ASSERT(closedFormOutput.HasPointField(closedFormFilter.GetCrossingVarianceName()),
@@ -103,12 +105,11 @@ void TestContourUncertainGaussianIndependent()
 
   // Monte Carlo path: same inputs, compare against the closed-form output
   // within a tolerance comparable to MC's standard error.
-  Filter monteCarloFilter;
+  MonteCarlo monteCarloFilter;
   monteCarloFilter.SetMeanField("mean");
   monteCarloFilter.SetVarianceField("variance");
   monteCarloFilter.SetIsoValue(50.0);
   monteCarloFilter.SetMergeDuplicatePoints(true);
-  monteCarloFilter.SetApproach(Filter::ApproachEnum::MonteCarlo);
   monteCarloFilter.SetNumberOfSamples(1000);
   viskores::cont::DataSet monteCarloOutput = monteCarloFilter.Execute(input);
 
@@ -127,8 +128,8 @@ void TestContourUncertainGaussianIndependent()
   VISKORES_TEST_ASSERT(monteCarloVarianceArray.GetNumberOfValues() == numOutputPoints,
                        "Monte Carlo and closed-form outputs have different point counts.");
 
-  // Tolerance reflects MC's standard error at NumberOfSamples = 5000.
-  // 1/sqrt(5000) ~ 0.014 for the mean; allow generous slack for the variance.
+  // Tolerance reflects MC's standard error at NumberOfSamples = 1000.
+  // 1/sqrt(1000) ~ 0.032 for the mean; allow generous slack for the variance.
   const viskores::Float64 expectedCrossingTolerance = 0.05f;
   const viskores::FloatDefault varianceTolerance = 0.05f;
 
@@ -163,6 +164,27 @@ void TestContourUncertainGaussianIndependent()
                          " CF=",
                          closedFormVariance);
   }
+
+  // Verify that the compatibility filter dispatches both approaches to the
+  // corresponding implementation and preserves their output configuration.
+  Dispatcher dispatcher;
+  dispatcher.SetMeanField("mean");
+  dispatcher.SetVarianceField("variance");
+  dispatcher.SetIsoValue(50.0);
+  dispatcher.SetMergeDuplicatePoints(true);
+  dispatcher.SetCrossingVarianceName("dispatcher_variance");
+  dispatcher.SetExpectedCrossingName("dispatcher_crossing");
+
+  dispatcher.SetApproach(Dispatcher::ApproachEnum::ClosedForm);
+  viskores::cont::DataSet dispatchedClosedForm = dispatcher.Execute(input);
+  VISKORES_TEST_ASSERT(dispatchedClosedForm.HasPointField("dispatcher_variance"));
+  VISKORES_TEST_ASSERT(dispatchedClosedForm.HasPointField("dispatcher_crossing"));
+
+  dispatcher.SetApproach(Dispatcher::ApproachEnum::MonteCarlo);
+  dispatcher.SetNumberOfSamples(1000);
+  viskores::cont::DataSet dispatchedMonteCarlo = dispatcher.Execute(input);
+  VISKORES_TEST_ASSERT(dispatchedMonteCarlo.HasPointField("dispatcher_variance"));
+  VISKORES_TEST_ASSERT(dispatchedMonteCarlo.HasPointField("dispatcher_crossing"));
 }
 
 } // anonymous namespace
