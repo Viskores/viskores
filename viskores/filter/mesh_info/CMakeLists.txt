@@ -66,7 +66,6 @@ viskores_library(
   NAME viskores_filter_mesh_info
   HEADERS ${mesh_info_headers}
   DEVICE_SOURCES ${mesh_info_sources}
-  USE_VISKORES_JOB_POOL
 )
 
 target_link_libraries(viskores_filter PUBLIC INTERFACE viskores_filter_mesh_info)

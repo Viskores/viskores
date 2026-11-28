@@ -27,7 +27,6 @@ viskores_library(
   NAME viskores_filter_uncertainty
   HEADERS ${uncertainty_headers}
   DEVICE_SOURCES ${uncertainty_sources_device}
-  USE_VISKORES_JOB_POOL
 )
 
 add_subdirectory(worklet)

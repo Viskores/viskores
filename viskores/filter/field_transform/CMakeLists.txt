@@ -42,7 +42,6 @@ viskores_library(
   HEADERS ${field_transform_headers}
   DEVICE_SOURCES ${field_transform_sources}
   SOURCES ${field_transform_sources_no_device}
-  USE_VISKORES_JOB_POOL
 )
 
 target_link_libraries(viskores_filter PUBLIC INTERFACE viskores_filter_field_transform)

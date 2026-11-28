@@ -30,7 +30,6 @@ endif()
 viskores_unit_tests(
   SOURCES ${filter_unit_tests}
   DEVICE_SOURCES ${worklet_unit_tests}
-  USE_VISKORES_JOB_POOL
   )
 
 #add distributed tests i.e.test to run with MPI
@@ -50,7 +49,6 @@ if (Viskores_ENABLE_MPI)
   viskores_unit_tests(
     MPI
     SOURCES ${mpi_unit_tests} ${mpi_helpers}
-    USE_VISKORES_JOB_POOL
   )
   set_tests_properties(UnitTestAdvectionMPI_mpi PROPERTIES TIMEOUT 500)
 endif()

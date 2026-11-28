@@ -46,7 +46,6 @@ viskores_library(
   SOURCES ${contour_sources}
   HEADERS ${contour_headers}
   DEVICE_SOURCES ${contour_sources_device}
-  USE_VISKORES_JOB_POOL
 )
 
 set_property(TARGET

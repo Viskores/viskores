@@ -26,5 +26,4 @@ viskores_unit_tests(
   SOURCES ${unit_tests}
   DEVICE_SOURCES ${unit_tests_device}
   LIBRARIES ${libraries}
-  USE_VISKORES_JOB_POOL
 )
